@@ -21,3 +21,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Backups de BD (no versionar — datos personales)
+/storage/backups
