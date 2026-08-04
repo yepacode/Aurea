@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200" fill="none">
+  <!-- Rama izquierda -->
+  <g>
+    <path d="M96 184 C 42 178 20 134 28 86 C 32 60 46 40 66 26" stroke="#9AA588" stroke-width="1.6" stroke-linecap="round"/>
+    <g fill="#9AA588">
+      <ellipse cx="72" cy="162" rx="9" ry="3.4" transform="rotate(40 72 162)"/>
+      <ellipse cx="50" cy="142" rx="9" ry="3.4" transform="rotate(60 50 142)"/>
+      <ellipse cx="35" cy="116" rx="9" ry="3.3" transform="rotate(82 35 116)"/>
+      <ellipse cx="31" cy="88" rx="8.5" ry="3.2" transform="rotate(102 31 88)"/>
+      <ellipse cx="40" cy="60" rx="8" ry="3" transform="rotate(122 40 60)"/>
+      <ellipse cx="56" cy="40" rx="7" ry="2.8" transform="rotate(142 56 40)"/>
+    </g>
+  </g>
+  <!-- Rama derecha (espejo) -->
+  <g transform="translate(200,0) scale(-1,1)">
+    <path d="M96 184 C 42 178 20 134 28 86 C 32 60 46 40 66 26" stroke="#9AA588" stroke-width="1.6" stroke-linecap="round"/>
+    <g fill="#9AA588">
+      <ellipse cx="72" cy="162" rx="9" ry="3.4" transform="rotate(40 72 162)"/>
+      <ellipse cx="50" cy="142" rx="9" ry="3.4" transform="rotate(60 50 142)"/>
+      <ellipse cx="35" cy="116" rx="9" ry="3.3" transform="rotate(82 35 116)"/>
+      <ellipse cx="31" cy="88" rx="8.5" ry="3.2" transform="rotate(102 31 88)"/>
+      <ellipse cx="40" cy="60" rx="8" ry="3" transform="rotate(122 40 60)"/>
+      <ellipse cx="56" cy="40" rx="7" ry="2.8" transform="rotate(142 56 40)"/>
+    </g>
+  </g>
+  <!-- Detalle dorado arriba -->
+  <g fill="#D9B56D">
+    <circle cx="90" cy="24" r="2.4"/>
+    <circle cx="110" cy="24" r="2.4"/>
+    <path d="M100 30 l3 5 -3 3 -3 -3z"/>
+  </g>
+</svg>

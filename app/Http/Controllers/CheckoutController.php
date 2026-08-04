@@ -45,7 +45,24 @@ class CheckoutController extends Controller
         $freeThreshold = (float) \App\Models\ShippingSetting::get('free_shipping_threshold', 999);
         $lentesPage = \App\Models\LentesPageSetting::getCurrent();
 
+        $authCustomer = \Illuminate\Support\Facades\Auth::guard('customer')->user();
+        $prefill = null;
+        if ($authCustomer) {
+            $addr = $authCustomer->defaultAddress();
+            $prefill = [
+                'name'     => $authCustomer->name,
+                'email'    => $authCustomer->email,
+                'phone'    => $addr->phone ?? $authCustomer->phone,
+                'address'  => $addr->address ?? $authCustomer->address,
+                'city'     => $addr->city ?? $authCustomer->city,
+                'state'    => $addr->state ?? $authCustomer->state,
+                'zip_code' => $addr->zip_code ?? $authCustomer->zip_code,
+            ];
+        }
+
         return view('storefront.checkout', [
+            'authCustomer' => $authCustomer,
+            'prefill' => $prefill,
             'items' => $items,
             'subtotal' => $subtotal,
             'discount2x1' => $discount2x1,
@@ -163,7 +180,7 @@ class CheckoutController extends Controller
 
         $paymentIntent = PaymentIntent::create([
             'amount' => (int) round($total * 100),
-            'currency' => 'mxn',
+            'currency' => 'cop',
             'automatic_payment_methods' => ['enabled' => true],
             'metadata' => [
                 'cart_total' => $total,
@@ -188,7 +205,7 @@ class CheckoutController extends Controller
             'city' => 'nullable|string|max:100',
             'state' => 'required|string|max:100',
             'zip_code' => 'required|string|max:10',
-            'payment_method' => 'required|in:transfer,cash_on_delivery,card',
+            'payment_method' => 'required|in:transfer,cash_on_delivery,card,epayco',
             'stripe_payment_intent_id' => 'required_if:payment_method,card|nullable|string',
             'notes' => 'nullable|string|max:1000',
         ]);
@@ -221,13 +238,18 @@ class CheckoutController extends Controller
 
         session()->forget('discount_code_id');
 
+        // ePayco: el pedido queda pendiente y se envía al widget de pago.
+        $redirect = $validated['payment_method'] === 'epayco'
+            ? route('epayco.pay', $order->id)
+            : route('checkout.confirmation', $order->id);
+
         if ($request->expectsJson()) {
             return response()->json([
-                'redirect' => route('checkout.confirmation', $order->id),
+                'redirect' => $redirect,
             ]);
         }
 
-        return redirect()->route('checkout.confirmation', $order->id)
+        return redirect()->to($redirect)
             ->with('success', '¡Pedido realizado con éxito!');
     }
 

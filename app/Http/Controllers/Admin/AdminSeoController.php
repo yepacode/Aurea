@@ -11,11 +11,13 @@ class AdminSeoController extends Controller
 {
     private array $pageLabels = [
         'home' => 'Inicio',
-        'products-index' => 'Catálogo de lentes',
-        'blue-light' => '¿Qué es la luz azul?',
+        'products-index' => 'Catálogo',
+        'blue-light' => 'Rituales',
         'blog' => 'Blog',
         'contact' => 'Contacto',
         'shipping-returns' => 'Envíos y devoluciones',
+        'quiz' => 'Quiz de piel',
+        'brands' => 'Marcas',
     ];
 
     public function index()

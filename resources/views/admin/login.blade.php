@@ -16,7 +16,7 @@
 <body class="bg-bg text-text font-body min-h-screen flex items-center justify-center antialiased">
     <div class="w-full max-w-md px-6">
         <div class="text-center mb-8">
-            <img src="{{ asset('img/brand/logo-transparent.png') }}" alt="Belleza Áurea" class="h-20 w-20 object-contain mx-auto mb-3">
+            <img src="{{ asset('img/brand/logo-transparent.png') }}" alt="Belleza Áurea" class="h-36 object-contain mx-auto mb-3">
             <div>
                 <span style="font-family:'Playfair Display',serif;font-size:30px;font-weight:600;color:#2E2A26;letter-spacing:0.02em;">Belleza</span>
                 <span style="font-family:'Playfair Display',serif;font-size:30px;font-weight:600;color:#D9B56D;font-style:italic;margin-left:6px;">Áurea</span>
@@ -39,21 +39,21 @@
                 @csrf
 
                 <div>
-                    <label for="email" class="block text-sm font-medium text-muted/70 mb-1">Email</label>
+                    <label for="email" class="block text-sm font-medium mb-1" style="color:#4B4541;">Email</label>
                     <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus
-                           class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-white placeholder-muted/30 focus:outline-none focus:border-secondary transition-colors">
+                           class="w-full border border-border rounded-lg px-4 py-2.5 placeholder-muted/30 focus:outline-none focus:border-secondary transition-colors" style="color:#2E2A26;background:#FFFFFF;">
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm font-medium text-muted/70 mb-1">Contraseña</label>
+                    <label for="password" class="block text-sm font-medium mb-1" style="color:#4B4541;">Contraseña</label>
                     <input type="password" id="password" name="password" required
-                           class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-white placeholder-muted/30 focus:outline-none focus:border-secondary transition-colors">
+                           class="w-full border border-border rounded-lg px-4 py-2.5 placeholder-muted/30 focus:outline-none focus:border-secondary transition-colors" style="color:#2E2A26;background:#FFFFFF;">
                 </div>
 
                 <div class="flex items-center">
                     <input type="checkbox" id="remember" name="remember"
                            class="w-4 h-4 rounded border-border bg-bg text-secondary focus:ring-secondary">
-                    <label for="remember" class="ml-2 text-sm text-muted/70">Recordarme</label>
+                    <label for="remember" class="ml-2 text-sm" style="color:#4B4541;">Recordarme</label>
                 </div>
 
                 <button type="submit"

@@ -73,6 +73,7 @@ class CartService
         }
 
         session([self::SESSION_KEY => $cart]);
+        $this->syncPersisted();
     }
 
     /**
@@ -93,6 +94,7 @@ class CartService
         }
 
         session([self::SESSION_KEY => $cart]);
+        $this->syncPersisted();
     }
 
     /**
@@ -103,6 +105,7 @@ class CartService
         $cart = session(self::SESSION_KEY, []);
         unset($cart[$itemKey]);
         session([self::SESSION_KEY => $cart]);
+        $this->syncPersisted();
     }
 
     /**
@@ -111,6 +114,50 @@ class CartService
     public function clear(): void
     {
         session()->forget(self::SESSION_KEY);
+        $this->clearPersisted();
+    }
+
+    /**
+     * Persiste una foto del carrito del cliente autenticado (para recordatorio
+     * de carrito abandonado). Solo aplica a clientes con cuenta; los invitados
+     * no se persisten (no tenemos su correo). Si el carrito queda vacío, borra.
+     */
+    private function syncPersisted(): void
+    {
+        $customer = \Illuminate\Support\Facades\Auth::guard('customer')->user();
+        if (! $customer) {
+            return;
+        }
+
+        $items = $this->getItems();
+
+        if ($items->isEmpty()) {
+            \App\Models\AbandonedCart::where('customer_id', $customer->id)->delete();
+
+            return;
+        }
+
+        $snapshot = $items->map(fn ($i) => [
+            'name'       => $i['product']->name,
+            'slug'       => $i['product']->slug,
+            'image'      => $i['product']->images[0] ?? null,
+            'qty'        => $i['qty'],
+            'unit_price' => $i['unit_price'],
+        ])->all();
+
+        \App\Models\AbandonedCart::updateOrCreate(
+            ['customer_id' => $customer->id],
+            ['items' => $snapshot, 'subtotal' => $items->sum('total')],
+        );
+    }
+
+    /** Borra el carrito persistido del cliente (al vaciar o al comprar). */
+    private function clearPersisted(): void
+    {
+        $customer = \Illuminate\Support\Facades\Auth::guard('customer')->user();
+        if ($customer) {
+            \App\Models\AbandonedCart::where('customer_id', $customer->id)->delete();
+        }
     }
 
     /**
@@ -123,7 +170,7 @@ class CartService
 
     /**
      * Calculate 2x1 discount.
-     * Only lens products (miopia, lectura, sin_graduacion) with badge_2x1 qualify.
+     * Aplica a productos con 2x1 activo (por producto o por su categoría).
      * Expands by qty, sorts by price desc, every 2nd unit is free.
      */
     public function calculate2x1(): array
@@ -135,11 +182,7 @@ class CartService
         foreach ($items as $item) {
             $product = $item['product'];
 
-            if (! $product->badge_2x1) {
-                continue;
-            }
-
-            if (! $product->hasAnyType(['miopia', 'lectura', 'sin_graduacion'])) {
+            if (! $product->qualifiesFor2x1()) {
                 continue;
             }
 

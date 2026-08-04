@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Product;
+use App\Models\SeoSetting;
+use App\Services\SeoService;
 use Illuminate\View\View;
 
 class BrandController extends Controller
@@ -15,10 +17,12 @@ class BrandController extends Controller
     {
         $brands = Brand::active()->ordered()->withCount('activeProducts')->get();
 
+        $s = SeoSetting::getForPage('brands');
         $seo = [
-            'title'       => 'Marcas que distribuimos | Belleza Áurea',
-            'description' => 'Descubre todas las marcas premium de cosmética, skincare y rituales que distribuimos en Belleza Áurea.',
-            'canonical'   => url('/marcas'),
+            'title'       => ($s->meta_title ?? null) ?: 'Marcas que distribuimos | Belleza Áurea',
+            'description' => ($s->meta_description ?? null) ?: 'Descubre todas las marcas premium de cosmética, skincare y rituales que distribuimos en Belleza Áurea.',
+            'canonical'   => ($s->canonical_url ?? null) ?: url('/marcas'),
+            'og_image'    => ($s->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'),
         ];
 
         return view('storefront.brands.index', compact('brands', 'seo'));
@@ -27,7 +31,7 @@ class BrandController extends Controller
     /**
      * /marcas/{slug} — página de una marca con sus productos.
      */
-    public function show(string $slug): View
+    public function show(SeoService $seoService, string $slug): View
     {
         $brand = Brand::active()->where('slug', $slug)->firstOrFail();
 
@@ -36,12 +40,18 @@ class BrandController extends Controller
             ->orderBy('sort_order')
             ->paginate(24);
 
-        $seo = [
-            'title'       => $brand->meta_title ?: ($brand->name.' | Belleza Áurea'),
-            'description' => $brand->meta_description
+        $image = $brand->logo_url ?: asset('img/brand/logo-principal.png');
+        $meta = $seoService->meta(
+            $brand->meta_title ?: ($brand->name.' | Belleza Áurea'),
+            $brand->meta_description
                 ?: ($brand->short_description ?: 'Conoce todos los productos de '.$brand->name.' disponibles en Belleza Áurea.'),
-            'canonical'   => route('brands.show', $brand->slug),
-        ];
+            null,
+            route('brands.show', $brand->slug),
+            'website',
+        );
+        $meta['og_image'] = $image;
+        $meta['twitter_image'] = $image;
+        $seo = $seoService->applyItemSeo($meta, $brand, 'og_image_path', 'twitter_image_path');
 
         // Schema.org Brand — chr(64) evita que Blade procese @context/@type como directivas
         $K_CTX = chr(64).'context';

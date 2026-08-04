@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Editar: ' . $post->title)
-@section('page_title', 'Editar artículo')
+@section('page_title', 'Editar publicación')
 
 @section('content')
     <form method="POST" action="{{ route('admin.blog.update', $post) }}" enctype="multipart/form-data" class="max-w-4xl space-y-6"
@@ -67,106 +67,41 @@
             </div>
         </div>
 
-        {{-- SEO --}}
+        {{-- Categoría del blog (no forma parte del panel SEO) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">SEO</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="meta_title" class="block text-sm font-medium text-gray-700 mb-1">Meta título</label>
-                    <input type="text" id="meta_title" name="meta_title" value="{{ old('meta_title', $post->meta_title) }}" maxlength="60"
-                           x-model="metaTitle"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <div class="mt-1 flex items-center gap-2">
-                        <div class="h-1.5 flex-1 rounded-full bg-gray-200 overflow-hidden">
-                            <div class="h-full rounded-full transition-all duration-200"
-                                 :class="metaTitle.length === 0 ? 'bg-gray-300' : metaTitle.length <= 60 ? 'bg-green-500' : 'bg-red-500'"
-                                 :style="'width:' + Math.min(100, (metaTitle.length / 60) * 100) + '%'"></div>
-                        </div>
-                        <span class="text-xs" :class="metaTitle.length > 60 ? 'text-red-500' : 'text-gray-400'">
-                            <span x-text="metaTitle.length"></span>/60
-                        </span>
-                    </div>
-                </div>
-                <div>
-                    <label for="meta_description" class="block text-sm font-medium text-gray-700 mb-1">Meta descripción</label>
-                    <textarea id="meta_description" name="meta_description" rows="2" maxlength="160"
-                              x-model="metaDescription"
-                              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('meta_description', $post->meta_description) }}</textarea>
-                    <div class="mt-1 flex items-center gap-2">
-                        <div class="h-1.5 flex-1 rounded-full bg-gray-200 overflow-hidden">
-                            <div class="h-full rounded-full transition-all duration-200"
-                                 :class="metaDescription.length === 0 ? 'bg-gray-300' : metaDescription.length <= 160 ? 'bg-green-500' : 'bg-red-500'"
-                                 :style="'width:' + Math.min(100, (metaDescription.length / 160) * 100) + '%'"></div>
-                        </div>
-                        <span class="text-xs" :class="metaDescription.length > 160 ? 'text-red-500' : 'text-gray-400'">
-                            <span x-text="metaDescription.length"></span>/160
-                        </span>
-                    </div>
-                </div>
-                <div>
-                    <label for="focus_keyword" class="block text-sm font-medium text-gray-700 mb-1">Keyword principal</label>
-                    <input type="text" id="focus_keyword" name="focus_keyword" value="{{ old('focus_keyword', $post->focus_keyword) }}"
-                           placeholder="Ej: lentes luz azul"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Categoría del blog</label>
-                    <select id="category" name="category"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        @php
-                            $blogCategories = [
-                                '' => '— Detectar automáticamente por keyword —',
-                                'salud-visual' => 'Salud visual',
-                                'luz-azul' => 'Luz azul',
-                                'habitos' => 'Hábitos digitales',
-                                'lentes' => 'Lentes',
-                            ];
-                            $currentCat = old('category', $post->category);
-                        @endphp
-                        @foreach($blogCategories as $val => $label)
-                            <option value="{{ $val }}" {{ $currentCat === $val ? 'selected' : '' }}>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                    <p class="mt-1 text-xs text-gray-400">Determina en qué filtro aparece el artículo en <code>/blog</code>.</p>
-                </div>
-                <div>
-                    <label for="canonical_url" class="block text-sm font-medium text-gray-700 mb-1">URL canónica</label>
-                    <input type="url" id="canonical_url" name="canonical_url" value="{{ old('canonical_url', $post->canonical_url) }}"
-                           placeholder="Dejar vacío para usar la URL del post"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-            </div>
-
-            {{-- Google snippet preview --}}
-            <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p class="text-xs font-medium text-gray-500 mb-3 uppercase tracking-wider">Vista previa en Google</p>
-                <div class="space-y-0.5">
-                    <p class="text-sm text-green-700 font-normal truncate" x-text="'nuvionglass.com.mx/blog/' + slug"></p>
-                    <p class="text-lg text-blue-700 font-medium leading-snug hover:underline cursor-pointer truncate"
-                       x-text="metaTitle || (title + ' | nuvion glass')"></p>
-                    <p class="text-sm text-gray-600 line-clamp-2"
-                       x-text="metaDescription || excerpt || 'Agrega una meta descripción para controlar cómo se ve tu artículo en los resultados de búsqueda.'"></p>
-                </div>
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Categoría</h2>
+            <div>
+                <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Categoría del blog</label>
+                <select id="category" name="category"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    @php
+                        $blogCategories = [
+                            '' => '— Detectar automáticamente por keyword —',
+                            'salud-visual' => 'Salud visual',
+                            'luz-azul' => 'Luz azul',
+                            'habitos' => 'Hábitos digitales',
+                            'lentes' => 'Lentes',
+                        ];
+                        $currentCat = old('category', $post->category);
+                    @endphp
+                    @foreach($blogCategories as $val => $label)
+                        <option value="{{ $val }}" {{ $currentCat === $val ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <p class="mt-1 text-xs text-gray-400">Determina en qué filtro aparece el publicación en <code>/blog</code>.</p>
             </div>
         </div>
 
-        {{-- Open Graph --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-1">Open Graph</h2>
-            <p class="text-xs text-gray-400 mb-4">Personaliza cómo se ve tu artículo al compartirlo en redes sociales. Si lo dejas vacío, se usarán los valores de SEO.</p>
-            <div class="space-y-4">
-                <div>
-                    <label for="og_title" class="block text-sm font-medium text-gray-700 mb-1">OG Título</label>
-                    <input type="text" id="og_title" name="og_title" value="{{ old('og_title', $post->og_title) }}"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label for="og_description" class="block text-sm font-medium text-gray-700 mb-1">OG Descripción</label>
-                    <textarea id="og_description" name="og_description" rows="2"
-                              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('og_description', $post->og_description) }}</textarea>
-                </div>
-            </div>
-        </div>
+        {{-- Panel SEO completo (Google preview, meta, Open Graph, Twitter, JSON-LD) --}}
+        @include('admin.partials.seo-panel', [
+            'seo'           => $post,
+            'ogCol'         => 'og_image',
+            'twCol'         => 'twitter_image_path',
+            'baseUrl'       => url('/rituales'),
+            'slug'          => old('slug', $post->slug ?? ''),
+            'titleFallback' => ($post->title ?? 'Ritual') . ' | Belleza Áurea',
+            'descFallback'  => 'Descripción del ritual…',
+        ])
 
         {{-- Publish --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -256,7 +191,7 @@
 
             var quill = new Quill(editorEl, {
                 theme: 'snow',
-                placeholder: 'Escribe el contenido del artículo...',
+                placeholder: 'Escribe el contenido del publicación...',
                 modules: {
                     toolbar: [
                         [{ 'header': [2, 3, false] }],

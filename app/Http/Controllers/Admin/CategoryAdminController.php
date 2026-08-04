@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesSeoInput;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
@@ -13,6 +14,8 @@ use Illuminate\View\View;
 
 class CategoryAdminController extends Controller
 {
+    use HandlesSeoInput;
+
     public function index(): View
     {
         $categories = Category::withCount('products')
@@ -40,6 +43,9 @@ class CategoryAdminController extends Controller
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('categories', 'public');
         }
+
+        $validated = array_merge($validated, $this->seoInput($request, 'og_image_path', 'twitter_image_path'));
+        unset($validated['og_image'], $validated['twitter_image']);
 
         $category = Category::create($validated);
 
@@ -78,6 +84,9 @@ class CategoryAdminController extends Controller
             $validated['image'] = null;
         }
 
+        $validated = array_merge($validated, $this->seoInput($request, 'og_image_path', 'twitter_image_path'));
+        unset($validated['og_image'], $validated['twitter_image']);
+
         $category->update($validated);
 
         return redirect()->route('admin.categories.index')
@@ -105,11 +114,12 @@ class CategoryAdminController extends Controller
     private function validateForm(Request $request, ?int $ignoreId = null): array
     {
         $uniqueRule = 'unique:categories,name'.($ignoreId ? ','.$ignoreId : '');
-        return $request->validate([
+        return $request->validate(array_merge([
             'name'        => 'required|string|max:255|'.$uniqueRule,
             'description' => 'nullable|string|max:1000',
             'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'sort_order'  => 'nullable|integer|min:0',
-        ]);
+            'promo_2x1'   => 'nullable|boolean',
+        ], $this->seoRules()));
     }
 }

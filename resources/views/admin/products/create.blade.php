@@ -72,7 +72,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
                                     <input type="text" x-model="newName" x-ref="catName"
                                            @keydown.enter.prevent="createCategory()"
-                                           placeholder="Ej: Lentes de sol"
+                                           placeholder="Ej: Esmalte semipermanente"
                                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 </div>
                                 <p x-show="error" x-text="error" class="text-sm text-red-600"></p>
@@ -315,6 +315,18 @@
                         <p class="text-xs mt-1" style="color:#6B6157;">Aparece <strong>primero</strong> en la sección "Nuestros productos" del home con un badge dorado.</p>
                     </div>
                 </label>
+
+                <label class="flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all"
+                       style="border-color:{{ old('badge_2x1') ? '#D9B56D' : '#E5DCC9' }};background:{{ old('badge_2x1') ? '#FBF4E6' : '#FBF8F2' }};">
+                    <input type="hidden" name="badge_2x1" value="0">
+                    <input type="checkbox" name="badge_2x1" value="1"
+                           {{ old('badge_2x1') ? 'checked' : '' }}
+                           class="mt-1 w-4 h-4" style="accent-color:#D9B56D;">
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold" style="color:#2E2A26;">Promo 2×1</p>
+                        <p class="text-xs mt-1" style="color:#6B6157;">Muestra el badge <strong>2×1</strong> y aplica "paga 1, lleva 2" en el carrito para este producto. (También puedes activar 2×1 por categoría.)</p>
+                    </div>
+                </label>
             </div>
 
             <div>
@@ -332,14 +344,7 @@
         </div>
 
         {{-- ───────────── SEO ───────────── --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-             x-data="seoEditor({
-                title: @js(old('meta_title', '')),
-                desc:  @js(old('meta_description', '')),
-                slug:  @js(old('slug', '')),
-                productName: '',
-                baseUrl: @js(url('/productos')),
-             })">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
 
             <div class="flex items-baseline justify-between mb-4 pb-3" style="border-bottom:1px solid #F0EAE0;">
                 <div>
@@ -349,62 +354,28 @@
                 </div>
             </div>
 
-            {{-- Live preview Google --}}
-            <div class="mb-5 p-4 rounded-xl" style="background:#FBF8F2;border:1px solid #E5DCC9;">
-                <p class="text-[10px] uppercase tracking-wider mb-3" style="color:#9CA3AF;letter-spacing:.18em;">Vista previa en Google</p>
-                <div style="background:#FFFFFF;padding:14px 16px;border-radius:8px;font-family:Arial,sans-serif;">
-                    <p style="font-size:12px;color:#202124;line-height:1.3;margin:0 0 2px;">
-                        <span style="color:#5f6368;">bellezaaurea.com</span>
-                        <span x-text="' › productos › ' + (slug || 'mi-producto')" style="color:#5f6368;"></span>
-                    </p>
-                    <p x-text="title || 'Título del producto | Belleza Áurea'"
-                       style="font-size:18px;color:#1a0dab;line-height:1.3;margin:2px 0 4px;cursor:pointer;font-weight:400;"></p>
-                    <p x-text="desc || 'Sin descripción — se generará desde la descripción del producto.'"
-                       style="font-size:13px;color:#4d5156;line-height:1.4;margin:0;"></p>
-                </div>
-            </div>
-
+            {{-- Slug --}}
             <div class="mb-4">
                 <label class="block text-xs font-medium mb-1" style="color:#4B4541;">
                     URL (slug) <span class="text-xs ml-2" style="color:#9CA3AF;">— se autogenera del nombre si lo dejas vacío</span>
                 </label>
                 <div class="flex items-center gap-2">
                     <span class="text-xs" style="color:#9CA3AF;">{{ url('/productos') }}/</span>
-                    <input type="text" name="slug" x-model="slug"
+                    <input type="text" name="slug" value="{{ old('slug') }}"
                            class="flex-1 rounded-lg px-3 py-2 text-sm font-mono"
                            style="background:#FBF8F2;border:1px solid #E5DCC9;color:#2E2A26;">
                 </div>
             </div>
 
-            <div class="mb-4">
-                <label class="flex justify-between text-xs font-medium mb-1" style="color:#4B4541;">
-                    <span>Meta título (Google muestra ~60 caracteres)</span>
-                    <span x-text="title.length + ' / 60'"
-                          :style="{ color: title.length > 60 ? '#C97B6B' : (title.length > 50 ? '#BE9A53' : '#7C9B7E') }"></span>
-                </label>
-                <input type="text" name="meta_title" x-model="title" maxlength="255"
-                       placeholder="ej. Sérum facial vitamina C 30 ml | Belleza Áurea"
-                       class="w-full rounded-lg px-3 py-2 text-sm"
-                       style="background:#FBF8F2;border:1px solid #E5DCC9;color:#2E2A26;">
-                <p class="mt-1 text-xs italic" style="color:#9CA3AF;">
-                    Idealmente 50–60 caracteres. Incluye palabra clave + nombre + marca al final.
-                </p>
-            </div>
-
-            <div>
-                <label class="flex justify-between text-xs font-medium mb-1" style="color:#4B4541;">
-                    <span>Meta descripción (Google muestra ~155 caracteres)</span>
-                    <span x-text="desc.length + ' / 155'"
-                          :style="{ color: desc.length > 155 ? '#C97B6B' : (desc.length > 140 ? '#BE9A53' : '#7C9B7E') }"></span>
-                </label>
-                <textarea name="meta_description" x-model="desc" rows="3" maxlength="500"
-                          placeholder="ej. Sérum iluminador con vitamina C estabilizada y rosa mosqueta. Unifica el tono en 28 días. Envío gratis +$200.000."
-                          class="w-full rounded-lg px-3 py-2 text-sm"
-                          style="background:#FBF8F2;border:1px solid #E5DCC9;color:#2E2A26;"></textarea>
-                <p class="mt-1 text-xs italic" style="color:#9CA3AF;">
-                    Frase atractiva que invite al click. Menciona beneficio principal + diferenciador + CTA suave.
-                </p>
-            </div>
+            @include('admin.partials.seo-panel', [
+                'seo'           => new \App\Models\Product,
+                'ogCol'         => 'og_image_path',
+                'twCol'         => 'twitter_image_path',
+                'baseUrl'       => url('/productos'),
+                'slug'          => old('slug'),
+                'titleFallback' => 'Título del producto | Belleza Áurea',
+                'descFallback'  => 'Descripción del producto…',
+            ])
         </div>
 
         {{-- Actions --}}

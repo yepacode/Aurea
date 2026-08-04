@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\HandlesSeoInput;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
@@ -13,6 +14,8 @@ use Illuminate\View\View;
 
 class ProductAdminController extends Controller
 {
+    use HandlesSeoInput;
+
     public function index(Request $request): View
     {
         $query = Product::with(['category', 'variants']);
@@ -44,7 +47,7 @@ class ProductAdminController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge($this->seoRules(), [
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
@@ -55,13 +58,8 @@ class ProductAdminController extends Controller
             'compare_price' => 'nullable|numeric|min:0',
             'cost_price'    => 'nullable|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
             'slug' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0',
-            'focus_keyword' => 'nullable|string|max:120',
-            'noindex' => 'boolean',
-            'og_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
             'key_features_raw' => 'nullable|string|max:2000',
             'how_to_use' => 'nullable|string|max:5000',
             'ingredients' => 'nullable|string|max:5000',
@@ -75,6 +73,7 @@ class ProductAdminController extends Controller
             'is_vegan' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'badge_2x1' => 'boolean',
             'images.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
             'variants.*.option_type' => 'nullable|in:color,size,scent,finish,style,material,quantity,other',
             'variants.*.name' => 'nullable|string|max:100',
@@ -86,7 +85,7 @@ class ProductAdminController extends Controller
             'variants.*.price_modifier' => 'nullable|numeric',
             'variants.*.stock' => 'nullable|integer|min:0',
             'variants.*.image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-        ]);
+        ]));
 
         // Slug: si el admin lo personalizó, lo usamos (slugificado y único);
         // si no, lo generamos del nombre.
@@ -97,7 +96,7 @@ class ProductAdminController extends Controller
         $validated['sort_order'] = $request->input('sort_order') ?: 0;
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['noindex'] = $request->boolean('noindex');
+        $validated['badge_2x1'] = $request->boolean('badge_2x1');
         $validated['is_cruelty_free'] = $request->boolean('is_cruelty_free');
         $validated['is_vegan'] = $request->boolean('is_vegan');
 
@@ -111,11 +110,9 @@ class ProductAdminController extends Controller
         $validated['key_features'] = ! empty($features) ? $features : null;
         unset($validated['key_features_raw']);
 
-        // OG image upload
-        if ($request->hasFile('og_image')) {
-            $validated['og_image_path'] = $request->file('og_image')->store('og', 'public');
-        }
-        unset($validated['og_image']);
+        // SEO por-ítem (meta, keywords, canónica, robots, OG, Twitter, JSON-LD) — trait compartido
+        $validated = array_merge($validated, $this->seoInput($request));
+        unset($validated['og_image'], $validated['twitter_image']);
 
         $imagePaths = [];
         if ($request->hasFile('images')) {
@@ -174,7 +171,7 @@ class ProductAdminController extends Controller
 
     public function update(Request $request, Product $product): RedirectResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge($this->seoRules(), [
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'brand_id' => 'nullable|exists:brands,id',
@@ -185,13 +182,8 @@ class ProductAdminController extends Controller
             'compare_price' => 'nullable|numeric|min:0',
             'cost_price'    => 'nullable|numeric|min:0',
             'stock' => 'required|integer|min:0',
-            'meta_title' => 'nullable|string|max:255',
-            'meta_description' => 'nullable|string|max:500',
             'slug' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0',
-            'focus_keyword' => 'nullable|string|max:120',
-            'noindex' => 'boolean',
-            'og_image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
             'key_features_raw' => 'nullable|string|max:2000',
             'how_to_use' => 'nullable|string|max:5000',
             'ingredients' => 'nullable|string|max:5000',
@@ -205,6 +197,7 @@ class ProductAdminController extends Controller
             'is_vegan' => 'boolean',
             'is_active' => 'boolean',
             'is_featured' => 'boolean',
+            'badge_2x1' => 'boolean',
             'images.*' => 'image|mimes:jpg,jpeg,png,webp|max:2048',
             'remove_images' => 'nullable|array',
             'variants.*.id' => 'nullable|integer',
@@ -219,7 +212,7 @@ class ProductAdminController extends Controller
             'variants.*.stock' => 'nullable|integer|min:0',
             'variants.*.image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'variants.*.remove_image' => 'nullable|boolean',
-        ]);
+        ]));
 
         $customSlug = trim((string) $request->input('slug', ''));
         $validated['slug'] = $customSlug !== ''
@@ -228,7 +221,7 @@ class ProductAdminController extends Controller
         $validated['sort_order'] = $request->input('sort_order') ?: 0;
         $validated['is_active'] = $request->boolean('is_active');
         $validated['is_featured'] = $request->boolean('is_featured');
-        $validated['noindex'] = $request->boolean('noindex');
+        $validated['badge_2x1'] = $request->boolean('badge_2x1');
         $validated['is_cruelty_free'] = $request->boolean('is_cruelty_free');
         $validated['is_vegan'] = $request->boolean('is_vegan');
 
@@ -242,11 +235,9 @@ class ProductAdminController extends Controller
         $validated['key_features'] = ! empty($features) ? $features : null;
         unset($validated['key_features_raw']);
 
-        // OG image upload
-        if ($request->hasFile('og_image')) {
-            $validated['og_image_path'] = $request->file('og_image')->store('og', 'public');
-        }
-        unset($validated['og_image']);
+        // SEO por-ítem (meta, keywords, canónica, robots, OG, Twitter, JSON-LD) — trait compartido
+        $validated = array_merge($validated, $this->seoInput($request));
+        unset($validated['og_image'], $validated['twitter_image']);
 
         // Handle image removal
         $currentImages = $product->images ?? [];

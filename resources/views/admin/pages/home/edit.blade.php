@@ -44,7 +44,7 @@
 
                 <div class="border-t pt-4 mt-4">
                     <h4 class="text-sm font-semibold text-gray-800 mb-1">Tarjetas (3 categorías)</h4>
-                    <p class="text-xs text-gray-500 mb-3">Estas son las tarjetas que se muestran en la página principal. El botón "Ver modelos" usa el campo <strong>Tipo a filtrar</strong> para llevar al catálogo filtrado (<code>/lentes?type=...</code>).</p>
+                    <p class="text-xs text-gray-500 mb-3">Estas son las tarjetas que se muestran en la página principal. El botón "Ver modelos" usa el campo <strong>Tipo a filtrar</strong> para llevar al catálogo filtrado (<code>/productos?type=...</code>).</p>
                     @php $cards = $page->category_cards ?? []; @endphp
                     @for($i = 0; $i < 3; $i++)
                     @php $card = $cards[$i] ?? ['name' => '', 'link_param' => '', 'description' => '', 'icon_svg' => '', 'image' => '']; @endphp
@@ -292,7 +292,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
             <button type="button" @click="toggle('benefits')"
                     class="w-full flex items-center justify-between px-6 py-4 text-left">
-                <h3 class="text-base font-semibold text-gray-900">Beneficios (¿Por qué elegir nuvion?)</h3>
+                <h3 class="text-base font-semibold text-gray-900">Beneficios (¿Por qué elegir Belleza Áurea?)</h3>
                 <svg :class="openSection === 'benefits' && 'rotate-180'" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
                 </svg>
@@ -366,6 +366,32 @@
                             Agregar beneficio
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ═══════════ TÍTULOS DE SECCIÓN (SEO / H2) ═══════════ --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4 px-6 py-5">
+            <h3 class="text-base font-semibold text-gray-900 mb-1">Títulos de sección (SEO)</h3>
+            <p class="text-xs text-gray-400 mb-4">Estos son encabezados <strong>H2</strong> del home. Escríbelos con palabras clave de belleza para mejorar el posicionamiento.</p>
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sección "Distribuidora / autoridad"</label>
+                    <input type="text" name="authority_title" value="{{ old('authority_title', $page->authority_title) }}" maxlength="120"
+                           class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="Tu distribuidora de productos profesionales de belleza">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Título de Testimonios</label>
+                    <input type="text" name="testimonials_title" value="{{ old('testimonials_title', $page->testimonials_title) }}" maxlength="120"
+                           class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="Lo que dicen nuestras clientes">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Título de Preguntas frecuentes</label>
+                    <input type="text" name="faq_title" value="{{ old('faq_title', $page->faq_title) }}" maxlength="120"
+                           class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="Preguntas frecuentes">
                 </div>
             </div>
         </div>
@@ -542,12 +568,12 @@
                         </div>
                     </div>
 
-                    {{-- Con nuvion glass --}}
+                    {{-- Con Belleza Áurea --}}
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
-                        <h4 class="text-sm font-semibold text-green-700">Columna derecha — Con nuvion glass</h4>
+                        <h4 class="text-sm font-semibold text-green-700">Columna derecha — Con Belleza Áurea</h4>
                         <div>
                             <label class="block text-xs font-medium text-gray-600 mb-1">Título de la columna</label>
-                            <input type="text" name="comparison_with_label" value="{{ $page->comparison_with_label ?? 'Con nuvion glass' }}"
+                            <input type="text" name="comparison_with_label" value="{{ $page->comparison_with_label ?? 'Con Belleza Áurea' }}"
                                    class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>

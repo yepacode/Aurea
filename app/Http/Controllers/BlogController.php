@@ -85,11 +85,22 @@ class BlogController extends Controller
 
         $seo = $this->seo->forBlogPost($post);
         $schema = $this->seo->articleSchema($post);
+
+        // Si se entra por /rituales/{slug}, la miga de pan es "Rituales"; si no, "Blog".
+        $isRitual = request()->routeIs('ritual.show');
+        $parentCrumb = $isRitual
+            ? ['name' => 'Rituales', 'url' => route('blue-light')]
+            : ['name' => 'Blog', 'url' => route('blog.index')];
+        $selfUrl = $isRitual ? route('ritual.show', $post->slug) : route('blog.show', $post->slug);
+
         $breadcrumbs = $this->seo->breadcrumbSchema([
             ['name' => 'Inicio', 'url' => url('/')],
-            ['name' => 'Blog', 'url' => route('blog.index')],
-            ['name' => $post->title, 'url' => route('blog.show', $post->slug)],
+            $parentCrumb,
+            ['name' => $post->title, 'url' => $selfUrl],
         ]);
+        // Para la miga de pan visible en la vista
+        $crumbParentLabel = $parentCrumb['name'];
+        $crumbParentUrl = $parentCrumb['url'];
 
         $recent = BlogPost::published()
             ->where('id', '!=', $post->id)
@@ -128,7 +139,7 @@ class BlogController extends Controller
                     'slug' => $p->slug,
                     'price' => '$' . number_format((float) $p->price, 2),
                     'original_price' => $hasCompare ? '$' . number_format((float) $p->compare_price, 2) : null,
-                    'type' => $typeLabels[$primaryType] ?? 'Lentes',
+                    'type' => $typeLabels[$primaryType] ?? 'Producto',
                     'image' => $p->images[0] ?? null,
                 ];
             })
@@ -136,6 +147,7 @@ class BlogController extends Controller
 
         return view('storefront.blog.show', compact(
             'post', 'seo', 'schema', 'breadcrumbs', 'recent', 'products',
+            'crumbParentLabel', 'crumbParentUrl',
         ));
     }
 }

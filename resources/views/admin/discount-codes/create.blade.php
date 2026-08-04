@@ -24,7 +24,7 @@
                     <div>
                         <label for="code" class="block text-sm font-medium text-gray-700 mb-1">Código *</label>
                         <input type="text" id="code" name="code" value="{{ old('code') }}" required
-                               placeholder="Ej: NUVION20" style="text-transform: uppercase"
+                               placeholder="Ej: AUREA20" style="text-transform: uppercase"
                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <p class="mt-1 text-xs text-gray-400">Se convertirá a mayúsculas automáticamente.</p>
                     </div>

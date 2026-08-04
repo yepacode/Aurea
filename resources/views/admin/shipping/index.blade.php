@@ -66,9 +66,9 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
                     </svg>
-                    Tarifas por estado
+                    Zonas y tarifas de envío
                 </h2>
-                <p class="text-sm text-gray-500 mt-1">Los estados configurados aquí tienen prioridad sobre la tarifa default.</p>
+                <p class="text-sm text-gray-500 mt-1">Crea las zonas que quieras (departamento, ciudad, "Nacional", etc.), ponles su precio y actívalas o desactívalas. Las zonas activas tienen prioridad sobre la tarifa default.</p>
             </div>
 
             {{-- Add new rate --}}
@@ -76,14 +76,11 @@
                 <form method="POST" action="{{ route('admin.shipping.store') }}" class="flex flex-wrap items-end gap-3">
                     @csrf
                     <div class="flex-1 min-w-[200px]">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Estado *</label>
-                        <select name="state" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">— Selecciona un estado —</option>
-                            @foreach($states as $st)
-                                <option value="{{ $st }}">{{ $st }}</option>
-                            @endforeach
-                        </select>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Zona *</label>
+                        <input type="text" name="state" required maxlength="100"
+                               value="{{ old('state') }}"
+                               placeholder="Ej: Santander, Bogotá, Nacional..."
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div class="w-32">
                         <label class="block text-xs font-medium text-gray-600 mb-1">Precio ($) *</label>
@@ -94,19 +91,20 @@
                         Agregar
                     </button>
                 </form>
+                <p class="text-xs text-gray-400 mt-2">Consejo: pon precio <strong>0</strong> para envío gratis en esa zona.</p>
             </div>
 
             {{-- Rates table --}}
             @if($rates->isEmpty())
                 <div class="p-8 text-center text-gray-500">
-                    <p class="text-sm">No hay tarifas por estado configuradas.</p>
-                    <p class="text-xs mt-1">Se usará la tarifa default para todos los estados.</p>
+                    <p class="text-sm">Aún no has creado zonas de envío.</p>
+                    <p class="text-xs mt-1">Se usará la tarifa default para todos los pedidos.</p>
                 </div>
             @else
                 <table class="w-full">
                     <thead class="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <tr>
-                            <th class="px-6 py-3">Estado</th>
+                            <th class="px-6 py-3">Zona</th>
                             <th class="px-6 py-3">Precio</th>
                             <th class="px-6 py-3">Activa</th>
                             <th class="px-6 py-3 text-right">Acciones</th>
@@ -130,11 +128,18 @@
                             </template>
                             <template x-if="!editing">
                                 <td class="px-6 py-4">
-                                    @if($rate->is_active)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Activa</span>
-                                    @else
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">Inactiva</span>
-                                    @endif
+                                    {{-- Toggle rápido: activa/desactiva sin entrar a editar --}}
+                                    <form method="POST" action="{{ route('admin.shipping.update', $rate) }}" class="flex items-center gap-2">
+                                        @csrf @method('PUT')
+                                        <input type="hidden" name="state" value="{{ $rate->state }}">
+                                        <input type="hidden" name="price" value="{{ $rate->price }}">
+                                        <input type="hidden" name="is_active" value="{{ $rate->is_active ? '0' : '1' }}">
+                                        <label class="relative inline-flex items-center cursor-pointer" title="{{ $rate->is_active ? 'Desactivar zona' : 'Activar zona' }}">
+                                            <input type="checkbox" {{ $rate->is_active ? 'checked' : '' }} onchange="this.form.submit()" class="sr-only peer">
+                                            <div class="w-9 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                                        </label>
+                                        <span class="text-xs font-medium {{ $rate->is_active ? 'text-green-700' : 'text-gray-500' }}">{{ $rate->is_active ? 'Activa' : 'Inactiva' }}</span>
+                                    </form>
                                 </td>
                             </template>
                             <template x-if="!editing">
@@ -164,13 +169,9 @@
                                     <form method="POST" action="{{ route('admin.shipping.update', $rate) }}" class="flex flex-wrap items-end gap-3">
                                         @csrf @method('PUT')
                                         <div class="flex-1 min-w-[180px]">
-                                            <label class="block text-xs text-gray-500 mb-1">Estado</label>
-                                            <select name="state" required
-                                                    class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                @foreach($states as $st)
-                                                    <option value="{{ $st }}" {{ $rate->state === $st ? 'selected' : '' }}>{{ $st }}</option>
-                                                @endforeach
-                                            </select>
+                                            <label class="block text-xs text-gray-500 mb-1">Zona</label>
+                                            <input type="text" name="state" required maxlength="100" value="{{ $rate->state }}"
+                                                   class="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                                         </div>
                                         <div class="w-28">
                                             <label class="block text-xs text-gray-500 mb-1">Precio</label>

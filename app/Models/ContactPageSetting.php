@@ -39,14 +39,18 @@ class ContactPageSetting extends Model
 
         $number = preg_replace('/\D/', '', $page->whatsapp_number ?? '');
         if ($number === '') {
-            $number = '528146964477';
+            // Fallback a config/legal.php (ignora el placeholder entre corchetes)
+            $legal = (string) config('legal.whatsapp');
+            $number = \Illuminate\Support\Str::startsWith(trim($legal), '[') ? '' : preg_replace('/\D/', '', $legal);
         }
 
         $message = trim((string) ($page->whatsapp_message ?? ''));
         if ($message === '') {
-            $message = 'Hola, me interesa información sobre los lentes Nuvion Glass';
+            $message = '¡Hola! Me gustaría más información sobre los productos de Belleza Áurea 💛';
         }
 
-        return self::$cachedWhatsappUrl = 'https://wa.me/' . $number . '?text=' . rawurlencode($message);
+        $base = $number !== '' ? 'https://wa.me/' . $number : 'https://wa.me/';
+
+        return self::$cachedWhatsappUrl = $base . '?text=' . rawurlencode($message);
     }
 }

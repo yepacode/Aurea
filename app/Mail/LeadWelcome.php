@@ -21,7 +21,7 @@ class LeadWelcome extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Bienvenido a nuvion glass — Protege tu visión',
+            subject: 'Bienvenida a Belleza Áurea — tu ritual de belleza empieza aquí 💛',
         );
     }
 

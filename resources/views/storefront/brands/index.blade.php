@@ -5,6 +5,12 @@
 @section('canonical', $seo['canonical'])
 @section('og_title', $seo['title'])
 @section('og_description', $seo['description'])
+@section('og_image', $seo['og_image'] ?? asset('img/brand/logo-principal.png'))
+@section('twitter_title', $seo['title'])
+@section('twitter_description', $seo['description'])
+@section('twitter_image', $seo['og_image'] ?? asset('img/brand/logo-principal.png'))
+@section('og_title', $seo['title'])
+@section('og_description', $seo['description'])
 
 @section('content')
 <main style="background:#FBF8F2;padding:clamp(72px,10vw,140px) 0;">

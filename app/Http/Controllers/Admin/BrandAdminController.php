@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\HandlesSeoInput;
 use App\Models\Brand;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,8 @@ use Illuminate\View\View;
 
 class BrandAdminController extends Controller
 {
+    use HandlesSeoInput;
+
     public function index(): View
     {
         $brands = Brand::withCount('products')->ordered()->paginate(20);
@@ -37,6 +40,9 @@ class BrandAdminController extends Controller
         $data['slug'] = Str::slug($data['name']);
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_active']   = $request->boolean('is_active', true);
+
+        $data = array_merge($data, $this->seoInput($request, 'og_image_path', 'twitter_image_path'));
+        unset($data['og_image'], $data['twitter_image']);
 
         Brand::create($data);
 
@@ -65,6 +71,9 @@ class BrandAdminController extends Controller
         $data['is_featured'] = $request->boolean('is_featured');
         $data['is_active']   = $request->boolean('is_active', true);
 
+        $data = array_merge($data, $this->seoInput($request, 'og_image_path', 'twitter_image_path'));
+        unset($data['og_image'], $data['twitter_image']);
+
         $brand->update($data);
 
         return redirect()->route('admin.brands.index')->with('success', 'Marca actualizada.');
@@ -80,7 +89,7 @@ class BrandAdminController extends Controller
 
     private function validateForm(Request $request, ?int $ignoreId = null): array
     {
-        return $request->validate([
+        return $request->validate(array_merge([
             'name' => 'required|string|max:255',
             'short_description' => 'nullable|string|max:255',
             'long_description'  => 'nullable|string',
@@ -89,8 +98,6 @@ class BrandAdminController extends Controller
             'logo'              => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
             'banner'            => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'sort_order'        => 'nullable|integer|min:0',
-            'meta_title'        => 'nullable|string|max:255',
-            'meta_description'  => 'nullable|string|max:500',
-        ]);
+        ], $this->seoRules()));
     }
 }

@@ -28,9 +28,9 @@ class OrderStatusUpdate extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Pedido #{$this->order->id} — {$this->statusLabel} — nuvion glass",
+            subject: "Pedido #{$this->order->id} — {$this->statusLabel} — Belleza Áurea",
             replyTo: [
-                new Address(config('mail.contacto'), 'Nuvion Glass'),
+                new Address(config('mail.contacto'), 'Belleza Áurea'),
             ],
         );
     }

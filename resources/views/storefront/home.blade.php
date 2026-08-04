@@ -11,6 +11,8 @@
 @section('og_description', $seoSettings->og_description ?? $seoSettings->meta_description ?? 'Belleza natural, elegante y atemporal.')
 @section('twitter_title', $seoSettings->twitter_title ?? $seoSettings->meta_title ?? 'Belleza Áurea')
 @section('twitter_description', $seoSettings->twitter_description ?? $seoSettings->meta_description ?? 'Belleza natural, elegante y atemporal.')
+@section('og_image', ($seoSettings->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings->twitter_image_url ?? $seoSettings->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
 @push('schema')
     {{-- Organization JSON-LD (vienen como <script>...</script> completos del SeoService) --}}
@@ -1598,99 +1600,153 @@
 {{-- ============================================================
      1. HERO — Asymmetric editorial
      ============================================================ --}}
-<section class="ba-hero" aria-label="Bienvenida a Belleza Áurea">
-    <div class="ba-hero__left">
-        @if($hero->eyebrow_text ?? null)
-        <span class="ba-eyebrow" data-anim="fade-up">{{ $hero->eyebrow_text }}</span>
-        @endif
+@php
+    // Media del hero (imagen o video)
+    $videoExts = ['mp4', 'webm', 'mov'];
+    $heroMedia = $hero->media_path ?? null;
+    $heroExt = $heroMedia ? strtolower(pathinfo($heroMedia, PATHINFO_EXTENSION)) : null;
+    $isHeroVideo = ($hero->media_type ?? null) === 'video'
+        || ($heroMedia && in_array($heroExt, $videoExts, true));
+    $heroVideoUrl = $isHeroVideo && $heroMedia ? asset('storage/'.$heroMedia) : null;
+    $heroImageUrl = (! $isHeroVideo && $heroMedia) ? asset('storage/'.$heroMedia) : null;
+    $heroImg = $heroImageUrl
+        ?? (($starProduct && !empty($starProduct->images)) ? asset('storage/'.$starProduct->images[0]) : asset('img/brand/logo-transparent.png'));
+@endphp
 
-        <h1 class="ba-hero__title">
-            @php $wordIndex = 0; @endphp
-            @foreach($heroLines as $line)
-                @foreach(explode(' ', $line) as $word)
-                    @php
-                        $isHighlight = $highlight !== '' && mb_strtolower(trim($word, ',.!?')) === mb_strtolower($highlight);
-                    @endphp
-                    <span class="word"><span style="--w-i: {{ $wordIndex }};">@if($isHighlight)<em>{{ $word }}</em>@else{{ $word }}@endif</span></span>
-                    @php $wordIndex++; @endphp
-                @endforeach
-                @if(!$loop->last)<br>@endif
-            @endforeach
-        </h1>
+@if(! $isHeroVideo)
+@push('head')
+<link rel="preload" as="image" href="{{ $heroImg }}" fetchpriority="high">
+@endpush
+@endif
 
-        @if($hero->subtitle ?? null)
-        <p class="ba-hero__sub" data-anim="fade-up" style="--stagger: 8;">{{ $hero->subtitle }}</p>
-        @endif
+<style>
+/* ═══════════════════════════════════════════════════════════
+   HERO ELEGANTE BOTÁNICO — Belleza Áurea (ref. Imagen 1)
+   ═══════════════════════════════════════════════════════════ */
+.ae{position:relative;padding:clamp(56px,7vh,104px) 0 clamp(44px,6vh,84px);}
+.ae__wrap{max-width:1300px;margin:0 auto;padding:0 clamp(24px,5vw,72px);
+    display:grid;grid-template-columns:1fr 1.12fr;gap:clamp(32px,5vw,74px);align-items:center;}
+.ae__eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:11px;font-weight:600;
+    letter-spacing:.24em;text-transform:uppercase;color:#BE9A53;margin-bottom:24px;}
+.ae__eyebrow::before{content:"";width:30px;height:1px;background:#D9B56D;}
+.ae__title{font-family:'Playfair Display',Georgia,serif;color:#2E2A26;margin:0 0 22px;
+    font-size:clamp(40px,5.6vw,78px);line-height:1.0;letter-spacing:-.01em;font-weight:600;text-wrap:balance;}
+.ae__title .l1{display:block;text-transform:uppercase;letter-spacing:.005em;}
+.ae__title .l2{display:block;font-style:italic;color:#3A352E;}
+.ae__sub{max-width:412px;margin:0 0 34px;color:#6B6157;font-size:clamp(13px,1vw,14.5px);line-height:1.68;}
+.ae__cta{display:inline-flex;align-items:center;gap:11px;text-decoration:none;border-radius:999px;
+    padding:17px 34px;color:#fff;font:600 12.5px/1 'Montserrat',system-ui,sans-serif;
+    letter-spacing:.14em;text-transform:uppercase;
+    background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);
+    box-shadow:0 16px 32px -12px rgba(190,154,83,.75);
+    transition:transform .35s cubic-bezier(.2,.7,.3,1),box-shadow .35s ease;}
+.ae__cta:hover{transform:translateY(-3px);box-shadow:0 22px 44px -12px rgba(190,154,83,.9);}
+.ae__cta svg{transition:transform .35s;}
+.ae__cta:hover svg{transform:translateX(5px);}
 
-        <div class="ba-hero__actions" data-anim="fade-up" style="--stagger: 10;">
-            <a href="{{ $hero->btn_primary_url ?? route('products.index') }}" class="ba-btn-primary">
-                <span>{{ $hero->btn_primary_text ?? 'Descubrir productos' }}</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </a>
-            <a href="{{ $hero->btn_secondary_url ?? route('blue-light') }}" class="ba-btn-ghost">
-                {{ $hero->btn_secondary_text ?? 'Conocer rituales' }}
+.ae__media{position:relative;}
+.ae__panel{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:16/12;
+    background:
+      radial-gradient(120% 90% at 70% 20%, #FFFFFF 0%, #F4F0E9 55%, #EAE3D6 100%);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 44px 84px -34px rgba(120,92,44,.5), 0 10px 26px -16px rgba(0,0,0,.2);}
+.ae__panel::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(115deg, rgba(255,255,255,0) 0 22px, rgba(200,190,170,.06) 22px 23px);}
+.ae__prod{position:relative;z-index:2;max-width:62%;max-height:94%;object-fit:contain;
+    filter:drop-shadow(0 30px 46px rgba(120,92,44,.32));}
+.ae__panel video.ae__prod{max-width:64%;max-height:96%;border-radius:16px;
+    border:4px solid #FBF8F2;box-shadow:0 26px 52px -20px rgba(120,92,44,.5);}
+.ae__panel img.ae__prod{max-height:96%;}
+.ae__sprig{position:absolute;z-index:1;pointer-events:none;height:66%;top:17%;}
+.ae__sprig--gold{left:3%;transform:rotate(-6deg);}
+.ae__sprig--olive{right:2%;transform:rotate(6deg) scaleX(-1);}
+
+@media(max-width:900px){
+    .ae__wrap{grid-template-columns:1fr;gap:40px;}
+    .ae__media{order:-1;}
+    .ae__panel{aspect-ratio:16/10;}
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CATEGORÍAS — Fotos redondas con corona de hojas (ref. Imagen circular)
+   ═══════════════════════════════════════════════════════════ */
+.aeg{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(20px,2.6vw,44px);}
+.aeg__card{display:flex;flex-direction:column;align-items:center;gap:16px;text-decoration:none;color:inherit;}
+.aeg__ring{position:relative;width:clamp(120px,13vw,172px);aspect-ratio:1;display:grid;place-items:center;
+    transition:transform .5s cubic-bezier(.2,.7,.3,1);}
+.aeg__circle{position:relative;z-index:1;width:76%;height:76%;border-radius:50%;overflow:hidden;
+    background:linear-gradient(155deg,#BAC3AC,#9FAA92);border:3px solid #FBF8F2;
+    box-shadow:0 18px 36px -16px rgba(90,80,50,.55);display:grid;place-items:center;}
+.aeg__circle img{width:100%;height:100%;object-fit:cover;
+    filter:saturate(.68) brightness(1.03) contrast(.95);
+    transition:transform .7s cubic-bezier(.2,.7,.3,1), filter .6s ease;}
+/* Velo cálido de marca en reposo → se quita al hover (color real) */
+.aeg__circle::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;
+    background:linear-gradient(160deg, rgba(168,178,154,.34) 0%, rgba(217,181,109,.22) 100%);
+    mix-blend-mode:soft-light;opacity:1;transition:opacity .6s ease;}
+.aeg__card:hover .aeg__circle::after{opacity:0;}
+.aeg__ph{font-family:'Playfair Display',Georgia,serif;font-style:italic;color:#F4F0E9;font-size:26px;}
+.aeg__wreath{position:absolute;inset:0;z-index:2;width:100%;height:100%;pointer-events:none;
+    transition:transform .6s cubic-bezier(.2,.7,.3,1);}
+.aeg__card:hover .aeg__ring{transform:translateY(-6px);}
+.aeg__card:hover .aeg__circle img{transform:scale(1.08);filter:saturate(1) brightness(1) contrast(1);}
+.aeg__card:hover .aeg__wreath{transform:rotate(3deg) scale(1.02);}
+.aeg__name{font-family:'Playfair Display',Georgia,serif;font-size:clamp(16px,1.5vw,20px);
+    color:#2E2A26;text-align:center;line-height:1.15;}
+.aeg__count{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#8E7E70;margin-top:-8px;}
+@media(max-width:900px){.aeg{grid-template-columns:repeat(2,1fr);}}
+</style>
+
+<section class="ae" aria-label="Bienvenida a Belleza Áurea">
+    <div class="ae__wrap">
+        <div class="ae__copy" data-anim="fade-up">
+            <span class="ae__eyebrow">{{ $hero->eyebrow_text ?? 'Distribuidora oficial · Colombia' }}</span>
+            <h1 class="ae__title">
+                <span class="l1">{{ $hero->title_line1 ?? 'Tu belleza,' }}</span>
+                <span class="l2">{{ $hero->title_line2 ?? 'tu esencia.' }}</span>
+            </h1>
+            <p class="ae__sub">{{ $hero->subtitle ?? 'Distribución exclusiva de productos de belleza: piel, uñas, accesorios y estética profesional. Calidad garantizada.' }}</p>
+            <a href="{{ $hero->btn_primary_url ?? route('products.index') }}" class="ae__cta">
+                {{ $hero->btn_primary_text ?? 'Ver catálogo completo' }}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
         </div>
 
-        @if($hero->stat1_number || $hero->stat2_number)
-        <div class="ba-hero__meta" data-anim="fade-up" style="--stagger: 12;">
-            @if($hero->stat1_number)
-            <div class="ba-hero__meta-item">
-                <span class="ba-hero__meta-num">{{ $hero->stat1_number }}</span>
-                <span class="ba-hero__meta-lbl">{{ $hero->stat1_label }}</span>
+        <div class="ae__media" data-anim="fade-up" style="--stagger:4;">
+            <div class="ae__panel">
+                {{-- Rama dorada --}}
+                <svg class="ae__sprig ae__sprig--gold" viewBox="0 0 100 230" fill="none" aria-hidden="true">
+                    <path d="M54 226 C 49 168 44 112 58 16" stroke="#C6A052" stroke-width="2.4" stroke-linecap="round"/>
+                    <g fill="#D9B56D">
+                        <ellipse cx="39" cy="158" rx="16" ry="6" transform="rotate(-34 39 158)"/>
+                        <ellipse cx="67" cy="128" rx="15" ry="5.6" transform="rotate(30 67 128)"/>
+                        <ellipse cx="40" cy="102" rx="14" ry="5.4" transform="rotate(-36 40 102)"/>
+                        <ellipse cx="63" cy="72" rx="13" ry="5" transform="rotate(32 63 72)"/>
+                        <ellipse cx="46" cy="46" rx="11" ry="4.6" transform="rotate(-38 46 46)"/>
+                        <ellipse cx="58" cy="26" rx="9" ry="4" transform="rotate(26 58 26)"/>
+                    </g>
+                </svg>
+                {{-- Rama de olivo --}}
+                <svg class="ae__sprig ae__sprig--olive" viewBox="0 0 100 230" fill="none" aria-hidden="true">
+                    <path d="M54 226 C 49 168 44 112 58 16" stroke="#7C8A6B" stroke-width="2.4" stroke-linecap="round"/>
+                    <g fill="#8A9772">
+                        <ellipse cx="39" cy="158" rx="17" ry="6.4" transform="rotate(-34 39 158)"/>
+                        <ellipse cx="67" cy="128" rx="16" ry="6" transform="rotate(30 67 128)"/>
+                        <ellipse cx="40" cy="102" rx="15" ry="5.8" transform="rotate(-36 40 102)"/>
+                        <ellipse cx="63" cy="72" rx="14" ry="5.4" transform="rotate(32 63 72)"/>
+                        <ellipse cx="46" cy="46" rx="12" ry="5" transform="rotate(-38 46 46)"/>
+                        <ellipse cx="58" cy="26" rx="10" ry="4.4" transform="rotate(26 58 26)"/>
+                    </g>
+                </svg>
+
+                @if($heroVideoUrl)
+                    <video class="ae__prod" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+                        <source src="{{ $heroVideoUrl }}" type="video/{{ $heroExt === 'mov' ? 'quicktime' : $heroExt }}">
+                    </video>
+                @else
+                    <img class="ae__prod" src="{{ $heroImg }}" alt="Belleza Áurea — cosmética e insumos de belleza" fetchpriority="high" decoding="async" width="640" height="480">
+                @endif
             </div>
-            @endif
-            @if($hero->stat2_number)
-            <div class="ba-hero__meta-item">
-                <span class="ba-hero__meta-num">{{ $hero->stat2_number }}</span>
-                <span class="ba-hero__meta-lbl">{{ $hero->stat2_label }}</span>
-            </div>
-            @endif
-        </div>
-        @endif
-    </div>
-
-    <div class="ba-hero__right" aria-hidden="true">
-        {{-- Hojas botánicas decorativas --}}
-        <svg class="ba-hero__leaf" style="top:10%;left:6%;width:130px;" viewBox="0 0 120 120" fill="none">
-            <path d="M20 100 Q 60 60 40 20 M 20 100 Q 70 80 90 40" stroke="#A8B29A" stroke-width="1" stroke-linecap="round"/>
-            <ellipse cx="48" cy="50" rx="11" ry="4" transform="rotate(-30 48 50)" fill="#A8B29A" opacity=".6"/>
-            <ellipse cx="68" cy="32" rx="9" ry="3.5" transform="rotate(-15 68 32)" fill="#A8B29A" opacity=".6"/>
-        </svg>
-        <svg class="ba-hero__leaf" style="bottom:8%;right:6%;width:160px;transform:scaleX(-1);" viewBox="0 0 120 120" fill="none">
-            <path d="M20 100 Q 60 60 40 20 M 20 100 Q 70 80 90 40 M 38 70 Q 70 60 70 30" stroke="#A8B29A" stroke-width="1" stroke-linecap="round"/>
-            <ellipse cx="48" cy="50" rx="11" ry="4" transform="rotate(-30 48 50)" fill="#A8B29A" opacity=".5"/>
-            <ellipse cx="68" cy="32" rx="9" ry="3.5" transform="rotate(-15 68 32)" fill="#A8B29A" opacity=".5"/>
-        </svg>
-
-        <div class="ba-hero__product">
-            @php
-                // Detectar si HeroSetting tiene un video subido. Soportamos
-                // media_type='video' o media_path con extensión de video.
-                $videoExts = ['mp4', 'webm', 'mov'];
-                $heroMedia = $hero->media_path ?? null;
-                $heroExt = $heroMedia ? strtolower(pathinfo($heroMedia, PATHINFO_EXTENSION)) : null;
-                $isHeroVideo = ($hero->media_type ?? null) === 'video'
-                    || ($heroMedia && in_array($heroExt, $videoExts, true));
-                $heroVideoUrl = $isHeroVideo && $heroMedia ? asset('storage/'.$heroMedia) : null;
-                $heroImageUrl = (! $isHeroVideo && $heroMedia) ? asset('storage/'.$heroMedia) : null;
-            @endphp
-
-            @if($heroVideoUrl)
-                {{-- Video b-roll: autoplay muted loop. preload="auto" para que arranque sin flash de imagen
-                     y SIN poster (que provocaba el "salto" de imagen → video que veía el cliente). --}}
-                <video class="ba-hero__video"
-                       autoplay muted loop playsinline preload="auto"
-                       aria-hidden="true">
-                    <source src="{{ $heroVideoUrl }}" type="video/{{ $heroExt === 'mov' ? 'quicktime' : $heroExt }}">
-                </video>
-            @elseif($heroImageUrl)
-                <img src="{{ $heroImageUrl }}" alt="{{ $hero->title_line1 ?? 'Belleza Áurea' }}">
-            @elseif($starProduct && !empty($starProduct->images))
-                <img src="{{ asset('storage/'.$starProduct->images[0]) }}" alt="{{ $starProduct->name }} — producto destacado de Belleza Áurea">
-            @else
-                <img src="{{ asset('img/brand/logo-transparent.png') }}" alt="Belleza Áurea — cosmética natural">
-            @endif
         </div>
     </div>
 </section>
@@ -1730,62 +1786,53 @@
             <div class="ba-divider"></div>
         </header>
 
-        @php
-            // Gradientes áureos como fallback cuando la categoría no tiene imagen.
-            // Sage / blush / gold / cream / taupe / olive
-            $catGradients = [
-                'linear-gradient(135deg,#BE9A53 0%,#E8CC92 60%,#FBF4E6 100%)',  // gold cream
-                'linear-gradient(135deg,#8A9680 0%,#A8B29A 60%,#E5EBD8 100%)',  // sage
-                'linear-gradient(135deg,#C9A693 0%,#E8D1C5 60%,#F7E8DE 100%)',  // blush taupe
-                'linear-gradient(135deg,#A8825A 0%,#D9B56D 60%,#F0DEB0 100%)',  // bronze
-                'linear-gradient(135deg,#7A8470 0%,#9DA890 60%,#D9E0CC 100%)',  // moss
-                'linear-gradient(135deg,#B89A7C 0%,#D4BC9E 60%,#F2E5D2 100%)',  // sand
-                'linear-gradient(135deg,#704A3B 0%,#A47659 60%,#E8C9A8 100%)',  // chocolate
-                'linear-gradient(135deg,#9C7A8E 0%,#C9A8B5 60%,#EBD3DA 100%)',  // mauve
-            ];
-        @endphp
-
-        <div class="ba-cats">
-            @foreach($categories as $i => $cat)
+        <div class="aeg">
+            @foreach($categories->take(8) as $i => $cat)
                 @php
                     $count = $cat->products_count ?? 0;
                     $catLink = route('products.index', ['category' => $cat->slug]);
-                    $fallback = $catGradients[$i % count($catGradients)];
+                    $catImg = $cat->image ? asset('storage/'.$cat->image) : null;
+                    // Fallback: si la categoría no tiene foto, usar la del primer producto (prioriza destacados)
+                    if (! $catImg) {
+                        $fp = $cat->products()->where('is_active', 1)
+                                  ->whereNotNull('images')->where('images', '!=', '[]')
+                                  ->orderByDesc('is_featured')->first();
+                        if ($fp && ! empty($fp->images)) {
+                            $catImg = asset('storage/'.$fp->images[0]);
+                        }
+                    }
                 @endphp
                 <a href="{{ $catLink }}"
-                   class="ba-cat"
+                   class="aeg__card"
                    data-anim="fade-up"
                    style="--stagger: {{ $i }};"
                    aria-label="Explorar {{ $cat->name }} — {{ $count }} producto{{ $count === 1 ? '' : 's' }}">
-                    @if($cat->image)
-                        <div class="ba-cat__bg" style="background-image:url('{{ asset('storage/'.$cat->image) }}');"></div>
-                    @else
-                        <div class="ba-cat__bg" style="background-image:{{ $fallback }};"></div>
-                    @endif
-                    <div class="ba-cat__overlay"></div>
-                    <div class="ba-cat__body">
-                        @if($count > 0)
-                        <span class="ba-cat__count">{{ $count }} producto{{ $count === 1 ? '' : 's' }}</span>
-                        @endif
-                        <h3 class="ba-cat__name">{{ $cat->name }}</h3>
-                        @if($cat->description)
-                        <p class="ba-cat__desc">{{ \Illuminate\Support\Str::limit($cat->description, 110) }}</p>
-                        @endif
-                        <span class="ba-cat__cta">
-                            Explorar
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="aeg__ring">
+                        <span class="aeg__circle">
+                            @if($catImg)
+                                <img src="{{ $catImg }}" alt="{{ $cat->name }} — insumos y cosmética de belleza | Belleza Áurea" loading="lazy" decoding="async">
+                            @else
+                                <span class="aeg__ph">{{ mb_substr($cat->name, 0, 1) }}</span>
+                            @endif
                         </span>
-                    </div>
+                        <img class="aeg__wreath" src="{{ asset('img/patterns/wreath.svg') }}" alt="" aria-hidden="true">
+                    </span>
+                    <span class="aeg__name">{{ $cat->name }}</span>
+                    @if($count > 0)
+                    <span class="aeg__count">{{ $count }} producto{{ $count === 1 ? '' : 's' }}</span>
+                    @endif
                 </a>
             @endforeach
         </div>
 
-        <div style="text-align:center;margin-top:48px;" data-anim="fade-up">
+        <div style="text-align:center;margin-top:52px;" data-anim="fade-up">
             <a href="{{ route('products.index') }}" class="ba-btn-ghost">Ver todas las categorías</a>
         </div>
     </div>
 </section>
 @endif
+
+@include('partials.ba-divider')
 
 {{-- ============================================================
      4. CATÁLOGO — Productos destacados con tabs filtro
@@ -1802,6 +1849,33 @@
 @endphp
 
 @if($allProducts->isNotEmpty())
+<style>
+/* Refinamiento elegante botánico — tarjetas de producto + tabs */
+.ba-card__img{border-radius:16px;border:1px solid rgba(217,181,109,.2);
+    background:linear-gradient(155deg,#FBF8F2 0%,#F3ECDF 100%);}
+.ba-card:hover .ba-card__img{border-color:rgba(217,181,109,.5);
+    box-shadow:0 30px 56px -24px rgba(190,154,83,.45);}
+.ba-card__price{color:#BE9A53;}
+/* Ramito decorativo en la esquina de la tarjeta */
+.ba-card::after{content:"";position:absolute;right:-6px;bottom:-4px;width:38px;height:50px;z-index:0;
+    background:url('{{ asset('img/patterns/leaf-corner.svg') }}') no-repeat center/contain;
+    opacity:.5;transform:rotate(6deg);pointer-events:none;
+    transition:transform .5s cubic-bezier(.2,.7,.3,1),opacity .5s ease;}
+.ba-card:hover::after{opacity:.8;transform:rotate(0deg) translateY(-3px);}
+/* Calma el color chillón de fotos de proveedor — solo escritorio (hover); móvil a todo color */
+@media (hover:hover){
+    .ba-card__img img{filter:saturate(.8) brightness(1.02) contrast(.96);}
+    .ba-card:hover .ba-card__img img{filter:brightness(1.03);}
+}
+.ba-tabs{background:rgba(255,255,255,.7);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    border-color:rgba(217,181,109,.3);}
+.ba-tab.is-active{background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#fff;
+    box-shadow:0 8px 20px -8px rgba(190,154,83,.7);}
+/* Botón ghost coherente con el resto */
+.ba-btn-ghost{border-radius:999px;border:1.5px solid rgba(42,38,32,.22);color:#2E2A26;
+    padding:15px 30px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;transition:all .35s ease;}
+.ba-btn-ghost:hover{border-color:#BE9A53;color:#A9853C;transform:translateY(-2px);}
+</style>
 <section class="ba-section" aria-labelledby="catalog-title"
          x-data="{ tab: 'all' }">
     <div class="ba-container">
@@ -1966,11 +2040,32 @@
 </section>
 @endif
 
+@include('partials.ba-divider')
+
 {{-- ============================================================
      5. STAR PRODUCT — Split layout editorial
      ============================================================ --}}
 @if($starProduct)
-<section class="ba-section ba-section--cream" aria-labelledby="star-title">
+<style>
+/* Refinamiento elegante botánico — Producto estrella + botón primario global */
+.ba-star{position:relative;}
+.ba-star__visual{border-radius:20px;border:5px solid #FBF8F2;
+    box-shadow:0 44px 84px -34px rgba(120,92,44,.5),0 10px 26px -16px rgba(0,0,0,.18);}
+.ba-star__price{color:#BE9A53;}
+.ba-star__visual::after{content:"";position:absolute;top:-20px;left:-16px;width:74px;height:96px;z-index:3;
+    background:url('{{ asset('img/patterns/leaf-corner.svg') }}') no-repeat center/contain;
+    transform:rotate(-14deg);opacity:.9;pointer-events:none;
+    filter:drop-shadow(0 6px 10px rgba(120,92,44,.18));}
+
+/* Botón primario unificado a dorado (antes negro) — coherencia en todo el sitio */
+.ba-btn-primary{background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#fff;
+    box-shadow:0 16px 32px -12px rgba(190,154,83,.72);}
+.ba-btn-primary::before{opacity:0 !important;}
+.ba-btn-primary:hover{transform:translateY(-3px);color:#fff;
+    box-shadow:0 22px 44px -12px rgba(190,154,83,.9);}
+.ba-section--ink .ba-btn-primary{box-shadow:0 16px 32px -12px rgba(0,0,0,.4);}
+</style>
+<section class="ba-section ba-section--cream ba-section--float" aria-labelledby="star-title">
     <div class="ba-container">
         <div class="ba-star">
             <div class="ba-star__visual" data-anim="fade-right">
@@ -2002,6 +2097,8 @@
 </section>
 @endif
 
+@include('partials.ba-divider')
+
 {{-- ============================================================
      6. BENEFITS — Belleza con propósito
      ============================================================ --}}
@@ -2028,6 +2125,66 @@
         return $iconDefault;
     };
 @endphp
+<style>
+/* Refinamiento elegante botánico — tarjetas de beneficios con ramito */
+.ba-benefit{border-radius:18px;}
+.ba-benefit > *{position:relative;z-index:1;}
+.ba-benefit::after{content:"";position:absolute;right:8px;bottom:6px;width:42px;height:54px;z-index:0;
+    background:url('{{ asset('img/patterns/leaf-corner.svg') }}') no-repeat center/contain;
+    opacity:.4;transform:rotate(8deg);pointer-events:none;
+    transition:transform .5s cubic-bezier(.2,.7,.3,1),opacity .5s ease;}
+.ba-benefit:hover::after{opacity:.72;transform:rotate(0deg) translateY(-3px);}
+
+/* ─── Iconos animados (al pasar el mouse por la tarjeta) ─── */
+.ba-benefit__icon{position:relative;overflow:visible;}
+.ba-benefit__icon svg{transition:transform .4s cubic-bezier(.2,.7,.3,1);}
+
+/* Carrito / despacho: se desplaza como manejando */
+.ba-benefit:hover .ba-benefit__icon--cart svg{animation:ba-drive 1s ease-in-out infinite;}
+@keyframes ba-drive{0%,100%{transform:translateX(-2px);}50%{transform:translateX(3px) translateY(-1px);}}
+
+/* Estrella / calidad: crece y gira un poco */
+.ba-benefit:hover .ba-benefit__icon--star svg{animation:ba-starpulse 1.1s ease-in-out infinite;}
+@keyframes ba-starpulse{0%,100%{transform:scale(1) rotate(0);}50%{transform:scale(1.28) rotate(10deg);}}
+
+/* Etiqueta / precio: se balancea */
+.ba-benefit:hover .ba-benefit__icon--tag svg{animation:ba-swing 1.1s ease-in-out infinite;transform-origin:72% 22%;}
+@keyframes ba-swing{0%,100%{transform:rotate(-9deg);}50%{transform:rotate(9deg);}}
+
+/* Grid / lugar: latido */
+.ba-benefit:hover .ba-benefit__icon--grid svg{animation:ba-beat 1s ease-in-out infinite;}
+@keyframes ba-beat{0%,100%{transform:scale(1);}50%{transform:scale(1.16);}}
+
+/* Default / spark: gira */
+.ba-benefit:hover .ba-benefit__icon--default svg{animation:ba-turn 2.4s linear infinite;}
+@keyframes ba-turn{to{transform:rotate(360deg);}}
+
+/* Destellitos de la estrella — titilan siempre */
+.ba-spk{position:absolute;width:12px;height:12px;border-radius:50%;pointer-events:none;opacity:0;z-index:3;
+    background:radial-gradient(circle,#ffffff 0%,#FBEFC8 42%,rgba(217,181,109,0) 72%);
+    filter:drop-shadow(0 0 4px rgba(255,248,222,1)) drop-shadow(0 0 9px rgba(232,204,146,.85));
+    animation:ba-spk 1.9s ease-in-out infinite;}
+/* Glint en cruz (destello de estrella) */
+.ba-spk::before,.ba-spk::after{content:"";position:absolute;left:50%;top:50%;border-radius:2px;}
+.ba-spk::before{width:1.6px;height:210%;transform:translate(-50%,-50%);
+    background:linear-gradient(to bottom,transparent,rgba(255,255,255,.95),transparent);}
+.ba-spk::after{height:1.6px;width:210%;transform:translate(-50%,-50%);
+    background:linear-gradient(to right,transparent,rgba(255,255,255,.95),transparent);}
+.ba-spk--1{top:-9px;right:-6px;animation-delay:0s;}
+.ba-spk--2{top:16px;right:-11px;animation-delay:.5s;}
+.ba-spk--3{top:-11px;left:-3px;animation-delay:1s;}
+.ba-spk--4{bottom:-8px;left:10px;animation-delay:1.4s;}
+.ba-spk--5{top:6px;left:-11px;animation-delay:.8s;}
+@keyframes ba-spk{0%,100%{opacity:0;transform:scale(.2);}35%{opacity:1;transform:scale(1);}60%{opacity:.85;transform:scale(1.06);}}
+/* Al pasar el mouse titilan más rápido */
+.ba-benefit:hover .ba-spk{animation-duration:1.1s;}
+
+@media(prefers-reduced-motion:reduce){
+    .ba-benefit__icon--cart svg,.ba-benefit__icon--star svg,.ba-benefit__icon--tag svg,
+    .ba-benefit__icon--grid svg,.ba-benefit__icon--default svg,.ba-spk{animation:none!important;}
+    .ba-spk{opacity:.85!important;}
+}
+</style>
 <section class="ba-section ba-benefits-wrap" aria-labelledby="benefits-title">
     <div class="ba-container">
         <header class="ba-section-head" data-anim="fade-up">
@@ -2041,9 +2198,23 @@
 
         <div class="ba-benefits">
             @foreach($benefitsCards->values() as $i => $b)
+                @php
+                    $bt = mb_strtolower($b['title']);
+                    $iconType = 'default';
+                    foreach (['precio' => 'tag', 'lugar' => 'grid', 'calidad' => 'star', 'despacho' => 'cart'] as $k => $type) {
+                        if (str_contains($bt, $k)) { $iconType = $type; break; }
+                    }
+                @endphp
                 <div class="ba-benefit" data-anim="fade-up" style="--stagger: {{ $i }};">
-                    <div class="ba-benefit__icon" aria-hidden="true">
+                    <div class="ba-benefit__icon ba-benefit__icon--{{ $iconType }}" aria-hidden="true">
                         {!! $pickIcon($b['title']) !!}
+                        @if($iconType === 'star')
+                            <span class="ba-spk ba-spk--1"></span>
+                            <span class="ba-spk ba-spk--2"></span>
+                            <span class="ba-spk ba-spk--3"></span>
+                            <span class="ba-spk ba-spk--4"></span>
+                            <span class="ba-spk ba-spk--5"></span>
+                        @endif
                     </div>
                     <div class="ba-benefit__num">— {{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</div>
                     <h3 class="ba-benefit__title">{{ $b['title'] }}</h3>
@@ -2054,6 +2225,8 @@
     </div>
 </section>
 @endif
+
+@include('partials.ba-divider')
 
 {{-- ============================================================
      7. EDITORIAL QUOTE — Manifesto
@@ -2070,6 +2243,12 @@
         <ellipse cx="48" cy="50" rx="11" ry="4" transform="rotate(-30 48 50)" fill="#D9B56D" opacity=".5"/>
         <ellipse cx="68" cy="32" rx="9" ry="3.5" transform="rotate(-15 68 32)" fill="#D9B56D" opacity=".5"/>
     </svg>
+
+    {{-- Destellitos de rocío sobre el follaje de las esquinas --}}
+    <span class="ba-dew" style="top:64px;left:120px;z-index:1;--d:0s" aria-hidden="true"></span>
+    <span class="ba-dew" style="top:110px;left:58px;z-index:1;--d:1.1s" aria-hidden="true"></span>
+    <span class="ba-dew" style="bottom:66px;right:122px;z-index:1;--d:.6s" aria-hidden="true"></span>
+    <span class="ba-dew" style="bottom:112px;right:60px;z-index:1;--d:1.5s" aria-hidden="true"></span>
 
     <div class="ba-quote" data-anim="fade-in">
         <div class="ba-quote__mark" aria-hidden="true">&ldquo;</div>
@@ -2089,7 +2268,8 @@
      8. SETS / RITUALES — Split con sets
      ============================================================ --}}
 @if($toallitas->isNotEmpty())
-<section class="ba-section" aria-labelledby="sets-title">
+@include('partials.ba-divider')
+<section class="ba-section ba-section--float" aria-labelledby="sets-title">
     <div class="ba-container">
         <div class="ba-sets">
             <div data-anim="fade-right">
@@ -2143,6 +2323,17 @@
      9. COMPARISON — Con vs Sin ritual
      ============================================================ --}}
 @if(!empty($homePage->comparison_without_items) || !empty($homePage->comparison_with_items))
+@include('partials.ba-divider')
+<style>
+/* Ramito botánico en la columna ganadora de la comparativa */
+.ba-compare__col--with .ba-compare__label,
+.ba-compare__col--with .ba-compare__list{position:relative;z-index:1;}
+.ba-compare__col--with::after{content:"";position:absolute;right:12px;bottom:10px;width:46px;height:60px;z-index:0;
+    background:url('{{ asset('img/patterns/leaf-corner.svg') }}') no-repeat center/contain;
+    opacity:.42;transform:rotate(8deg);pointer-events:none;
+    transition:transform .5s cubic-bezier(.2,.7,.3,1),opacity .5s ease;}
+.ba-compare__col--with:hover::after{opacity:.7;transform:rotate(0deg) translateY(-3px);}
+</style>
 <section class="ba-section ba-section--cream ba-compare-wrap" aria-labelledby="compare-title">
     <div class="ba-container">
         <header class="ba-section-head" data-anim="fade-up">
@@ -2199,11 +2390,21 @@
         ['num' => '100', 'suffix' => '%', 'label' => 'Producto original', 'detail' => 'Solo trabajamos con marcas verificadas y proveedores con trazabilidad.'],
     ];
 @endphp
+@include('partials.ba-divider')
+<style>
+/* Ramito botánico en las tarjetas de cifras */
+.ba-authority__stat > *{position:relative;z-index:1;}
+.ba-authority__stat::after{content:"";position:absolute;right:8px;bottom:6px;width:36px;height:46px;z-index:0;
+    background:url('{{ asset('img/patterns/leaf-corner.svg') }}') no-repeat center/contain;
+    opacity:.34;transform:rotate(8deg);pointer-events:none;
+    transition:transform .5s cubic-bezier(.2,.7,.3,1),opacity .5s ease;}
+.ba-authority__stat:hover::after{opacity:.62;transform:rotate(0deg) translateY(-2px);}
+</style>
 <section class="ba-section ba-authority" aria-labelledby="auth-title">
     <div class="ba-container">
         <header class="ba-section-head" data-anim="fade-up">
             <span class="ba-section-head__label">Mayorista en Colombia</span>
-            <h2 id="auth-title" class="ba-section-head__title">Tu distribuidora de productos profesionales de belleza</h2>
+            <h2 id="auth-title" class="ba-section-head__title">{{ $homePage->authority_title ?? 'Tu distribuidora de productos profesionales de belleza' }}</h2>
             <div class="ba-divider"></div>
         </header>
 
@@ -2360,11 +2561,12 @@
      Solo se renderiza si el admin sube testimonios reales en la BD.
      ============================================================ --}}
 @if($testimonials->count())
+@include('partials.ba-divider')
 <section class="ba-section" aria-labelledby="tests-title">
     <div class="ba-container">
         <header class="ba-section-head" data-anim="fade-up">
             <span class="ba-section-head__label">Testimonios</span>
-            <h2 id="tests-title" class="ba-section-head__title">Lo que dicen nuestras clientes</h2>
+            <h2 id="tests-title" class="ba-section-head__title">{{ $homePage->testimonials_title ?? 'Lo que dicen nuestras clientes' }}</h2>
             <div class="ba-divider"></div>
         </header>
 
@@ -2388,11 +2590,12 @@
      11. FAQ — Accordion semántico (SEO)
      ============================================================ --}}
 @if(!empty($homePage->faqs))
-<section class="ba-section ba-section--cream-soft" aria-labelledby="faq-title">
+@include('partials.ba-divider')
+<section class="ba-section ba-section--cream-soft ba-section--float" aria-labelledby="faq-title">
     <div class="ba-container">
         <header class="ba-section-head" data-anim="fade-up">
             <span class="ba-section-head__label">FAQ</span>
-            <h2 id="faq-title" class="ba-section-head__title">Preguntas frecuentes</h2>
+            <h2 id="faq-title" class="ba-section-head__title">{{ $homePage->faq_title ?? 'Preguntas frecuentes' }}</h2>
             <div class="ba-divider"></div>
         </header>
 
@@ -2413,7 +2616,40 @@
 {{-- ============================================================
      12. FINAL CTA — Dark ink
      ============================================================ --}}
+@include('partials.ba-divider')
+<style>
+/* CTA final — botones pill + decoración botánica dorada sobre oscuro */
+.ba-section--ink{position:relative;overflow:hidden;}
+.ba-btn-gold,.ba-btn-outline-light{border-radius:999px;}
+.ba-btn-gold{box-shadow:0 16px 32px -12px rgba(217,181,109,.55);}
+.ba-cta{position:relative;z-index:2;}
+.ba-cta-leaf{position:absolute;z-index:1;pointer-events:none;opacity:.5;}
+.ba-cta-leaf--tl{top:36px;left:clamp(20px,5vw,64px);width:92px;transform:rotate(-6deg);}
+.ba-cta-leaf--br{bottom:36px;right:clamp(20px,5vw,64px);width:106px;transform:rotate(184deg);}
+@media(max-width:760px){.ba-cta-leaf{display:none;}}
+</style>
 <section class="ba-section ba-section--ink" aria-labelledby="cta-title">
+    {{-- Decoración botánica dorada + destellos de rocío --}}
+    <span class="ba-cta-leaf ba-cta-leaf--tl" aria-hidden="true">
+        <svg viewBox="0 0 120 120" fill="none">
+            <path d="M20 100 Q 60 60 40 20 M 20 100 Q 70 80 90 40" stroke="#D9B56D" stroke-width="1.2" stroke-linecap="round"/>
+            <ellipse cx="48" cy="50" rx="12" ry="4.2" transform="rotate(-30 48 50)" fill="#D9B56D" opacity=".7"/>
+            <ellipse cx="68" cy="32" rx="10" ry="3.6" transform="rotate(-15 68 32)" fill="#D9B56D" opacity=".7"/>
+            <ellipse cx="34" cy="72" rx="10" ry="3.6" transform="rotate(-45 34 72)" fill="#D9B56D" opacity=".6"/>
+        </svg>
+    </span>
+    <span class="ba-cta-leaf ba-cta-leaf--br" aria-hidden="true">
+        <svg viewBox="0 0 120 120" fill="none">
+            <path d="M20 100 Q 60 60 40 20 M 20 100 Q 70 80 90 40 M 38 70 Q 70 60 70 30" stroke="#D9B56D" stroke-width="1.2" stroke-linecap="round"/>
+            <ellipse cx="48" cy="50" rx="12" ry="4.2" transform="rotate(-30 48 50)" fill="#D9B56D" opacity=".65"/>
+            <ellipse cx="68" cy="32" rx="10" ry="3.6" transform="rotate(-15 68 32)" fill="#D9B56D" opacity=".65"/>
+        </svg>
+    </span>
+    <span class="ba-dew" style="top:76px;left:15%;z-index:1;--d:0s" aria-hidden="true"></span>
+    <span class="ba-dew" style="top:130px;left:9%;z-index:1;--d:1s" aria-hidden="true"></span>
+    <span class="ba-dew" style="bottom:80px;right:15%;z-index:1;--d:.6s" aria-hidden="true"></span>
+    <span class="ba-dew" style="bottom:132px;right:9%;z-index:1;--d:1.5s" aria-hidden="true"></span>
+
     <div class="ba-cta">
         <h2 id="cta-title" class="ba-cta__title" data-anim="fade-up">
             @php

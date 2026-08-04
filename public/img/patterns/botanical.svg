@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="560" viewBox="0 0 560 560" fill="none">
+  <!-- Motivos botánicos dispersos e irregulares, tenues (visibilidad media) -->
+
+  <!-- sprig 1 (sage) -->
+  <g transform="translate(72,110) rotate(-12)" opacity="0.26">
+    <path d="M0 44 Q 22 24 18 -4" stroke="#A8B29A" stroke-width="1.2" stroke-linecap="round"/>
+    <ellipse cx="16" cy="20" rx="8" ry="3" transform="rotate(-38 16 20)" fill="#A8B29A"/>
+    <ellipse cx="6" cy="6" rx="6.5" ry="2.6" transform="rotate(-60 6 6)" fill="#A8B29A"/>
+    <ellipse cx="17" cy="2" rx="6" ry="2.4" transform="rotate(-18 17 2)" fill="#A8B29A"/>
+  </g>
+
+  <!-- lone leaf (sage) -->
+  <g transform="translate(322,64) rotate(34)" opacity="0.23">
+    <ellipse cx="0" cy="0" rx="11" ry="4" fill="#A8B29A"/>
+    <path d="M-11 0 H 11" stroke="#8A9680" stroke-width="0.8"/>
+  </g>
+
+  <!-- tiny flower (gold) -->
+  <g transform="translate(452,168)" opacity="0.22">
+    <circle cx="0" cy="-6" r="2.4" fill="#D9B56D"/>
+    <circle cx="6" cy="-2" r="2.4" fill="#D9B56D"/>
+    <circle cx="4" cy="5" r="2.4" fill="#D9B56D"/>
+    <circle cx="-4" cy="5" r="2.4" fill="#D9B56D"/>
+    <circle cx="-6" cy="-2" r="2.4" fill="#D9B56D"/>
+    <circle cx="0" cy="0" r="2" fill="#C6A052"/>
+  </g>
+
+  <!-- sprig 2 (sage) lower right -->
+  <g transform="translate(430,438) rotate(158)" opacity="0.25">
+    <path d="M0 50 Q 24 28 20 -6" stroke="#A8B29A" stroke-width="1.2" stroke-linecap="round"/>
+    <ellipse cx="18" cy="22" rx="8.5" ry="3.2" transform="rotate(-36 18 22)" fill="#A8B29A"/>
+    <ellipse cx="8" cy="6" rx="7" ry="2.8" transform="rotate(-58 8 6)" fill="#A8B29A"/>
+    <ellipse cx="19" cy="0" rx="6" ry="2.4" transform="rotate(-16 19 0)" fill="#A8B29A"/>
+  </g>
+
+  <!-- lone leaf (gold) -->
+  <g transform="translate(150,406) rotate(-52)" opacity="0.2">
+    <ellipse cx="0" cy="0" rx="10" ry="3.6" fill="#D9B56D"/>
+  </g>
+
+  <!-- small two-leaf (sage) center -->
+  <g transform="translate(258,300) rotate(88)" opacity="0.22">
+    <path d="M0 22 Q 14 10 12 -8" stroke="#A8B29A" stroke-width="1" stroke-linecap="round"/>
+    <ellipse cx="10" cy="8" rx="6.5" ry="2.6" transform="rotate(-40 10 8)" fill="#A8B29A"/>
+    <ellipse cx="11" cy="-6" rx="5.5" ry="2.2" transform="rotate(-14 11 -6)" fill="#A8B29A"/>
+  </g>
+
+  <!-- scattered dots -->
+  <g fill="#D9B56D">
+    <circle cx="500" cy="330" r="1.9" opacity="0.22"/>
+    <circle cx="96" cy="300" r="1.7" opacity="0.2"/>
+    <circle cx="360" cy="500" r="1.9" opacity="0.2"/>
+  </g>
+  <g fill="#A8B29A">
+    <circle cx="210" cy="150" r="1.7" opacity="0.22"/>
+    <circle cx="520" cy="70" r="1.7" opacity="0.21"/>
+    <circle cx="40" cy="470" r="1.7" opacity="0.21"/>
+  </g>
+</svg>

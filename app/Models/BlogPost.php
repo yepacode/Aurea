@@ -16,12 +16,21 @@ class BlogPost extends Model
         'featured_image_alt',
         'meta_title',
         'meta_description',
+        'meta_keywords',
         'focus_keyword',
         'category',
         'canonical_url',
+        'noindex',
+        'nofollow',
+        'og_type',
         'og_title',
         'og_description',
         'og_image',
+        'twitter_card',
+        'twitter_title',
+        'twitter_description',
+        'twitter_image_path',
+        'custom_schema_markup',
         'reading_time',
         'status',
         'published_at',
@@ -34,6 +43,8 @@ class BlogPost extends Model
         return [
             'published_at' => 'datetime',
             'reading_time' => 'integer',
+            'noindex'      => 'boolean',
+            'nofollow'     => 'boolean',
         ];
     }
 

@@ -2,20 +2,18 @@
 
 @section('title', $seo['title'])
 @section('meta_description', $seo['description'])
+@section('robots', $seo['robots'])
 @section('canonical', $seo['canonical'])
+@if(!empty($seo['keywords']))@section('keywords', $seo['keywords'])@endif
 @section('og_type', $seo['og_type'])
 @section('og_title', $seo['og_title'])
 @section('og_description', $seo['og_description'])
 @section('og_image', $seo['og_image'])
+@section('twitter_card', $seo['twitter_card'])
 @section('twitter_title', $seo['twitter_title'])
 @section('twitter_description', $seo['twitter_description'])
 @section('twitter_image', $seo['twitter_image'])
-
-@push('head')
-    @if($post->focus_keyword)
-        <meta name="keywords" content="{{ $post->focus_keyword }}">
-    @endif
-@endpush
+@if(!empty($seo['custom_schema']))@section('custom_schema', $seo['custom_schema'])@endif
 
 @push('schema')
     {!! $schema !!}
@@ -32,9 +30,9 @@
     .article-content strong { font-weight:600; color:var(--color-text-primary); }
     .article-content ul, .article-content ol { margin:1rem 0 1.25rem 1.5rem; }
     .article-content li { margin-bottom:.5rem; line-height:1.7; }
-    .article-content blockquote { border-left:3px solid #D9B56D; padding:12px 20px; margin:1.5rem 0; background:rgba(56,130,221,0.06); border-radius:0 8px 8px 0; font-style:italic; color:var(--color-text-secondary); }
+    .article-content blockquote { border-left:3px solid #D9B56D; padding:12px 20px; margin:1.5rem 0; background:rgba(217,181,109,0.06); border-radius:0 8px 8px 0; font-style:italic; color:var(--color-text-secondary); }
     .article-content table { width:100%; border-collapse:collapse; margin:1.5rem 0; font-size:14px; }
-    .article-content th { background:rgba(56,130,221,0.1); padding:10px 14px; text-align:left; font-weight:500; border-bottom:1px solid rgba(56,130,221,0.2); }
+    .article-content th { background:rgba(217,181,109,0.1); padding:10px 14px; text-align:left; font-weight:500; border-bottom:1px solid rgba(217,181,109,0.2); }
     .article-content td { padding:10px 14px; border-bottom:0.5px solid var(--color-border-tertiary); }
     .article-content a { color:#D9B56D; text-decoration:underline; }
     .article-content img { border-radius:12px; margin:1.5rem 0; max-width:100%; }
@@ -56,9 +54,9 @@
     .sidebar-product { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:0.5px solid var(--color-border-tertiary); cursor:pointer; transition:opacity .15s; }
     .sidebar-product:last-of-type { border-bottom:none; }
     .sidebar-product:hover { opacity:.75; }
-    .sidebar-product-img { width:48px; height:48px; border-radius:8px; flex-shrink:0; background:linear-gradient(135deg,#0f1b3d,#1a3a6e); }
+    .sidebar-product-img { width:48px; height:48px; border-radius:8px; flex-shrink:0; background:linear-gradient(135deg,#3A352E,#2E2A26); }
 
-    .sidebar-newsletter { background:rgba(56,130,221,0.06); border:0.5px solid rgba(56,130,221,0.2); border-radius:12px; padding:20px; }
+    .sidebar-newsletter { background:rgba(217,181,109,0.06); border:0.5px solid rgba(217,181,109,0.2); border-radius:12px; padding:20px; }
     .sidebar-newsletter input[type="email"] { width:100%; border:0.5px solid var(--color-border-secondary); border-radius:8px; padding:8px 12px; font-size:13px; margin-bottom:8px; background:var(--color-background-primary); color:var(--color-text-primary); }
     .sidebar-newsletter button { width:100%; background:#D9B56D; color:#fff; border:none; border-radius:8px; padding:9px; font-size:13px; cursor:pointer; transition:background .15s; }
     .sidebar-newsletter button:hover { background:#BE9A53; }
@@ -89,18 +87,20 @@
     .p-card { border-radius:12px; overflow:hidden; border:0.5px solid var(--color-border-tertiary); background:var(--color-background-primary); transition:transform .25s ease, box-shadow .25s ease; }
     .p-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.1); }
 
-    /* ── Hero ── */
-    .blog-hero { position:relative; min-height:520px; display:flex; align-items:flex-end; overflow:hidden; background:#0a0f1e; }
-    .blog-hero-bg { position:absolute; inset:0; }
-    .blog-hero-bg img { width:100%; height:100%; object-fit:cover; opacity:.45; filter:saturate(0.7); }
-    .blog-hero-overlay { position:absolute; inset:0; background:linear-gradient(to top, #0a0f1e 0%, #0a0f1e 20%, rgba(10,15,30,0.85) 45%, rgba(10,15,30,0.4) 70%, rgba(10,15,30,0.15) 100%); pointer-events:none; }
-    .blog-hero-glow { position:absolute; top:-80px; left:50%; transform:translateX(-50%); width:600px; height:400px; background:radial-gradient(ellipse, rgba(56,130,220,0.12) 0%, transparent 70%); pointer-events:none; }
-    .blog-hero-content { position:relative; z-index:2; width:100%; max-width:800px; margin:0 auto; padding:0 32px 56px; }
+    /* ── Hero (oscuro elegante, aire de marca) ── */
+    .blog-hero { position:relative; overflow:hidden; background:#2E2A26; padding:clamp(50px,8vh,110px) 0 clamp(30px,4vh,52px); }
+    .blog-hero__glow { position:absolute; inset:0; pointer-events:none; opacity:.4; background:radial-gradient(ellipse at 50% 30%, #D9B56D 0%, transparent 60%); }
+    .blog-hero-content { position:relative; z-index:2; width:100%; max-width:820px; margin:0 auto; padding:0 32px; text-align:center; }
+    .blog-hero__leaf { position:absolute; z-index:1; pointer-events:none; opacity:.6; }
+    .blog-hero__leaf--tl { top:26px; left:clamp(16px,5vw,84px); width:82px; transform:rotate(-8deg); }
+    .blog-hero__leaf--br { bottom:20px; right:clamp(16px,5vw,84px); width:96px; transform:rotate(184deg); }
+    .blog-cover { max-width:820px; margin:26px auto 0; border-radius:20px; overflow:hidden; aspect-ratio:16/8; box-shadow:0 40px 84px -40px rgba(0,0,0,.45); border:1px solid rgba(217,181,109,.22); }
+    .blog-cover img { width:100%; height:100%; object-fit:cover; }
+    @media(max-width:760px){ .blog-hero__leaf{display:none;} }
     .hero-anim { opacity:0; transform:translateY(12px); }
 
     @media(max-width:768px){
-        .blog-hero { min-height:420px!important; }
-        .blog-hero-content { padding:0 20px 40px!important; }
+        .blog-hero-content { padding:0 20px!important; }
     }
 
     @media(prefers-reduced-motion:reduce){
@@ -118,69 +118,64 @@
      ZONA 1 — HERO
      ════════════════════════════════════════════════════════════════ --}}
 <section class="blog-hero">
-    {{-- Background: image or gradient --}}
-    @if($post->image)
-        <div class="blog-hero-bg">
-            <img src="{{ asset('storage/' . $post->image) }}"
-                 alt="{{ $post->featured_image_alt ?? $post->title }}">
-        </div>
-    @else
-        <div class="blog-hero-bg" style="background:linear-gradient(135deg,#0d2137 0%,#1a3a6e 100%);">
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-                <span style="font-size:280px;font-weight:700;color:rgba(255,255,255,0.04);user-select:none;line-height:1;">{{ str_pad($post->id, 2, '0', STR_PAD_LEFT) }}</span>
-            </div>
-        </div>
-    @endif
+    <div class="blog-hero__glow"></div>
+    {{-- Detalles botánicos + rocío --}}
+    <svg class="blog-hero__leaf blog-hero__leaf--tl" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+        <path d="M20 100 Q 60 60 40 20 M 20 100 Q 70 80 90 40" stroke="#D9B56D" stroke-width="1.2" stroke-linecap="round"/>
+        <ellipse cx="48" cy="50" rx="12" ry="4.2" transform="rotate(-30 48 50)" fill="#D9B56D" opacity=".6"/>
+        <ellipse cx="68" cy="32" rx="10" ry="3.6" transform="rotate(-15 68 32)" fill="#D9B56D" opacity=".6"/>
+    </svg>
+    <svg class="blog-hero__leaf blog-hero__leaf--br" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+        <path d="M20 100 Q 60 60 40 20 M 20 100 Q 70 80 90 40 M 38 70 Q 70 60 70 30" stroke="#D9B56D" stroke-width="1.2" stroke-linecap="round"/>
+        <ellipse cx="48" cy="50" rx="12" ry="4.2" transform="rotate(-30 48 50)" fill="#D9B56D" opacity=".55"/>
+        <ellipse cx="68" cy="32" rx="10" ry="3.6" transform="rotate(-15 68 32)" fill="#D9B56D" opacity=".55"/>
+    </svg>
+    <span class="ba-dew" style="top:30%;left:15%;z-index:1;--d:0s" aria-hidden="true"></span>
+    <span class="ba-dew" style="top:24%;right:17%;z-index:1;--d:1s" aria-hidden="true"></span>
 
-    {{-- Overlay gradient --}}
-    <div class="blog-hero-overlay"></div>
-
-    {{-- Glow --}}
-    <div class="blog-hero-glow"></div>
-
-    {{-- Content --}}
     <div class="blog-hero-content">
         {{-- Breadcrumb --}}
-        <div class="hero-anim" style="transition:opacity .5s ease,transform .5s ease;margin-bottom:20px;">
-            <span style="font-size:12px;color:rgba(255,255,255,0.3);">
-                <a href="{{ url('/') }}" style="color:rgba(255,255,255,0.3);text-decoration:none;" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">Inicio</a>
-                <span style="margin:0 6px;opacity:.4;">&middot;</span>
-                <a href="{{ route('blog.index') }}" style="color:rgba(255,255,255,0.3);text-decoration:none;" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">Blog</a>
-                <span style="margin:0 6px;opacity:.4;">&middot;</span>
-                {{ Str::limit($post->title, 42) }}
+        <div class="hero-anim" style="transition:opacity .5s ease,transform .5s ease;margin-bottom:16px;">
+            <span style="font-size:12px;color:rgba(247,243,237,0.5);">
+                <a href="{{ url('/') }}" style="color:rgba(247,243,237,0.5);text-decoration:none;" onmouseover="this.style.color='#E8CC92'" onmouseout="this.style.color='rgba(247,243,237,0.5)'">Inicio</a>
+                <span style="margin:0 6px;opacity:.5;">&middot;</span>
+                <a href="{{ $crumbParentUrl ?? route('blog.index') }}" style="color:rgba(247,243,237,0.5);text-decoration:none;" onmouseover="this.style.color='#E8CC92'" onmouseout="this.style.color='rgba(247,243,237,0.5)'">{{ $crumbParentLabel ?? 'Blog' }}</a>
+                <span style="margin:0 6px;opacity:.5;">&middot;</span>
+                <span style="color:rgba(247,243,237,0.75);">{{ Str::limit($post->title, 42) }}</span>
             </span>
         </div>
 
         {{-- Category badge --}}
         <div class="hero-anim" style="transition:opacity .5s ease .1s,transform .5s ease .1s;margin-bottom:16px;">
-            <span style="display:inline-block;font-size:10px;font-weight:500;padding:5px 14px;border-radius:20px;background:rgba(56,130,221,0.2);color:#85B7EB;border:0.5px solid rgba(56,130,221,0.35);letter-spacing:.05em;text-transform:uppercase;">{{ $post->focus_keyword ?? 'Salud visual' }}</span>
+            <span style="display:inline-block;font-size:10px;font-weight:600;padding:5px 14px;border-radius:999px;background:#F1E9DA;color:#A9853C;letter-spacing:.12em;text-transform:uppercase;">{{ $post->focus_keyword ?? $post->category ?? 'Belleza' }}</span>
         </div>
 
         {{-- Title --}}
-        <div class="hero-anim" style="transition:opacity .6s ease .2s,transform .6s ease .2s;margin-bottom:20px;">
-            <h1 class="font-brand" style="font-size:clamp(24px,4vw,38px);font-weight:600;color:#fff;line-height:1.2;max-width:700px;margin:0;">{{ $post->title }}</h1>
+        <div class="hero-anim" style="transition:opacity .6s ease .2s,transform .6s ease .2s;margin-bottom:18px;">
+            <h1 class="font-brand" style="font-family:'Playfair Display',serif;font-size:clamp(28px,4.4vw,46px);font-weight:600;color:#FBF8F2;line-height:1.12;max-width:760px;margin:0 auto;">{{ $post->title }}</h1>
         </div>
 
         {{-- Meta + share --}}
-        <div class="hero-anim" style="transition:opacity .5s ease .35s,transform .5s ease .35s;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-            {{-- Meta left --}}
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                <span style="font-size:12px;color:rgba(255,255,255,0.38);display:flex;align-items:center;gap:4px;">
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="opacity:.5;"><circle cx="6" cy="6" r="5" stroke="white" stroke-width="1"/><path d="M6 3v3l2 1.5" stroke="white" stroke-width="1" stroke-linecap="round"/></svg>
-                    {{ $post->reading_time ?? 1 }} min lectura
-                </span>
-                <span style="color:rgba(255,255,255,0.15);font-size:10px;">&middot;</span>
-                <span style="font-size:12px;color:rgba(255,255,255,0.38);">{{ $post->published_at?->translatedFormat('d M Y') ?? $post->created_at->translatedFormat('d M Y') }}</span>
-                <span style="color:rgba(255,255,255,0.15);font-size:10px;">&middot;</span>
-                <span style="font-size:12px;color:rgba(255,255,255,0.38);">{{ $post->author_name ?? 'nuvion glass' }}</span>
+        <div class="hero-anim" style="transition:opacity .5s ease .35s,transform .5s ease .35s;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:14px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:rgba(247,243,237,0.55);">
+                <span>{{ $post->reading_time ?? 1 }} min lectura</span>
+                <span style="opacity:.5;">&middot;</span>
+                <span>{{ $post->published_at?->translatedFormat('d M Y') ?? $post->created_at->translatedFormat('d M Y') }}</span>
+                <span style="opacity:.5;">&middot;</span>
+                <span>{{ $post->author_name ?? 'Belleza Áurea' }}</span>
             </div>
-
-            {{-- Share button --}}
-            <button onclick="sharePost()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:0.5px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);border-radius:20px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;backdrop-filter:blur(4px);" onmouseover="this.style.background='rgba(255,255,255,0.14)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.6)'">
+            <button onclick="sharePost()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.75);border-radius:999px;padding:7px 16px;font-size:12px;cursor:pointer;transition:all .25s;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);" onmouseover="this.style.borderColor='#E8CC92';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='rgba(255,255,255,0.75)'">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="10.5" cy="2.5" r="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="10.5" r="1.5" stroke="currentColor" stroke-width="1.2"/><circle cx="2.5" cy="6.5" r="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 5.8L9 3.2M4 7.2L9 9.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
                 <span id="share-text">Compartir</span>
             </button>
         </div>
+
+        {{-- Portada (si existe) --}}
+        @if($post->image)
+        <div class="blog-cover hero-anim" style="transition:opacity .6s ease .45s,transform .6s ease .45s;">
+            <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->featured_image_alt ?? $post->title }}">
+        </div>
+        @endif
     </div>
 </section>
 
@@ -235,9 +230,9 @@
 
         {{-- Widget 2: Products --}}
         <div class="sidebar-card">
-            <p class="sidebar-title">Lentes nuvion</p>
+            <p class="sidebar-title">Nuestros productos</p>
             @forelse($products as $prod)
-                <a href="{{ url('/lentes/' . $prod['slug']) }}" class="sidebar-product" style="text-decoration:none; color:inherit;">
+                <a href="{{ route('products.show', $prod['slug']) }}" class="sidebar-product" style="text-decoration:none; color:inherit;">
                     @if(!empty($prod['image']))
                         <div class="sidebar-product-img" style="background:#f1f5f9 url('{{ asset('storage/' . $prod['image']) }}') center/cover no-repeat;"></div>
                     @else
@@ -251,13 +246,13 @@
             @empty
                 <p style="font-size:12px;color:var(--color-text-secondary);margin:0;">Pronto añadiremos productos.</p>
             @endforelse
-            <a href="{{ route('products.index') }}" style="display:inline-block; margin-top:12px; font-size:13px; color:#D9B56D; text-decoration:none;">Ver todos los lentes &rarr;</a>
+            <a href="{{ route('products.index') }}" style="display:inline-block; margin-top:12px; font-size:13px; color:#D9B56D; text-decoration:none;">Ver todos los productos &rarr;</a>
         </div>
 
         {{-- Widget 3: Newsletter --}}
         <div class="sidebar-newsletter">
             <p style="font-size:14px; font-weight:500; color:var(--color-text-primary); margin:0 0 4px;">Recibe más consejos</p>
-            <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 12px;">Tips semanales para cuidar tu visión</p>
+            <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 12px;">Tips semanales para cuidar tu belleza</p>
             <input type="email" placeholder="Tu correo electrónico">
             <button type="button">Suscribirme</button>
         </div>
@@ -277,8 +272,8 @@
             @foreach($recent as $related)
                 @php
                     $gradients = [
-                        'linear-gradient(135deg, #0f1b3d, #1a3a6e)',
-                        'linear-gradient(135deg, #0d2137, #0f4c75)',
+                        'linear-gradient(135deg, #3A352E, #2E2A26)',
+                        'linear-gradient(135deg, #3A352E, #2E2A26)',
                         'linear-gradient(135deg, #1a0a2e, #2d1b69)',
                     ];
                     $grad = $gradients[$loop->index % 3];
@@ -295,7 +290,7 @@
                             </div>
                         @endif
                         @if($related->focus_keyword)
-                            <span style="position:absolute; top:12px; left:12px; background:rgba(56,130,221,0.85); color:#fff; font-size:10px; padding:4px 10px; border-radius:20px; font-weight:500; text-transform:capitalize;">{{ $related->focus_keyword }}</span>
+                            <span style="position:absolute; top:12px; left:12px; background:rgba(217,181,109,0.85); color:#fff; font-size:10px; padding:4px 10px; border-radius:20px; font-weight:500; text-transform:capitalize;">{{ $related->focus_keyword }}</span>
                         @endif
                     </div>
                     <div style="padding:16px 18px 0;">
@@ -329,16 +324,16 @@
 <section class="fw-section" style="background:var(--color-background-primary); padding:48px 24px;">
     <div style="max-width:1100px; margin:0 auto; text-align:center; margin-bottom:32px;">
         <p style="font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#D9B56D; margin-bottom:8px;">PROTEGE TU VISIÓN</p>
-        <h2 class="font-brand" style="font-size:24px; font-weight:700; color:var(--color-text-primary); margin:0 0 6px;">Lentes nuvion glass</h2>
-        <p style="font-size:14px; color:var(--color-text-secondary); margin:0;">Con o sin graduación, todos con cosmética natural</p>
+        <h2 class="font-brand" style="font-size:24px; font-weight:700; color:var(--color-text-primary); margin:0 0 6px;">Nuestros productos</h2>
+        <p style="font-size:14px; color:var(--color-text-secondary); margin:0;">Insumos y cosmética de belleza, con envío a toda Colombia</p>
     </div>
 
     <div class="products-grid" style="max-width:1100px; margin:0 auto;">
         @forelse($products as $i => $prod)
             @php
                 $pGrads = [
-                    'linear-gradient(135deg, #0f1b3d, #1a3a6e)',
-                    'linear-gradient(135deg, #0d2137, #0f4c75)',
+                    'linear-gradient(135deg, #3A352E, #2E2A26)',
+                    'linear-gradient(135deg, #3A352E, #2E2A26)',
                     'linear-gradient(135deg, #1a0a2e, #2d1b69)',
                 ];
             @endphp
@@ -364,7 +359,7 @@
                         @endif
                         <span style="color:#D9B56D; font-weight:600;">{{ $prod['price'] }}</span>
                     </div>
-                    <a href="{{ url('/lentes/' . $prod['slug']) }}" style="display:block; text-align:center; background:#D9B56D; color:#fff; border-radius:8px; padding:10px; font-size:14px; text-decoration:none; transition:background .15s;" onmouseover="this.style.background='#BE9A53'" onmouseout="this.style.background='#D9B56D'">Ver detalle</a>
+                    <a href="{{ route('products.show', $prod['slug']) }}" style="display:block; text-align:center; background:#D9B56D; color:#fff; border-radius:8px; padding:10px; font-size:14px; text-decoration:none; transition:background .15s;" onmouseover="this.style.background='#BE9A53'" onmouseout="this.style.background='#D9B56D'">Ver detalle</a>
                 </div>
             </div>
         @empty
@@ -380,15 +375,15 @@
 {{-- ════════════════════════════════════════════════════════════════
      ZONA 5 — CTA / CONTACTO
      ════════════════════════════════════════════════════════════════ --}}
-<section class="fw-section" style="background:#0a0f1e; padding:64px 24px; text-align:center;">
-    <h2 class="font-brand" style="font-size:28px; font-weight:700; color:#fff; margin:0 0 10px;">¿Tienes dudas sobre qué lentes son para ti?</h2>
+<section class="fw-section" style="background:#2E2A26; padding:64px 24px; text-align:center;">
+    <h2 class="font-brand" style="font-size:28px; font-weight:700; color:#fff; margin:0 0 10px;">¿Buscas los productos ideales para tu ritual?</h2>
     <p style="color:rgba(255,255,255,0.5); margin:0; font-size:15px;">Escríbenos por WhatsApp y te ayudamos a elegir</p>
     <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-top:24px; flex-wrap:wrap;">
         <a href="{{ \App\Models\ContactPageSetting::whatsappUrl() }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:8px; background:#25D366; color:#fff; border-radius:8px; padding:12px 28px; font-size:15px; font-weight:500; text-decoration:none; transition:background .15s;" onmouseover="this.style.background='#1da851'" onmouseout="this.style.background='#25D366'">
             <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.12.553 4.113 1.519 5.845L.053 23.681a.5.5 0 0 0 .611.612l5.836-1.466A11.948 11.948 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-1.97 0-3.834-.558-5.42-1.524l-.389-.233-3.462.87.87-3.462-.233-.389A9.709 9.709 0 0 1 2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z"/></svg>
             WhatsApp
         </a>
-        <a href="{{ route('products.index') }}" style="display:inline-flex; align-items:center; background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:12px 28px; font-size:15px; text-decoration:none; transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.3)'">Ver lentes</a>
+        <a href="{{ route('products.index') }}" style="display:inline-flex; align-items:center; background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:12px 28px; font-size:15px; text-decoration:none; transition:border-color .15s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.6)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.3)'">Ver productos</a>
     </div>
 </section>
 

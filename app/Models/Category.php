@@ -14,6 +14,18 @@ class Category extends Model
         'type_filter',
         'image',
         'sort_order',
+        'promo_2x1',
+        'meta_title', 'meta_description', 'meta_keywords', 'focus_keyword',
+        'canonical_url', 'noindex', 'nofollow',
+        'og_type', 'og_title', 'og_description', 'og_image_path',
+        'twitter_card', 'twitter_title', 'twitter_description', 'twitter_image_path',
+        'custom_schema_markup',
+    ];
+
+    protected $casts = [
+        'promo_2x1' => 'boolean',
+        'noindex'   => 'boolean',
+        'nofollow'  => 'boolean',
     ];
 
     public function products(): HasMany

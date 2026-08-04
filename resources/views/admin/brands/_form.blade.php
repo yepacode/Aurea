@@ -108,22 +108,17 @@
         </div>
     </div>
 
-    {{-- SEO --}}
-    <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-        <h2 class="text-lg font-semibold" style="font-family:'Playfair Display',serif;">SEO</h2>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Meta título</label>
-            <input type="text" name="meta_title" maxlength="255" value="{{ old('meta_title', $brand->meta_title ?? '') }}"
-                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                   placeholder="Auto: '{Nombre} | Belleza Áurea'">
-        </div>
-        <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Meta descripción</label>
-            <textarea name="meta_description" rows="3" maxlength="500"
-                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500"
-                      placeholder="155-160 caracteres óptimo para Google.">{{ old('meta_description', $brand->meta_description ?? '') }}</textarea>
-        </div>
-    </div>
+    {{-- SEO (panel completo reutilizable) --}}
+    @php $seoBrand = $brand ?? new \App\Models\Brand; @endphp
+    @include('admin.partials.seo-panel', [
+        'seo'           => $seoBrand,
+        'ogCol'         => 'og_image_path',
+        'twCol'         => 'twitter_image_path',
+        'baseUrl'       => url('/marcas'),
+        'slug'          => old('slug', $seoBrand->slug ?? ''),
+        'titleFallback' => ($seoBrand->name ?? 'Marca') . ' | Belleza Áurea',
+        'descFallback'  => 'Descripción de la marca…',
+    ])
 
     <div class="flex items-center gap-3">
         <button type="submit" class="px-5 py-2.5 rounded-lg font-semibold text-sm text-white" style="background:#D9B56D;">

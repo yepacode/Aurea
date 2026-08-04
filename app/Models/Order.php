@@ -17,6 +17,7 @@ class Order extends Model
         'total',
         'payment_method',
         'payment_status',
+        'payment_reference',
         'payment_receipt',
         'stripe_payment_intent_id',
         'discount_code',

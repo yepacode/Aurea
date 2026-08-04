@@ -27,13 +27,13 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Título del hero</label>
                     <input type="text" name="hero_title" value="{{ $page->hero_title }}"
-                           placeholder="¿Qué lentes son para ti?"
+                           placeholder="¿Cuál es tu ritual de belleza?"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Subtítulo del hero</label>
                     <input type="text" name="hero_subtitle" value="{{ $page->hero_subtitle }}"
-                           placeholder="Responde 4 preguntas rápidas y te recomendamos los mejores lentes para ti."
+                           placeholder="Responde 4 preguntas rápidas y te recomendamos los mejores productos para tu piel."
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
             </div>
@@ -135,7 +135,7 @@
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Pregunta (visible al usuario)</label>
                                     <input type="text" x-model="question.label"
-                                           placeholder="¿Para qué usarás tus lentes?"
+                                           placeholder="¿Qué buscas para tu piel?"
                                            class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500">
                                 </div>
                             </div>
@@ -163,7 +163,7 @@
                                         </div>
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                                             <input type="text" x-model="option.value"
-                                                   placeholder="Valor (ej: gaming)"
+                                                   placeholder="Valor (ej: piel-grasa)"
                                                    class="w-full rounded-lg border-gray-300 shadow-sm text-xs font-mono focus:border-blue-500 focus:ring-blue-500">
                                             <input type="text" x-model="option.label"
                                                    placeholder="Texto visible"
@@ -255,13 +255,13 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Razón que ve el usuario</label>
                                 <input type="text" x-model="rule.reason"
-                                       placeholder="Ej: Para gaming intenso necesitas filtro de alto rendimiento."
+                                       placeholder="Ej: Para piel grasa, productos de control de grasa y textura ligera."
                                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500">
                             </div>
                         </div>
                     </template>
 
-                    <button type="button" @click="items.push({condition_field:'usage', condition_value:'gaming', product_id:'', reason:''})"
+                    <button type="button" @click="items.push({condition_field:'usage', condition_value:'piel-grasa', product_id:'', reason:''})"
                             class="mt-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 font-medium">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15"/>
@@ -285,13 +285,13 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Meta título</label>
                     <input type="text" name="meta_title" value="{{ $page->meta_title }}"
-                           placeholder="¿Qué lentes necesitas? — Quiz | Belleza Áurea"
+                           placeholder="Quiz de piel | Belleza Áurea"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Meta descripción</label>
                     <textarea name="meta_description" rows="2"
-                              placeholder="Responde 4 preguntas y descubre qué lentes con protección de luz azul son perfectos para ti."
+                              placeholder="Responde 4 preguntas sobre tu piel y descubre los productos de belleza perfectos para ti."
                               class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">{{ $page->meta_description }}</textarea>
                 </div>
             </div>

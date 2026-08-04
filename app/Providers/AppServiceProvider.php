@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Models\DiscountCode;
+use App\Models\PaymentSetting;
 use App\Models\Product;
 use App\Models\ShippingSetting;
 use App\Services\CartService;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +26,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->applyStripeSettingsFromDatabase();
+
+        // Avisos "vuelve a estar disponible" al reponer stock.
+        Product::observe(\App\Observers\ProductObserver::class);
+        \App\Models\ProductVariant::observe(\App\Observers\ProductVariantObserver::class);
+
         View::composer('partials.navbar', function ($view) {
             $cart = app(CartService::class);
             $items = $cart->getItems();
@@ -85,5 +93,35 @@ class AppServiceProvider extends ServiceProvider
             $view->with('cartTotal', max(0, $subtotalConDescuento - $couponDiscount + $shipping));
             $view->with('toallitasCarrito', $toallitas);
         });
+    }
+
+    /**
+     * Sobrescribe las llaves de Stripe (config('services.stripe.*')) con los
+     * valores guardados en el panel de admin (tabla payment_settings). Si un
+     * valor no está configurado, se conserva el del .env como respaldo.
+     */
+    private function applyStripeSettingsFromDatabase(): void
+    {
+        try {
+            if (! Schema::hasTable('payment_settings')) {
+                return;
+            }
+        } catch (\Throwable $e) {
+            // BD no disponible (p.ej. durante instalación); usar .env.
+            return;
+        }
+
+        $map = [
+            'stripe_key' => 'services.stripe.key',
+            'stripe_secret' => 'services.stripe.secret',
+            'stripe_webhook_secret' => 'services.stripe.webhook_secret',
+        ];
+
+        foreach ($map as $dbKey => $configKey) {
+            $value = PaymentSetting::get($dbKey);
+            if (! empty($value)) {
+                config([$configKey => $value]);
+            }
+        }
     }
 }

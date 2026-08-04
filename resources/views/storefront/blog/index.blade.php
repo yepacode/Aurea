@@ -1,12 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Blog | nuvion glass')
-@section('meta_description', 'Artículos sobre salud visual, luz azul y cómo proteger tus ojos de las pantallas. Blog nuvion glass.')
-@section('canonical', route('blog.index'))
-@section('og_title', 'Blog | nuvion glass')
-@section('og_description', 'Artículos sobre salud visual, luz azul y cómo proteger tus ojos.')
-@section('twitter_title', 'Blog | nuvion glass')
-@section('twitter_description', 'Artículos sobre salud visual, luz azul y cómo proteger tus ojos.')
+@section('title', $seoSettings->meta_title ?? 'Blog de belleza | Belleza Áurea')
+@section('meta_description', $seoSettings->meta_description ?? 'Tips, guías y rituales de belleza para uñas, piel, maquillaje y cabello. Aprende a sacarle el máximo a tus productos con el blog de Belleza Áurea.')
+@section('canonical', $seoSettings->canonical_url ?? route('blog.index'))
+@section('og_title', $seoSettings->og_title ?? 'Blog de belleza | Belleza Áurea')
+@section('og_description', $seoSettings->og_description ?? 'Tips, guías y rituales de belleza para uñas, piel, maquillaje y cabello.')
+@section('twitter_title', $seoSettings->twitter_title ?? 'Blog de belleza | Belleza Áurea')
+@section('twitter_description', $seoSettings->twitter_description ?? 'Tips, guías y rituales de belleza para uñas, piel, maquillaje y cabello.')
+{{-- La tienda no maneja un blog público: no se indexa (el sistema se usa solo para el detalle de Rituales). --}}
+@section('robots', 'noindex, follow')
 
 @push('schema')
     {!! $breadcrumbs !!}
@@ -98,7 +100,7 @@
         grid-column: 1 / -1;
         text-align: center;
         padding: 56px 16px;
-        color: #64748b;
+        color: #6B6157;
         font-size: 14px;
     }
     .blog-grid {
@@ -127,11 +129,11 @@
         border-radius: 50%;
         font-size: 13px;
         font-weight: 500;
-        color: #64748b;
+        color: #6B6157;
         transition: background .15s;
     }
     .blog-pagination nav a:hover {
-        background: #f1f5f9;
+        background: #F1E9DA;
     }
     .blog-pagination nav span[aria-current="page"] {
         background: #D9B56D;
@@ -147,21 +149,21 @@
 </style>
 
     {{-- Hero --}}
-    <section class="relative overflow-hidden flex items-center justify-center" style="background:#0a0f1e;min-height:340px;">
-        {{-- Glow --}}
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(56,130,220,0.18),transparent 70%);pointer-events:none;"></div>
+    <section class="relative overflow-hidden flex items-center justify-center" style="background:#2E2A26;min-height:340px;">
+        {{-- Glow dorado --}}
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(217,181,109,0.20),transparent 70%);pointer-events:none;"></div>
 
         <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center py-16">
-            <p style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#D9B56D;margin-bottom:20px;">{{ $blogPage->hero_label ?? 'NUVION GLASS · BLOG' }}</p>
-            <h1 class="font-brand text-3xl md:text-5xl font-bold leading-tight" style="color:#fff;">{{ $blogPage->hero_title ?? 'Cuida tu visión.' }}<br>{{ $blogPage->hero_title_line2 ?? 'Lee, aprende,' }} <span style="color:#D9B56D;">{{ $blogPage->hero_title_accent ?? 'protégete.' }}</span></h1>
-            <p class="mt-5 text-base md:text-lg max-w-2xl mx-auto" style="color:rgba(255,255,255,0.45);">{{ $blogPage->hero_subtitle ?? 'Consejos, guías y datos respaldados por ciencia para cuidar tu visión en la era digital.' }}</p>
+            <p style="font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#D9B56D;margin-bottom:20px;">{{ $blogPage->hero_label ?? 'Belleza Áurea · Blog' }}</p>
+            <h1 class="font-brand text-3xl md:text-5xl font-bold leading-tight" style="color:#FBF8F2;font-family:'Playfair Display',serif;">{{ $blogPage->hero_title ?? 'Belleza y bienestar.' }}<br>{{ $blogPage->hero_title_line2 ?? 'Lee, aprende,' }} <span style="color:#D9B56D;">{{ $blogPage->hero_title_accent ?? 'brilla.' }}</span></h1>
+            <p class="mt-5 text-base md:text-lg max-w-2xl mx-auto" style="color:rgba(247,243,237,0.55);">{{ $blogPage->hero_subtitle ?? 'Tips, guías y rituales de belleza para uñas, piel y cabello — para tu salón, tu estudio o tu casa.' }}</p>
             <div style="width:48px;height:3px;background:#D9B56D;border-radius:2px;margin:24px auto 0;"></div>
         </div>
     </section>
 
     {{-- Filter bar --}}
     @if(!$posts->isEmpty() && $availableCategories->count() > 0)
-    <div style="background:#0a0f1e;padding:0 24px 32px;">
+    <div style="background:#2E2A26;padding:0 24px 32px;">
         <div class="flex flex-wrap items-center justify-center" style="gap:10px;">
             <button class="blog-filter-btn active" data-filter="todos" type="button">
                 Todos
@@ -183,34 +185,35 @@
             @if($posts->isEmpty())
                 <div class="text-center py-20" style="grid-column:1/-1;">
                     <svg class="mx-auto mb-4" width="48" height="48" viewBox="0 0 48 48" fill="none">
-                        <circle cx="16" cy="24" r="8" stroke="#94a3b8" stroke-width="2"/>
-                        <circle cx="32" cy="24" r="8" stroke="#94a3b8" stroke-width="2"/>
-                        <path d="M24 22v4" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
-                        <path d="M8 20c-2-3-3-6-2-8M40 20c2-3 3-6 2-8" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+                        <circle cx="16" cy="24" r="8" stroke="#B8A999" stroke-width="2"/>
+                        <circle cx="32" cy="24" r="8" stroke="#B8A999" stroke-width="2"/>
+                        <path d="M24 22v4" stroke="#B8A999" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M8 20c-2-3-3-6-2-8M40 20c2-3 3-6 2-8" stroke="#B8A999" stroke-width="1.5" stroke-linecap="round"/>
                     </svg>
-                    <h2 class="font-brand font-bold" style="font-size:20px;color:#1e293b;">Próximamente</h2>
-                    <p class="mt-2" style="font-size:14px;color:#94a3b8;">Estamos preparando contenido para cuidar tu visión</p>
+                    <h2 class="font-brand font-bold" style="font-size:20px;color:#2E2A26;">Próximamente</h2>
+                    <p class="mt-2" style="font-size:14px;color:#B8A999;">Estamos preparando tips y rituales de belleza para ti</p>
                     <a href="{{ route('products.index') }}"
-                       class="inline-block mt-8 px-7 py-3 rounded-lg text-sm font-semibold transition-colors"
-                       style="background:#2E2A26;color:#fff;">
-                        Ver lentes nuvion
+                       class="inline-block mt-8 px-8 py-3.5 text-sm font-semibold transition-colors"
+                       style="background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#fff;border-radius:999px;letter-spacing:.12em;text-transform:uppercase;">
+                        Ver productos
                     </a>
                 </div>
             @else
                 @foreach($posts as $post)
                     @php
-                        $catKey = $post->category_key ?? 'salud-visual';
+                        $catKey = $post->category_key ?? 'belleza';
                         $catLabel = match($catKey) {
-                            'lentes' => 'Lentes',
-                            'habitos' => 'Hábitos digitales',
-                            'luz-azul' => 'Luz azul',
-                            default => 'Salud visual',
+                            'unas', 'nail' => 'Uñas',
+                            'piel', 'skincare' => 'Piel',
+                            'maquillaje' => 'Maquillaje',
+                            'cabello' => 'Cabello',
+                            default => 'Belleza',
                         };
 
                         $gradients = [
-                            'linear-gradient(135deg, #0f1b3d, #1a3a6e)',
-                            'linear-gradient(135deg, #0d2137, #0f4c75)',
-                            'linear-gradient(135deg, #1a0a2e, #2d1b69)',
+                            'linear-gradient(150deg, #BAC3AC, #8F9C7E)',
+                            'linear-gradient(150deg, #E8CC92, #C6A052)',
+                            'linear-gradient(150deg, #E0C2B4, #C98B72)',
                         ];
                         $grad = $gradients[$loop->index % 3];
                     @endphp
@@ -233,7 +236,7 @@
                             @endif
 
                             {{-- Category badge --}}
-                            <span class="absolute" style="top:12px;left:12px;background:rgba(56,130,221,0.85);color:#fff;font-size:10px;padding:4px 10px;border-radius:20px;font-weight:500;">{{ $catLabel }}</span>
+                            <span class="absolute" style="top:12px;left:12px;background:rgba(46,42,38,0.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#fff;font-size:10px;letter-spacing:.06em;padding:4px 11px;border-radius:999px;font-weight:500;">{{ $catLabel }}</span>
 
                             {{-- Reading time --}}
                             @if($post->reading_time)
@@ -246,7 +249,7 @@
 
                         {{-- Body --}}
                         <div style="padding:16px 18px 0;">
-                            <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">
+                            <div style="font-size:11px;color:#B8A999;margin-bottom:8px;">
                                 {{ $post->published_at?->format('d M Y') }}
                                 @if($post->reading_time)
                                     <span style="margin:0 4px;">·</span>
@@ -254,12 +257,12 @@
                                 @endif
                             </div>
 
-                            <h2 class="font-brand" style="font-size:15px;font-weight:500;line-height:1.4;color:#0f172a;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                            <h2 class="font-brand" style="font-size:15px;font-weight:500;line-height:1.4;color:#2E2A26;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
                                 {{ $post->title }}
                             </h2>
 
                             @if($post->excerpt)
-                                <p style="font-size:12px;color:#64748b;line-height:1.6;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">{{ $post->excerpt }}</p>
+                                <p style="font-size:12px;color:#6B6157;line-height:1.6;margin-bottom:14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">{{ $post->excerpt }}</p>
                             @endif
                         </div>
 
@@ -273,7 +276,7 @@
                                     </svg>
                                 </span>
                                 @if($post->focus_keyword)
-                                    <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#f1f5f9;color:#64748b;">{{ $post->focus_keyword }}</span>
+                                    <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#F1E9DA;color:#6B6157;">{{ $post->focus_keyword }}</span>
                                 @endif
                             </div>
                         </div>
@@ -293,12 +296,12 @@
     {{-- CTA --}}
     <section class="py-12" style="background:#0a0f1e;">
         <div class="max-w-3xl mx-auto px-4 text-center">
-            <h2 class="font-brand text-2xl md:text-3xl font-bold" style="color:#fff;">Protege tus ojos hoy</h2>
-            <p class="mt-3" style="color:rgba(255,255,255,0.55);">Lentes con cosmética natural diseñados para tu día a día.</p>
+            <h2 class="font-brand text-2xl md:text-3xl font-bold" style="color:#fff;">Descubre tu ritual de belleza</h2>
+            <p class="mt-3" style="color:rgba(255,255,255,0.55);">Productos e insumos de belleza para uñas, piel, maquillaje y cabello.</p>
             <a href="{{ route('products.index') }}"
                class="inline-block mt-6 px-8 py-3 rounded-lg font-semibold transition-colors"
                style="background:#D9B56D;color:#fff;">
-                Ver lentes nuvion glass
+                Ver productos
             </a>
         </div>
     </section>
@@ -314,8 +317,8 @@
     var emptyState = document.createElement('div');
     emptyState.className = 'blog-empty-state';
     emptyState.style.display = 'none';
-    emptyState.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
-        + '<p style="font-weight:600;color:#1e293b;font-size:15px;margin:0 0 4px;">No hay artículos en esta categoría</p>'
+    emptyState.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#B8A999" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>'
+        + '<p style="font-weight:600;color:#2E2A26;font-size:15px;margin:0 0 4px;">No hay artículos en esta categoría</p>'
         + '<p style="margin:0;">Prueba con otra o vuelve a "Todos".</p>';
     grid.appendChild(emptyState);
 

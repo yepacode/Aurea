@@ -133,15 +133,15 @@
                                 <select name="shipping_carrier" x-model="carrier"
                                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="">Seleccionar...</option>
+                                    <option value="Servientrega" {{ $order->shipping_carrier === 'Servientrega' ? 'selected' : '' }}>Servientrega</option>
+                                    <option value="Interrapidísimo" {{ $order->shipping_carrier === 'Interrapidísimo' ? 'selected' : '' }}>Interrapidísimo</option>
+                                    <option value="Coordinadora" {{ $order->shipping_carrier === 'Coordinadora' ? 'selected' : '' }}>Coordinadora</option>
+                                    <option value="Envía" {{ $order->shipping_carrier === 'Envía' ? 'selected' : '' }}>Envía</option>
+                                    <option value="TCC" {{ $order->shipping_carrier === 'TCC' ? 'selected' : '' }}>TCC</option>
+                                    <option value="Deprisa" {{ $order->shipping_carrier === 'Deprisa' ? 'selected' : '' }}>Deprisa</option>
+                                    <option value="4-72" {{ $order->shipping_carrier === '4-72' ? 'selected' : '' }}>4-72</option>
                                     <option value="FedEx" {{ $order->shipping_carrier === 'FedEx' ? 'selected' : '' }}>FedEx</option>
                                     <option value="DHL Express" {{ $order->shipping_carrier === 'DHL Express' ? 'selected' : '' }}>DHL Express</option>
-                                    <option value="Estafeta" {{ $order->shipping_carrier === 'Estafeta' ? 'selected' : '' }}>Estafeta</option>
-                                    <option value="Paquetexpress" {{ $order->shipping_carrier === 'Paquetexpress' ? 'selected' : '' }}>Paquetexpress</option>
-                                    <option value="Redpack" {{ $order->shipping_carrier === 'Redpack' ? 'selected' : '' }}>Redpack</option>
-                                    <option value="UPS" {{ $order->shipping_carrier === 'UPS' ? 'selected' : '' }}>UPS</option>
-                                    <option value="J&T Express" {{ $order->shipping_carrier === 'J&T Express' ? 'selected' : '' }}>J&T Express</option>
-                                    <option value="99 Minutos" {{ $order->shipping_carrier === '99 Minutos' ? 'selected' : '' }}>99 Minutos</option>
-                                    <option value="Correos de México" {{ $order->shipping_carrier === 'Correos de México' ? 'selected' : '' }}>Correos de México</option>
                                     <option value="Entrega personal" {{ $order->shipping_carrier === 'Entrega personal' ? 'selected' : '' }}>Entrega personal</option>
                                     <option value="Otro" {{ $order->shipping_carrier === 'Otro' ? 'selected' : '' }}>Otro</option>
                                 </select>
@@ -165,29 +165,32 @@
                             {{-- Helper links --}}
                             <div class="mt-2 flex flex-wrap gap-2 text-xs" x-show="carrier" x-cloak>
                                 <span class="text-gray-400">Rastreo rápido:</span>
+                                <template x-if="carrier === 'Servientrega'">
+                                    <a href="https://www.servientrega.com/wps/portal/rastreo-envio" target="_blank" class="text-blue-500 hover:underline">servientrega.com rastreo</a>
+                                </template>
+                                <template x-if="carrier === 'Interrapidísimo'">
+                                    <a href="https://interrapidisimo.com/sigue-tu-envio/" target="_blank" class="text-blue-500 hover:underline">interrapidisimo.com rastreo</a>
+                                </template>
+                                <template x-if="carrier === 'Coordinadora'">
+                                    <a href="https://coordinadora.com/rastreo/rastreo-de-guia/" target="_blank" class="text-blue-500 hover:underline">coordinadora.com rastreo</a>
+                                </template>
+                                <template x-if="carrier === 'Envía'">
+                                    <a href="https://envia.co/" target="_blank" class="text-blue-500 hover:underline">envia.co rastreo</a>
+                                </template>
+                                <template x-if="carrier === 'TCC'">
+                                    <a href="https://www.tcc.com.co/rastreo-de-mercancia/" target="_blank" class="text-blue-500 hover:underline">tcc.com.co rastreo</a>
+                                </template>
+                                <template x-if="carrier === 'Deprisa'">
+                                    <a href="https://www.deprisa.com/Seguimiento" target="_blank" class="text-blue-500 hover:underline">deprisa.com rastreo</a>
+                                </template>
+                                <template x-if="carrier === '4-72'">
+                                    <a href="https://www.4-72.com.co/" target="_blank" class="text-blue-500 hover:underline">4-72.com.co rastreo</a>
+                                </template>
                                 <template x-if="carrier === 'FedEx'">
                                     <a href="https://www.fedex.com/fedextrack/" target="_blank" class="text-blue-500 hover:underline">fedex.com/fedextrack</a>
                                 </template>
                                 <template x-if="carrier === 'DHL Express'">
-                                    <a href="https://www.dhl.com/mx-es/home/rastreo.html" target="_blank" class="text-blue-500 hover:underline">dhl.com rastreo</a>
-                                </template>
-                                <template x-if="carrier === 'Estafeta'">
-                                    <a href="https://www.estafeta.com/herramientas/rastreo" target="_blank" class="text-blue-500 hover:underline">estafeta.com rastreo</a>
-                                </template>
-                                <template x-if="carrier === 'Paquetexpress'">
-                                    <a href="https://www.paquetexpress.com.mx/rastreo" target="_blank" class="text-blue-500 hover:underline">paquetexpress.com rastreo</a>
-                                </template>
-                                <template x-if="carrier === 'Redpack'">
-                                    <a href="https://www.redpack.com.mx/es/rastreo/" target="_blank" class="text-blue-500 hover:underline">redpack.com rastreo</a>
-                                </template>
-                                <template x-if="carrier === 'UPS'">
-                                    <a href="https://www.ups.com/track" target="_blank" class="text-blue-500 hover:underline">ups.com/track</a>
-                                </template>
-                                <template x-if="carrier === 'J&T Express'">
-                                    <a href="https://www.jtexpress.mx/trajectoryQuery" target="_blank" class="text-blue-500 hover:underline">jtexpress.mx rastreo</a>
-                                </template>
-                                <template x-if="carrier === '99 Minutos'">
-                                    <a href="https://tracking.99minutos.com/" target="_blank" class="text-blue-500 hover:underline">99minutos tracking</a>
+                                    <a href="https://www.dhl.com/co-es/home/rastreo.html" target="_blank" class="text-blue-500 hover:underline">dhl.com rastreo</a>
                                 </template>
                             </div>
                         </div>

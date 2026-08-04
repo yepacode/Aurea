@@ -55,6 +55,22 @@ class CheckoutService
      */
     private function findOrCreateCustomer(array $data): Customer
     {
+        // Si hay un cliente con sesión iniciada, el pedido SIEMPRE se enlaza a
+        // su cuenta (no cambiamos su email de cuenta, solo sus datos de envío).
+        $authCustomer = \Illuminate\Support\Facades\Auth::guard('customer')->user();
+        if ($authCustomer) {
+            $authCustomer->update([
+                'name' => $data['name'],
+                'phone' => $data['phone'] ?? $authCustomer->phone,
+                'address' => $data['address'],
+                'city' => $data['city'] ?? null,
+                'state' => $data['state'],
+                'zip_code' => $data['zip_code'],
+            ]);
+
+            return $authCustomer;
+        }
+
         return Customer::updateOrCreate(
             ['email' => $data['email']],
             [

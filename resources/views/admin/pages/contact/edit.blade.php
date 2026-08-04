@@ -55,7 +55,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input type="email" name="email" value="{{ $page->email }}"
-                               placeholder="contacto@nuvionglass.com.mx"
+                               placeholder="contacto@bellezaaurea.com"
                                class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                     </div>
                     <div>
@@ -118,19 +118,19 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Instagram</label>
                     <input type="url" name="instagram_url" value="{{ $page->instagram_url }}"
-                           placeholder="https://instagram.com/nuvionglass"
+                           placeholder="https://instagram.com/bellezaaurea"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Facebook</label>
                     <input type="url" name="facebook_url" value="{{ $page->facebook_url }}"
-                           placeholder="https://facebook.com/nuvionglass"
+                           placeholder="https://facebook.com/bellezaaurea"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">TikTok</label>
                     <input type="url" name="tiktok_url" value="{{ $page->tiktok_url }}"
-                           placeholder="https://tiktok.com/@nuvionglass"
+                           placeholder="https://tiktok.com/@bellezaaurea"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
             </div>

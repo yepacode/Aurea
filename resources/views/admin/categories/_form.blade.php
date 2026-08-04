@@ -88,6 +88,40 @@
         </p>
     </div>
 
+    {{-- Promoción 2x1 --}}
+    <div class="bg-white rounded-2xl p-6" style="border:1px solid #E8DCC6;">
+        <div class="mb-4 pb-3" style="border-bottom:1px solid #F0EAE0;">
+            <p class="text-xs font-bold uppercase" style="color:#BE9A53;letter-spacing:.18em;">Promoción</p>
+            <h2 class="text-lg font-semibold mt-1" style="font-family:'Playfair Display',serif;color:#2E2A26;">Promo 2×1</h2>
+            <p class="text-xs mt-1" style="color:#6B6157;">Si la activas, <strong>todos los productos de esta categoría</strong> entran en 2×1 (paga 1, lleva 2). También puedes activarla producto por producto en cada ficha.</p>
+        </div>
+        <label class="flex items-center gap-3 cursor-pointer">
+            <input type="hidden" name="promo_2x1" value="0">
+            <input type="checkbox" name="promo_2x1" value="1" {{ old('promo_2x1', $category->promo_2x1 ?? false) ? 'checked' : '' }} class="w-4 h-4" style="accent-color:#D9B56D;">
+            <span class="text-sm" style="color:#2E2A26;">Activar 2×1 en toda esta categoría</span>
+        </label>
+    </div>
+
+    {{-- SEO --}}
+    <div class="bg-white rounded-2xl p-6" style="border:1px solid #E8DCC6;">
+        <div class="mb-5 pb-3" style="border-bottom:1px solid #F0EAE0;">
+            <p class="text-xs font-bold uppercase" style="color:#BE9A53;letter-spacing:.18em;">Posicionamiento</p>
+            <h2 class="text-lg font-semibold mt-1" style="font-family:'Playfair Display',serif;color:#2E2A26;">SEO de la categoría</h2>
+            <p class="text-xs mt-1" style="color:#6B6157;">Cómo se ve esta categoría en Google y al compartirla en redes. Todo es opcional: si lo dejas vacío se usan valores automáticos.</p>
+        </div>
+
+        @php $catSeo = $category ?? new \App\Models\Category; @endphp
+        @include('admin.partials.seo-panel', [
+            'seo'           => $catSeo,
+            'ogCol'         => 'og_image_path',
+            'twCol'         => 'twitter_image_path',
+            'baseUrl'       => url('/productos'),
+            'slug'          => old('slug', $catSeo->slug ?? ''),
+            'titleFallback' => ($catSeo->name ?? 'Categoría').' | Belleza Áurea',
+            'descFallback'  => 'Descubre '.($catSeo->name ?? 'esta categoría').' en Belleza Áurea: cosmética e insumos de belleza seleccionados.',
+        ])
+    </div>
+
     {{-- Acciones --}}
     <div class="flex items-center justify-end gap-3">
         <a href="{{ route('admin.categories.index') }}" class="text-sm" style="color:#6B6157;">Cancelar</a>

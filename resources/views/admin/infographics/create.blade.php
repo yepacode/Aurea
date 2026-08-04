@@ -23,7 +23,7 @@
                 <div>
                     <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Título *</label>
                     <input type="text" id="title" name="title" value="{{ old('title') }}" required
-                           placeholder="Ej: Espectro de luz azul"
+                           placeholder="Ej: Rutina de skincare paso a paso"
                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>

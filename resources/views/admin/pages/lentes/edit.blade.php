@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Editar página de lentes')
-@section('page_title', 'Página de lentes')
+@section('title', 'Editar página del catálogo')
+@section('page_title', 'Página del catálogo')
 
 @section('content')
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-    <p class="text-sm text-gray-500 mb-6">Edita el título y subtítulo que se muestran en la página del catálogo de lentes. Los cambios se reflejan inmediatamente en la tienda.</p>
+    <p class="text-sm text-gray-500 mb-6">Edita el título (H1) y subtítulo que se muestran en la página del catálogo. Los cambios se reflejan inmediatamente en la tienda.</p>
 
     <form method="POST" action="{{ route('admin.pages.lentes.update') }}">
         @method('PUT')
@@ -16,19 +16,19 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
             <div class="px-6 py-4 border-b border-gray-100">
                 <h3 class="text-base font-semibold text-gray-900">Encabezado del catálogo</h3>
-                <p class="text-xs text-gray-500 mt-1">Título y descripción que aparecen en la parte superior de la página de lentes.</p>
+                <p class="text-xs text-gray-500 mt-1">Título (H1) y descripción que aparecen en la parte superior del catálogo.</p>
             </div>
             <div class="px-6 pb-6 pt-4 space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
                     <input type="text" name="catalog_title" value="{{ $page->catalog_title }}"
-                           placeholder="Catálogo"
+                           placeholder="Nuestro catálogo"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Subtítulo</label>
                     <input type="text" name="catalog_subtitle" value="{{ $page->catalog_subtitle }}"
-                           placeholder="Todos los lentes con cosmética natural · 2×1 combinables"
+                           placeholder="Insumos y cosmética de belleza — uñas, piel, maquillaje y más"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
             </div>
@@ -43,7 +43,7 @@
             <div class="px-6 pb-6 pt-4">
                 <textarea name="product_benefits_text" rows="4"
                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
-                          placeholder="Envío gratis +$999&#10;Garantía 6 meses&#10;30 días devolución&#10;Filtro luz azul certificado">{{ implode("\n", $page->product_benefits ?? []) }}</textarea>
+                          placeholder="Envío a toda Colombia&#10;Marcas originales&#10;Precios por mayor y detal&#10;Asesoría personalizada">{{ implode("\n", $page->product_benefits ?? []) }}</textarea>
             </div>
         </div>
 

@@ -2,25 +2,18 @@
 
 @section('title', $seo['title'])
 @section('meta_description', $seo['description'])
+@section('robots', $seo['robots'])
 @section('canonical', $seo['canonical'])
+@if(!empty($seo['keywords']))@section('keywords', $seo['keywords'])@endif
 @section('og_type', $seo['og_type'])
 @section('og_title', $seo['og_title'])
 @section('og_description', $seo['og_description'])
 @section('og_image', $seo['og_image'])
+@section('twitter_card', $seo['twitter_card'])
 @section('twitter_title', $seo['twitter_title'])
 @section('twitter_description', $seo['twitter_description'])
 @section('twitter_image', $seo['twitter_image'])
-
-{{-- noindex toggle por producto --}}
-@if($product->noindex)
-@section('robots', 'noindex, nofollow')
-@endif
-
-{{-- OG image específica del producto si existe --}}
-@if($product->og_image_path)
-@section('og_image', asset('storage/'.$product->og_image_path))
-@section('twitter_image', asset('storage/'.$product->og_image_path))
-@endif
+@if(!empty($seo['custom_schema']))@section('custom_schema', $seo['custom_schema'])@endif
 
 @push('schema')
     {!! $schema !!}
@@ -73,8 +66,8 @@
     {{-- ============================================================
          FICHA PRINCIPAL: IMAGEN + DATOS
          ============================================================ --}}
-    <section style="background:#fff;padding:48px 24px;" x-data="productDetail()" @variant-selection-changed.window="recomputeMax(); stockError = '';">
-        <div class="product-layout" style="max-width:1100px;margin:0 auto;">
+    <section style="background:transparent;padding:clamp(32px,5vw,64px) 24px;" x-data="productDetail()" @variant-selection-changed.window="recomputeMax(); stockError = '';">
+        <div class="product-layout" style="max-width:1160px;margin:0 auto;background:linear-gradient(160deg,#FEFCF8,#F8F2E8);border:1px solid rgba(217,181,109,.16);border-radius:28px;box-shadow:0 46px 92px -52px rgba(120,92,44,.5),0 6px 22px -12px rgba(0,0,0,.05);padding:clamp(24px,4vw,52px);">
 
             {{-- ==================== COLUMNA IZQUIERDA: IMAGEN ==================== --}}
             <div style="position:relative;">
@@ -82,7 +75,7 @@
 
                 @if($firstImage)
                     <div class="product-zoom-container"
-                         style="position:relative;border-radius:16px;overflow:hidden;cursor:zoom-in;min-height:300px;height:480px;background:#f8f9fa;"
+                         style="position:relative;border-radius:18px;overflow:hidden;cursor:zoom-in;min-height:300px;height:480px;background:linear-gradient(155deg,#FBF8F2,#F1EBDF);border:1px solid rgba(217,181,109,.22);"
                          @click="openLightbox()"
                          onmousemove="productZoomMove(event, this)"
                          onmouseleave="productZoomLeave(this)">
@@ -174,6 +167,12 @@
                     @endif
                 </div>
 
+                @if($isBestSeller ?? false)
+                <div style="margin:0 0 12px;">
+                    <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:linear-gradient(120deg,#E0BE77,#BE9A53);padding:6px 13px;border-radius:999px;box-shadow:0 8px 16px -8px rgba(190,154,83,.8);">★ Más vendido</span>
+                </div>
+                @endif
+
                 {{-- 3. Nombre --}}
                 <h1 style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;
                            color:#2E2A26;margin:0 0 16px;">
@@ -189,7 +188,7 @@
 
                 {{-- 4. Precio --}}
                 <div style="display:flex;align-items:baseline;gap:10px;">
-                    <span id="product-current-price" style="font-size:28px;font-weight:700;color:#2E2A26;">
+                    <span id="product-current-price" style="font-family:'Playfair Display',serif;font-size:30px;font-weight:600;color:#BE9A53;">
                         ${{ number_format($product->price, 0, ',', '.') }}
                     </span>
                     @if($product->compare_price && $product->compare_price > $product->price)
@@ -198,6 +197,32 @@
                     </span>
                     @endif
                 </div>
+
+                {{-- Favorito (wishlist) --}}
+                @php $inWishlist = $inWishlist ?? false; @endphp
+                <button type="button"
+                        class="ba-fav-btn {{ $inWishlist ? 'is-wished' : '' }}"
+                        aria-label="Agregar a favoritos"
+                        onclick="toggleWishlist({{ $product->id }}, this, event)"
+                        style="display:inline-flex;align-items:center;gap:9px;margin-top:16px;padding:10px 20px;
+                               border:1.5px solid #D9B56D;border-radius:9999px;background:#fff;cursor:pointer;
+                               font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;letter-spacing:.04em;color:#BE9A53;
+                               transition:background .25s ease,box-shadow .25s ease;"
+                        onmouseover="this.style.background='#FBF4E6'" onmouseout="this.style.background='#fff'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $inWishlist ? '#C97B6B' : 'none' }}"
+                         stroke="#BE9A53" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    <span>Favorito</span>
+                </button>
+
+                {{-- Urgencia honesta: stock bajo real --}}
+                @if($product->is_low_stock)
+                <p style="margin:12px 0 0;font-size:13.5px;font-weight:600;color:#C97B6B;display:flex;align-items:center;gap:7px;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#C97B6B;display:inline-block;"></span>
+                    ¡Solo quedan {{ $product->low_stock_count }} unidad{{ $product->low_stock_count == 1 ? '' : 'es' }}!
+                </p>
+                @endif
                 {{-- 6. Selector de color --}}
                 @if($colores->count() > 0)
                 <div style="margin-bottom:20px;margin-top:20px;">
@@ -358,8 +383,10 @@
                                     }">
                                 −
                             </button>
-                            <span style="width:36px;text-align:center;font-size:14px;font-weight:600;color:#2E2A26;"
-                                  x-text="qty"></span>
+                            <input type="number" x-model.number="qty" min="1" :max="currentMax"
+                                   @change="qty = Math.max(1, Math.min(parseInt(qty) || 1, currentMax))"
+                                   inputmode="numeric" aria-label="Cantidad"
+                                   style="width:58px;text-align:center;font-size:14px;font-weight:600;color:#2E2A26;border:none;background:none;outline:none;-moz-appearance:textfield;appearance:textfield;">
                             <button @click="increaseQty()"
                                     :disabled="qty >= currentMax"
                                     :title="qty >= currentMax ? ('Máximo disponible: ' + currentMax) : ''"
@@ -374,12 +401,8 @@
                             </button>
                         </div>
 
-                        {{-- Stock --}}
+                        {{-- Stock — oculto para el cliente; solo se avisa si intenta pedir más de lo disponible o si está agotado --}}
                         @if($productHasStock)
-                        <span x-show="!stockError" style="font-size:13px;color:#16a34a;display:flex;align-items:center;gap:5px;">
-                            <span style="width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block;"></span>
-                            En stock
-                        </span>
                         <span x-show="stockError" x-cloak x-transition style="font-size:13px;color:#dc2626;display:flex;align-items:center;gap:5px;font-weight:500;">
                             <span style="width:7px;height:7px;border-radius:50%;background:#dc2626;display:inline-block;flex-shrink:0;"></span>
                             <span x-text="stockError"></span>
@@ -397,15 +420,18 @@
                             @mouseenter="hoverBtn = true" @mouseleave="hoverBtn = false"
                             :style="{
                                 width: '100%',
-                                background: adding ? '#2E2A26' : (hoverBtn && {{ $productHasStock ? 'true' : 'false' }} ? '#D9B56D' : '#2E2A26'),
+                                background: adding ? '#BE9A53' : (hoverBtn && {{ $productHasStock ? 'true' : 'false' }} ? '#BE9A53' : '#D9B56D'),
                                 color: '#fff',
                                 border: 'none',
-                                borderRadius: '10px',
-                                padding: '14px',
-                                fontSize: '16px',
-                                fontWeight: '500',
+                                borderRadius: '999px',
+                                padding: '16px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                letterSpacing: '.14em',
+                                textTransform: 'uppercase',
+                                boxShadow: (adding || {{ $productHasStock ? 'false' : 'true' }}) ? 'none' : '0 16px 32px -12px rgba(190,154,83,.65)',
                                 cursor: adding ? 'wait' : ({{ $productHasStock ? 'true' : 'false' }} ? 'pointer' : 'not-allowed'),
-                                transition: 'background .2s',
+                                transition: 'background .3s, box-shadow .3s',
                                 fontFamily: 'inherit',
                                 opacity: (adding || {{ $productHasStock ? 'false' : 'true' }}) ? '0.6' : '1',
                             }">
@@ -413,6 +439,25 @@
                         <span x-show="adding" x-cloak>Agregando...</span>
                         <span x-show="added" x-cloak>✓ Agregado</span>
                     </button>
+
+                    @unless($productHasStock)
+                    {{-- Avísame cuando vuelva --}}
+                    <div x-data="{ email:'', sent:false, sending:false, err:'' }" style="margin-top:14px;padding:16px;border-radius:14px;background:#FBF4E6;border:1px solid #E8CC92;">
+                        <p style="font-size:13.5px;font-weight:600;color:#2E2A26;margin:0 0 9px;">🔔 ¿Lo quieres? Te avisamos cuando vuelva</p>
+                        <form x-show="!sent" @submit.prevent="sending=true; err='';
+                              fetch('{{ route('stock.notify') }}', {method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},body:JSON.stringify({product_id:{{ $product->id }},email:email})})
+                              .then(r=>r.json().then(d=>({ok:r.ok,d}))).then(({ok,d})=>{ if(ok){sent=true}else{err=(d.errors&&d.errors.email?d.errors.email[0]:d.message)||'Revisa el correo.'} }).catch(()=>{err='Error, intenta de nuevo.'}).finally(()=>{sending=false})"
+                              style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <input type="email" x-model="email" required placeholder="tu@correo.com"
+                                   style="flex:1;min-width:170px;border:1px solid #E5DCC9;border-radius:10px;padding:10px 12px;font-size:14px;color:#2E2A26;background:#fff;">
+                            <button type="submit" :disabled="sending"
+                                    style="border:none;border-radius:10px;padding:10px 20px;background:linear-gradient(120deg,#E0BE77,#BE9A53);color:#fff;font-weight:600;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;"
+                                    x-text="sending ? 'Enviando...' : 'Avísame'"></button>
+                        </form>
+                        <p x-show="sent" x-cloak style="font-size:13px;color:#3F8F5B;font-weight:500;margin:0;">✓ ¡Listo! Te avisaremos por correo cuando vuelva. 💛</p>
+                        <p x-show="err" x-cloak x-text="err" style="font-size:12.5px;color:#C97B6B;margin:6px 0 0;"></p>
+                    </div>
+                    @endunless
 
                 </div>
 
@@ -499,57 +544,139 @@
     @endif
 
     {{-- ============================================================
+         RESEÑAS ⭐
+         ============================================================ --}}
+    <style>
+        .rev-wrap{max-width:900px;margin:0 auto;padding:8px 20px 8px;}
+        .rev-title{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,30px);font-weight:700;color:#2E2A26;margin:0 0 6px;}
+        .rev-title span{color:#BE9A53;font-size:.7em;}
+        .rev-avg{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
+        .rev-stars,.rev-stars-lg{letter-spacing:1px;white-space:nowrap;}
+        .rev-stars-lg{font-size:24px;}
+        .rev-avg-num{font-weight:700;color:#2E2A26;}
+        .rev-avg-cnt{font-size:13px;color:#6B6157;}
+        .rev-ok{background:#EAF4EA;border:1px solid #BcdCBc;color:#2f6d34;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:14px;}
+        .rev-err{background:#FCEFE6;border:1px solid #E7C0B0;color:#A65A4D;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;}
+        .rev-item{border-bottom:1px solid #EFE7D8;padding:16px 0;}
+        .rev-item-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+        .rev-item-head strong{color:#2E2A26;font-size:14px;}
+        .rev-item-head time{color:#9CA3AF;font-size:12px;}
+        .rev-item-title{font-weight:600;color:#2E2A26;margin:6px 0 2px;font-size:14px;}
+        .rev-item-body{color:#5A5248;font-size:14px;line-height:1.6;margin:2px 0 0;}
+        .rev-empty{color:#8A8073;font-style:italic;padding:8px 0 18px;}
+        .rev-form{background:linear-gradient(180deg,#FCFAF5,#F6EFE1);border:1px solid rgba(217,181,109,.3);border-radius:18px;padding:22px;margin-top:26px;}
+        .rev-form h3{font-family:'Playfair Display',serif;font-size:1.2rem;color:#2E2A26;margin:0 0 14px;}
+        .rev-form input,.rev-form textarea{width:100%;border:1px solid #E5DCC9;background:#FFFDF9;border-radius:10px;padding:10px 12px;font-size:14px;color:#2E2A26;margin-bottom:12px;font-family:'Montserrat',sans-serif;}
+        .rev-form input:focus,.rev-form textarea:focus{outline:none;border-color:#D9B56D;box-shadow:0 0 0 3px rgba(217,181,109,.18);}
+        .rev-field-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+        .rev-field-row input{flex:1;min-width:200px;}
+        .rev-picker{display:inline-flex;gap:2px;margin-bottom:12px;}
+        .rev-picker button{background:none;border:none;cursor:pointer;font-size:26px;line-height:1;color:#E5DCC9;padding:0 1px;transition:color .15s;}
+        .rev-picker button.on{color:#D9B56D;}
+        .rev-submit{background:linear-gradient(135deg,#EBCF90,#D9B56D 55%,#C4A057);color:#3B310F;border:none;border-radius:9999px;padding:12px 26px;font-weight:600;font-size:.85rem;cursor:pointer;font-family:'Montserrat',sans-serif;transition:filter .2s;}
+        .rev-submit:hover{filter:brightness(1.04);}
+    </style>
+    @php $revs = $product->approvedReviews; $avg = $product->average_rating; $cnt = $product->reviews_count; @endphp
+    <section id="resenas" class="rev-wrap">
+        <h2 class="rev-title">Reseñas @if($cnt)<span>({{ $cnt }})</span>@endif</h2>
+
+        @if($cnt)
+        <div class="rev-avg">
+            <span class="rev-stars-lg">@for($i=1;$i<=5;$i++)<span style="color:{{ $i <= round($avg) ? '#D9B56D' : '#E5DCC9' }}">★</span>@endfor</span>
+            <span class="rev-avg-num">{{ number_format($avg, 1) }} / 5</span>
+            <span class="rev-avg-cnt">basado en {{ $cnt }} {{ $cnt === 1 ? 'reseña' : 'reseñas' }}</span>
+        </div>
+        @endif
+
+        @if(session('review_success'))<div class="rev-ok">{{ session('review_success') }}</div>@endif
+        @if($errors->any())<div class="rev-err">@foreach($errors->all() as $e)<p>{{ $e }}</p>@endforeach</div>@endif
+
+        @forelse($revs as $r)
+        <div class="rev-item">
+            <div class="rev-item-head">
+                <span class="rev-stars">@for($i=1;$i<=5;$i++)<span style="color:{{ $i <= $r->rating ? '#D9B56D' : '#E5DCC9' }}">★</span>@endfor</span>
+                <strong>{{ $r->author_name }}</strong>
+                <time>{{ $r->created_at->format('d/m/Y') }}</time>
+            </div>
+            @if($r->title)<p class="rev-item-title">{{ $r->title }}</p>@endif
+            @if($r->comment)<p class="rev-item-body">{{ $r->comment }}</p>@endif
+            @if($r->image_path)
+            <a href="{{ asset('storage/'.$r->image_path) }}" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;">
+                <img src="{{ asset('storage/'.$r->image_path) }}" alt="Foto de la reseña de {{ $r->author_name }}" loading="lazy" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid #E5DCC9;">
+            </a>
+            @endif
+        </div>
+        @empty
+        <p class="rev-empty">Aún no hay reseñas. ¡Sé la primera persona en opinar! 🌸</p>
+        @endforelse
+
+        <form method="POST" action="{{ route('reviews.store', $product->slug) }}" enctype="multipart/form-data" class="rev-form" x-data="{ rating: {{ (int) old('rating', 5) }} }">
+            @csrf
+            <h3>Deja tu reseña</h3>
+            <div class="rev-field-row">
+                <input type="text" name="author_name" placeholder="Tu nombre *" required maxlength="80" value="{{ old('author_name') }}">
+                <div class="rev-picker" role="radiogroup" aria-label="Calificación">
+                    <template x-for="s in 5" :key="s">
+                        <button type="button" @click="rating = s" :class="s <= rating ? 'on' : ''" x-text="'★'"></button>
+                    </template>
+                    <input type="hidden" name="rating" :value="rating">
+                </div>
+            </div>
+            <input type="text" name="title" placeholder="Título (opcional)" maxlength="120" value="{{ old('title') }}">
+            <textarea name="comment" rows="3" maxlength="1500" placeholder="Cuéntanos tu experiencia con el producto...">{{ old('comment') }}</textarea>
+            <label style="display:block;font-size:13px;color:#6B6157;margin:-2px 0 6px;">📷 Agrega una foto (opcional)</label>
+            <input type="file" name="image" accept="image/*" style="padding:8px 12px;">
+            <button type="submit" class="rev-submit">Enviar reseña</button>
+        </form>
+    </section>
+
+    {{-- ============================================================
          PRODUCTOS RELACIONADOS (misma categoría)
          ============================================================ --}}
     @if(($relatedProducts ?? collect())->count() > 0)
-    <section style="background:#FBF8F2;padding:64px 24px;">
-        <div style="max-width:1100px;margin:0 auto;">
-            <div style="text-align:center;margin-bottom:32px;">
-                <p style="font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:#BE9A53;margin:0 0 8px;">También te puede gustar</p>
-                <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:500;color:#2E2A26;margin:0;">
+    <style>
+    .relx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(16px,2vw,26px);max-width:1160px;margin:0 auto;}
+    @media(max-width:900px){.relx-grid{grid-template-columns:repeat(2,1fr);}}
+    .relx-card{display:block;text-decoration:none;color:inherit;}
+    .relx-card__img{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;margin-bottom:12px;
+        border:1px solid rgba(217,181,109,.2);background:linear-gradient(155deg,#FBF8F2,#F3ECDF);
+        transition:box-shadow .5s cubic-bezier(.2,.7,.3,1),border-color .5s,transform .5s cubic-bezier(.2,.7,.3,1);}
+    .relx-card:hover .relx-card__img{border-color:rgba(217,181,109,.5);box-shadow:0 26px 50px -22px rgba(190,154,83,.45);transform:translateY(-5px);}
+    .relx-card__img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.3s cubic-bezier(.2,.7,.3,1), filter .5s ease;}
+    .relx-card:hover .relx-card__img img{transform:scale(1.07);}
+    @media(hover:hover){.relx-card__img img{filter:saturate(.8) brightness(1.02) contrast(.96);}.relx-card:hover .relx-card__img img{filter:none;}}
+    .relx-card__brand{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#BE9A53;margin:0 0 4px;}
+    .relx-card__name{font-family:'Playfair Display',serif;font-size:14.5px;font-weight:600;color:#2E2A26;margin:0 0 8px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+    .relx-card__price{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:#BE9A53;}
+    .relx-card__compare{font-size:12px;color:#B8A999;text-decoration:line-through;margin-left:6px;}
+    </style>
+    <section style="background:transparent;padding:clamp(48px,7vw,84px) 24px;">
+        <div style="max-width:1160px;margin:0 auto;">
+            <div style="text-align:center;margin-bottom:40px;">
+                <p style="font-size:11px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#BE9A53;margin:0 0 10px;">También te puede gustar</p>
+                <h2 style="font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,34px);font-weight:600;color:#2E2A26;margin:0;">
                     Más en {{ $product->category?->name ?? 'esta categoría' }}
                 </h2>
             </div>
 
-            <div class="related-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px;">
+            <div class="relx-grid">
                 @foreach($relatedProducts as $rel)
                 @php $rImg = $rel->images[0] ?? null; @endphp
-                <a href="{{ route('products.show', $rel->slug) }}"
-                   style="background:#fff;border-radius:12px;overflow:hidden;
-                          border:0.5px solid rgba(0,0,0,0.08);text-decoration:none;color:inherit;
-                          transition:transform .2s ease,box-shadow .2s ease;display:block;"
-                   onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 12px 32px rgba(0,0,0,0.08)'"
-                   onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
-
-                    <div style="height:180px;background:#f8f9fa;overflow:hidden;">
+                <a href="{{ route('products.show', $rel->slug) }}" class="relx-card">
+                    <div class="relx-card__img">
                         @if($rImg)
-                            <img src="{{ asset('storage/' . $rImg) }}" alt="{{ $rel->name }}"
-                                 loading="lazy" style="width:100%;height:100%;object-fit:cover;">
-                        @else
-                            <div style="width:100%;height:100%;background:linear-gradient(135deg,#F7F3ED,#E8D1C5);"></div>
+                            <img src="{{ asset('storage/'.$rImg) }}" alt="{{ $rel->name }}" loading="lazy">
                         @endif
                     </div>
-
-                    <div style="padding:14px 16px 18px;">
-                        @if($rel->brand)
-                        <p style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#BE9A53;margin:0 0 4px;">
-                            {{ $rel->brand->name }}
-                        </p>
+                    @if($rel->brand)
+                        <p class="relx-card__brand">{{ $rel->brand->name }}</p>
+                    @endif
+                    <h4 class="relx-card__name">{{ $rel->name }}</h4>
+                    <div>
+                        <span class="relx-card__price">${{ number_format($rel->price, 0, ',', '.') }}</span>
+                        @if($rel->compare_price && $rel->compare_price > $rel->price)
+                            <span class="relx-card__compare">${{ number_format($rel->compare_price, 0, ',', '.') }}</span>
                         @endif
-                        <h4 style="font-size:14px;font-weight:500;color:#2E2A26;margin:0 0 10px;line-height:1.35;
-                                   overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
-                            {{ $rel->name }}
-                        </h4>
-                        <div style="display:flex;align-items:baseline;gap:6px;">
-                            <span style="font-size:16px;font-weight:700;color:#2E2A26;">
-                                ${{ number_format($rel->price, 0, ',', '.') }}
-                            </span>
-                            @if($rel->compare_price && $rel->compare_price > $rel->price)
-                            <span style="font-size:12px;color:#bbb;text-decoration:line-through;">
-                                ${{ number_format($rel->compare_price, 0, ',', '.') }}
-                            </span>
-                            @endif
-                        </div>
                     </div>
                 </a>
                 @endforeach
@@ -891,16 +1018,16 @@ function productDetail() {
             var data = window.variantStockData || [];
             var sel = window.currentSelection || {};
 
-            // Sin variantes: usa el stock del producto.
+            // Sin variantes: usa el stock del producto (sin tope artificial — mayoreo).
             if (data.length === 0) {
-                this.currentMax = Math.min({{ (int) ($product->stock ?? 10) }}, 10);
+                this.currentMax = Math.max({{ (int) ($product->stock ?? 0) }}, 0);
             } else {
                 var stock = data.reduce(function (sum, v) {
                     if (sel.color && v.color !== sel.color) return sum;
                     return sum + (v.stock || 0);
                 }, 0);
-                // Cap superior de 10 (limite de la API).
-                this.currentMax = Math.min(Math.max(stock, 0), 10);
+                // El máximo es el stock disponible real (permite pedidos mayoristas).
+                this.currentMax = Math.max(stock, 0);
             }
 
             // Clampear qty al nuevo maximo (siempre >= 1).

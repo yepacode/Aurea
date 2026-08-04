@@ -22,10 +22,14 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        // Invitados a /cuenta → login de cliente; a /admin → login de admin.
+        $middleware->redirectGuestsTo(fn ($request) => $request->is('cuenta*')
+            ? route('customer.login')
+            : route('admin.login'));
 
         $middleware->validateCsrfTokens(except: [
             'stripe/webhook',
+            'epayco/confirmacion',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

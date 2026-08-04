@@ -12,7 +12,7 @@ class SitemapController extends Controller
     public function index(): Response
     {
         $products = Product::active()
-            ->select('slug', 'updated_at')
+            ->select('slug', 'name', 'images', 'updated_at')
             ->orderByDesc('updated_at')
             ->get();
 

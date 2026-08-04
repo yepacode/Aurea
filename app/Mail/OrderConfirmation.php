@@ -31,13 +31,13 @@ class OrderConfirmation extends Mailable
     public function envelope(): Envelope
     {
         $subject = $this->order->payment_method === 'transfer'
-            ? "Pedido #{$this->order->id} — Datos para transferencia — nuvion glass"
-            : "Pedido #{$this->order->id} confirmado — nuvion glass";
+            ? "Pedido #{$this->order->id} — Datos para transferencia — Belleza Áurea"
+            : "Pedido #{$this->order->id} confirmado — Belleza Áurea";
 
         return new Envelope(
             subject: $subject,
             replyTo: [
-                new Address(config('mail.contacto'), 'Nuvion Glass'),
+                new Address(config('mail.contacto'), 'Belleza Áurea'),
             ],
         );
     }

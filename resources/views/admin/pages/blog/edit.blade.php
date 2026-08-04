@@ -22,9 +22,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Etiqueta superior</label>
                     <input type="text" name="hero_label" value="{{ $page->hero_label }}"
-                           placeholder="NUVION GLASS · BLOG"
+                           placeholder="BELLEZA ÁUREA · BLOG"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                    <p class="text-xs text-gray-400 mt-1">Texto pequeño sobre el título. Ej: NUVION GLASS · BLOG</p>
+                    <p class="text-xs text-gray-400 mt-1">Texto pequeño sobre el título. Ej: BELLEZA ÁUREA · BLOG</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Título (línea 1)</label>
@@ -59,7 +59,7 @@
         {{-- Preview --}}
         <div class="bg-gray-900 rounded-xl p-8 mb-4 text-center">
             <p class="text-xs font-semibold tracking-widest uppercase mb-4" style="color:#D9B56D;">
-                <span x-data x-text="$el.closest('form').querySelector('[name=hero_label]').value || 'NUVION GLASS · BLOG'">{{ $page->hero_label ?? 'NUVION GLASS · BLOG' }}</span>
+                <span x-data x-text="$el.closest('form').querySelector('[name=hero_label]').value || 'BELLEZA ÁUREA · BLOG'">{{ $page->hero_label ?? 'BELLEZA ÁUREA · BLOG' }}</span>
             </p>
             <p class="text-2xl font-bold text-white">Vista previa del hero</p>
             <p class="text-xs text-gray-500 mt-2">Guarda para ver los cambios en la tienda.</p>

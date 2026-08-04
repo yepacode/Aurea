@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\LentesPageSetting;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Models\SeoSetting;
 use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -58,6 +59,13 @@ class ProductController extends Controller
             }
         }
 
+        // Solo productos con stock (en el producto o en alguna variante activa).
+        // Se filtra en SQL para poder paginar sin cargar todo el catálogo.
+        $query->where(function ($q) {
+            $q->where('stock', '>', 0)
+              ->orWhereHas('variants', fn ($v) => $v->where('is_active', true)->where('stock', '>', 0));
+        });
+
         // ── Ordenamiento ──
         // Base: con imagen primero siempre (sin foto al final)
         $query->orderByRaw('CASE WHEN images IS NOT NULL AND JSON_LENGTH(images) > 0 THEN 0 ELSE 1 END');
@@ -70,7 +78,7 @@ class ProductController extends Controller
             default      => $query->orderByDesc('is_featured')->orderBy('sort_order')->orderByDesc('created_at'),
         };
 
-        $products = $query->get()->filter(fn ($p) => $p->hasStock())->values();
+        $products = $query->paginate(24)->withQueryString();
 
         // ── Datos para los filtros ──
         // Categorías con conteo de productos activos con stock
@@ -125,7 +133,34 @@ class ProductController extends Controller
             ['name' => 'Productos', 'url' => route('products.index')],
         ]);
 
+        // Ajustes editables de la página (H1/subtítulo) y SEO (meta) desde el admin.
+        $lentesPage  = LentesPageSetting::getCurrent();
+        $seoSettings = SeoSetting::getForPage('products-index');
+
+        // Si se está filtrando por UNA categoría, sus overrides SEO mandan.
+        $categorySeo = null;
+        if ($catFiltro) {
+            $cat = Category::where('slug', $catFiltro)->first();
+            if ($cat) {
+                $base = $this->seo->meta(
+                    $cat->meta_title ?: ($cat->name.' | Belleza Áurea'),
+                    $cat->meta_description ?: ('Explora la categoría '.$cat->name.' en Belleza Áurea. Cosmética e insumos de belleza con envío a toda Colombia.'),
+                    $cat->image ? asset('storage/'.$cat->image) : null,
+                    url()->current(),
+                    'website',
+                );
+                $categorySeo = $this->seo->applyItemSeo($base, $cat, 'og_image_path', 'twitter_image_path');
+            }
+        }
+
+        $wishlistIds = \Illuminate\Support\Facades\Auth::guard('customer')->check()
+            ? \Illuminate\Support\Facades\Auth::guard('customer')->user()->wishlist()->pluck('products.id')
+            : collect();
+
         return view('storefront.products.index', [
+            'categorySeo'      => $categorySeo,
+            'bestSellerIds'    => Product::bestSellerIds(8),
+            'wishlistIds'      => $wishlistIds,
             'products'         => $products,
             'categoriasFiltro' => $categoriasFiltro,
             'marcasFiltro'     => $marcasFiltro,
@@ -137,6 +172,8 @@ class ProductController extends Controller
             'priceFiltro'      => $priceFiltro,
             'sortFiltro'       => $sortFiltro,
             'breadcrumbs'      => $breadcrumbs,
+            'lentesPage'       => $lentesPage,
+            'seoSettings'      => $seoSettings,
         ]);
     }
 
@@ -144,7 +181,7 @@ class ProductController extends Controller
     {
         $product = Product::active()
             ->where('slug', $slug)
-            ->with(['variants', 'category', 'brand'])
+            ->with(['variants', 'category', 'brand', 'approvedReviews'])
             ->firstOrFail();
 
         $activeVariants = $product->variants->where('is_active', true);
@@ -179,6 +216,10 @@ class ProductController extends Controller
                 ->get();
         }
 
+        $isBestSeller = Product::bestSellerIds(8)->contains($product->id);
+        $inWishlist = \Illuminate\Support\Facades\Auth::guard('customer')->check()
+            && \Illuminate\Support\Facades\Auth::guard('customer')->user()->hasInWishlist($product->id);
+
         $seo = $this->seo->forProduct($product);
         $schema = $this->seo->productSchema($product);
         $howToSchema = $this->seo->howToSchema($product);
@@ -190,7 +231,7 @@ class ProductController extends Controller
 
         return view('storefront.products.show', compact(
             'product', 'colores', 'genericVariants',
-            'relatedProducts', 'seo', 'schema', 'howToSchema', 'breadcrumbs',
+            'relatedProducts', 'isBestSeller', 'inWishlist', 'seo', 'schema', 'howToSchema', 'breadcrumbs',
         ));
     }
 }

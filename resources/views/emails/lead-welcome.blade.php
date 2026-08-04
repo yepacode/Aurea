@@ -1,6 +1,6 @@
 @extends('layouts.email')
 
-@section('title', 'Bienvenido a nuvion glass')
+@section('title', 'Bienvenida a Belleza Áurea')
 
 @section('content')
     {{-- Heading --}}
@@ -8,7 +8,7 @@
         ¡Bienvenido{{ $lead->name ? ', ' . $lead->name : '' }}!
     </h1>
     <p style="margin:0 0 24px;font-size:15px;color:#4B5563;line-height:1.6;">
-        Gracias por suscribirte a nuvion glass. Ahora recibirás consejos para proteger tu visión y ofertas exclusivas.
+        Gracias por suscribirte a Belleza Áurea. Ahora recibirás rituales de belleza, tips de skincare y ofertas exclusivas.
     </p>
 
     {{-- Benefits --}}
@@ -22,19 +22,19 @@
                     <tr>
                         <td width="24" valign="top" style="padding:4px 8px 12px 0;font-size:16px;color:#D9B56D;">&#10003;</td>
                         <td style="padding:4px 0 12px;font-size:14px;color:#4B5563;line-height:1.5;">
-                            Pasamos en promedio <strong>7+ horas al día</strong> frente a pantallas
+                            Una rutina constante transforma tu piel en <strong>pocas semanas</strong>
                         </td>
                     </tr>
                     <tr>
                         <td width="24" valign="top" style="padding:4px 8px 12px 0;font-size:16px;color:#D9B56D;">&#10003;</td>
                         <td style="padding:4px 0 12px;font-size:14px;color:#4B5563;line-height:1.5;">
-                            La luz azul causa <strong>fatiga visual, dolores de cabeza y problemas de sueño</strong>
+                            Cuidar tu piel hoy previene <strong>signos de la edad</strong> mañana
                         </td>
                     </tr>
                     <tr>
                         <td width="24" valign="top" style="padding:4px 8px 0;font-size:16px;color:#D9B56D;">&#10003;</td>
                         <td style="padding:4px 0 0;font-size:14px;color:#4B5563;line-height:1.5;">
-                            Los lentes nuvion filtran <strong>30-50% de la luz azul dañina</strong>
+                            Los productos de calidad <strong>rinden más y cuidan mejor</strong> tu piel
                         </td>
                     </tr>
                 </table>
@@ -48,7 +48,7 @@
             <td align="center" style="padding:8px 0;">
                 <a href="{{ route('products.index') }}"
                    style="display:inline-block;background-color:#D9B56D;color:#FFFFFF;font-size:15px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">
-                    Ver catálogo de lentes
+                    Ver productos
                 </a>
             </td>
         </tr>
@@ -60,7 +60,7 @@
             <td align="center" style="padding:0 0 8px;">
                 <a href="{{ route('landing.quiz') }}"
                    style="display:inline-block;color:#D9B56D;font-size:14px;font-weight:600;text-decoration:none;padding:10px 24px;border:1px solid #D9B56D;border-radius:8px;">
-                    ¿Qué lentes necesito? — Hacer quiz
+                    ¿Qué necesita tu piel? — Hacer quiz
                 </a>
             </td>
         </tr>

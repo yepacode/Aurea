@@ -6,6 +6,7 @@ use App\Mail\LeadWelcome;
 use App\Models\Lead;
 use App\Models\Product;
 use App\Models\QuizPageSetting;
+use App\Models\SeoSetting;
 use App\Services\SeoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,34 +20,15 @@ class LandingController extends Controller
     ) {}
 
     /**
-     * Generic campaign landing page.
-     */
-    public function index(): View
-    {
-        $featuredProducts = Product::active()
-            ->featured()
-            ->where(function ($q) {
-                $q->where('stock', '>', 0)
-                  ->orWhereHas('variants', fn ($v) => $v->where('is_active', true)->where('stock', '>', 0));
-            })
-            ->with('category', 'variants')
-            ->limit(3)
-            ->get()
-            ->filter(fn ($p) => $p->hasStock())
-            ->values();
-
-        return view('storefront.landing.index', compact('featuredProducts'));
-    }
-
-    /**
-     * Quiz: "¿Qué lentes son para ti?"
+     * Quiz de piel — recomendación de productos.
      */
     public function quiz(): View
     {
         $quizPage = QuizPageSetting::getCurrent();
         $questions = $quizPage->getQuestionsOrDefault();
+        $seoSettings = SeoSetting::getForPage('quiz');
 
-        return view('storefront.landing.quiz', compact('quizPage', 'questions'));
+        return view('storefront.landing.quiz', compact('quizPage', 'questions', 'seoSettings'));
     }
 
     /**
@@ -72,8 +54,8 @@ class LandingController extends Controller
             Mail::to($lead->email)->send(new LeadWelcome($lead));
         }
 
-        // Determine recommendation based on answers
-        $recommendation = $this->getRecommendation($validated['answers']);
+        // Determine recommendations based on answers
+        $recommendation = $this->getRecommendations($validated['answers']);
 
         return response()->json([
             'success' => true,
@@ -82,48 +64,85 @@ class LandingController extends Controller
     }
 
     /**
-     * Determine product recommendation from quiz answers.
-     * Uses admin-configured rules, with fallback to default product.
+     * Determine a SET of product recommendations from quiz answers.
+     * Prioritises products of the category that matches the user's "interest",
+     * then fills up with featured / recent products. Returns up to 4.
      */
-    private function getRecommendation(array $answers): array
+    private function getRecommendations(array $answers): array
     {
-        $quizPage = QuizPageSetting::getCurrent();
-        $product = null;
-        $reason = null;
+        $interest = $answers['interest'] ?? null;
 
-        // 1. Try admin-configured rules (first match wins)
-        foreach ($quizPage->recommendation_rules ?? [] as $rule) {
-            $field = $rule['condition_field'] ?? null;
-            $value = $rule['condition_value'] ?? null;
+        // Keywords per interest → se buscan en el nombre de la categoría o del producto.
+        $keywords = [
+            'unas'       => ['uña', 'esmalte', 'nail', 'decora', 'pincel', 'preparad', 'gancho'],
+            'skincare'   => ['piel', 'skin', 'facial', 'crema', 'sérum', 'serum', 'jabon', 'mantequilla'],
+            'maquillaje' => ['maquillaje', 'labial', 'base', 'sombra', 'rubor', 'makeup', 'polvo'],
+            'cabello'    => ['cabello', 'peluquer', 'hair', 'capilar', 'shampoo'],
+        ];
 
-            if ($field && $value && ($answers[$field] ?? null) === $value) {
-                $product = Product::active()->find($rule['product_id'] ?? null);
-                if ($product) {
-                    $reason = $rule['reason'] ?? '';
-                    break;
+        $products = collect();
+
+        if ($interest && isset($keywords[$interest])) {
+            $kw = $keywords[$interest];
+            $products = Product::active()->with(['category', 'variants'])
+                ->where(function ($q) use ($kw) {
+                    foreach ($kw as $k) {
+                        $q->orWhere('name', 'like', "%{$k}%")
+                          ->orWhereHas('category', fn ($c) => $c->where('name', 'like', "%{$k}%"));
+                    }
+                })
+                ->get()
+                ->filter(fn ($p) => $p->hasStock())
+                ->values();
+        }
+
+        // Rellenar hasta 4 con destacados y, si faltan, con los más recientes.
+        if ($products->count() < 4) {
+            $fill = Product::active()->featured()->with(['category', 'variants'])->get()
+                ->filter(fn ($p) => $p->hasStock());
+
+            if ($fill->count() < 4) {
+                $fill = $fill->concat(
+                    Product::active()->with(['category', 'variants'])->latest()->get()
+                        ->filter(fn ($p) => $p->hasStock())
+                );
+            }
+
+            $ids = $products->pluck('id')->all();
+            foreach ($fill as $p) {
+                if ($products->count() >= 4) break;
+                if (! in_array($p->id, $ids, true)) {
+                    $products->push($p);
+                    $ids[] = $p->id;
                 }
             }
         }
 
-        // 2. Fallback to default product configured in admin
-        if (! $product && $quizPage->default_product_id) {
-            $product = Product::active()->find($quizPage->default_product_id);
-            $reason = $quizPage->default_reason ?: 'Este es nuestro modelo más popular y versátil.';
-        }
+        // Mensaje personalizado según tipo de piel + preocupación.
+        $skin = [
+            'grasa' => 'grasa', 'seca' => 'seca', 'mixta' => 'mixta', 'sensible' => 'sensible',
+        ][$answers['skin_type'] ?? ''] ?? null;
+        $concern = [
+            'brillo' => 'controlar el brillo', 'resequedad' => 'hidratar y calmar',
+            'manchas' => 'unificar el tono', 'lineas' => 'nutrir y prevenir',
+        ][$answers['concern'] ?? ''] ?? null;
 
-        // 3. Final fallback: first featured product
-        if (! $product) {
-            $product = Product::active()->featured()->first() ?? Product::active()->first();
-            $reason = $quizPage->default_reason ?: 'Este es nuestro modelo más popular y versátil.';
+        $message = 'Según tus respuestas, esto te puede servir:';
+        if ($skin && $concern) {
+            $message = "Para tu piel {$skin}, enfocada en {$concern}, esto te puede servir:";
+        } elseif ($skin) {
+            $message = "Para tu piel {$skin}, esto te puede servir:";
         }
 
         return [
-            'product_name' => $product->name,
-            'product_slug' => $product->slug,
-            'product_price' => $product->price,
-            'product_image' => $product->images[0] ?? null,
-            'product_url' => route('products.show', $product->slug),
-            'reason' => $reason,
+            'message' => $message,
+            'products' => $products->take(4)->map(fn ($p) => [
+                'name'     => $p->name,
+                'price'    => $p->price,
+                'image'    => $p->images[0] ?? null,
+                'url'      => route('products.show', $p->slug),
+                'category' => $p->category?->name,
+            ])->values()->all(),
         ];
     }
 }

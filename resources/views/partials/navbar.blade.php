@@ -11,55 +11,89 @@
         .ba-nav--clear  { background: transparent; border-bottom: 1px solid transparent; box-shadow: none; }
         .ba-nav--solid  { background: rgba(247,243,237,0.92); border-bottom: 1px solid rgba(184,169,153,0.18); box-shadow: 0 1px 16px rgba(46,42,38,0.04); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     </style>
-    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-            {{-- Logo --}}
-            <a href="{{ route('home') }}" class="flex items-center" style="text-decoration:none;">
-                {{-- Móvil: solo isotipo | Desktop: logo completo --}}
-                <img src="{{ asset('img/isotipo.png') }}" alt="Belleza Áurea" id="nav-logo-mobile" style="height:42px;width:auto;">
-                <img src="{{ asset('img/logo.png') }}" alt="Belleza Áurea" id="nav-logo-desktop" style="height:64px;width:auto;display:none;">
+    <style>
+        .ba-bar{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+            height:132px;max-width:1340px;margin:0 auto;padding:0 clamp(54px,6vw,84px);}
+        .ba-links{display:flex;align-items:center;gap:clamp(12px,1.5vw,22px);}
+        .ba-links--left{justify-content:flex-end;}
+        .ba-links--right{justify-content:flex-start;}
+        .ba-navlink{font-family:'Montserrat',system-ui,sans-serif;font-size:12.5px;font-weight:500;
+            letter-spacing:.11em;text-transform:uppercase;color:#3A352E;text-decoration:none;
+            transition:color .3s ease;white-space:nowrap;}
+        .ba-navlink:hover{color:#BE9A53;}
+        .ba-navlink.is-active{color:#BE9A53;}
+        .ba-sep{color:#D9B56D;font-size:10px;line-height:1;opacity:.85;user-select:none;}
+        .ba-logo{justify-self:center;display:flex;align-items:center;text-decoration:none;}
+        .ba-logo img{width:auto;display:block;}
+        .ba-logo .lg{height:126px;} .ba-logo .sm{height:62px;display:none;}
+        .ba-cart{position:absolute;right:clamp(16px,4vw,40px);top:50%;transform:translateY(-50%);
+            color:#2E2A26;background:none;border:none;cursor:pointer;transition:color .3s ease;padding:0;}
+        .ba-cart:hover{color:#BE9A53;}
+        .ba-burger{position:absolute;left:clamp(14px,4vw,30px);top:50%;transform:translateY(-50%);
+            color:#2E2A26;background:none;border:none;cursor:pointer;padding:0;}
+        @media(max-width:920px){
+            .ba-bar{grid-template-columns:1fr;height:78px;padding:0 16px;}
+            .ba-links{display:none;}
+            .ba-logo .lg{display:none;} .ba-logo .sm{display:block;}
+        }
+        @media(min-width:921px){ .ba-burger{display:none;} }
+    </style>
+    <nav>
+        <div class="ba-bar">
+            {{-- Hamburguesa (móvil) --}}
+            <button class="ba-burger" @click="mobileMenuOpen = !mobileMenuOpen" aria-label="Menú">
+                <svg x-show="!mobileMenuOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+                <svg x-show="mobileMenuOpen" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            {{-- Links izquierda --}}
+            <div class="ba-links ba-links--left">
+                <a class="ba-navlink {{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}">Inicio</a>
+                <span class="ba-sep">&#10022;</span>
+                <a class="ba-navlink {{ request()->routeIs('products.*') && !request()->has('type') ? 'is-active' : '' }}" href="{{ route('products.index') }}">Productos</a>
+            </div>
+
+            {{-- Logo centrado --}}
+            <a href="{{ route('home') }}" class="ba-logo" aria-label="Belleza Áurea — inicio">
+                <img class="lg" src="{{ asset('img/logo.png') }}" alt="Belleza Áurea">
+                <img class="sm" src="{{ asset('img/isotipo.png') }}" alt="Belleza Áurea">
             </a>
-            <style>
-                @media(min-width:768px){
-                    #nav-logo-mobile{display:none!important;}
-                    #nav-logo-desktop{display:block!important;}
-                }
-            </style>
 
-            {{-- Desktop Navigation --}}
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="{{ route('home') }}" class="text-sm transition-colors" style="color:{{ request()->routeIs('home') ? '#D9B56D' : '#2E2A26' }};" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='{{ request()->routeIs('home') ? '#D9B56D' : '#2E2A26' }}'">Inicio</a>
-                <a href="{{ route('products.index') }}" class="text-sm transition-colors" style="color:{{ request()->routeIs('products.*') && !request()->has('type') ? '#D9B56D' : '#2E2A26' }};" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='{{ request()->routeIs('products.*') && !request()->has('type') ? '#D9B56D' : '#2E2A26' }}'">Productos</a>
-                <a href="{{ route('products.index', ['type' => 'toallitas']) }}" class="text-sm transition-colors" style="color:{{ request()->input('type') === 'toallitas' ? '#D9B56D' : '#2E2A26' }};" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='{{ request()->input('type') === 'toallitas' ? '#D9B56D' : '#2E2A26' }}'">Sets</a>
-                <a href="{{ route('blue-light') }}" class="text-sm transition-colors" style="color:{{ request()->routeIs('blue-light') ? '#D9B56D' : '#2E2A26' }};" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='{{ request()->routeIs('blue-light') ? '#D9B56D' : '#2E2A26' }}'">Rituales</a>
-                <a href="{{ route('landing.quiz') }}" class="text-sm transition-colors" style="color:{{ request()->routeIs('landing.quiz*') ? '#D9B56D' : '#2E2A26' }};" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='{{ request()->routeIs('landing.quiz*') ? '#D9B56D' : '#2E2A26' }}'">Quiz de piel</a>
-                <a href="{{ route('blog.index') }}" class="text-sm transition-colors" style="color:{{ request()->routeIs('blog.*') ? '#D9B56D' : '#2E2A26' }};" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='{{ request()->routeIs('blog.*') ? '#D9B56D' : '#2E2A26' }}'">Blog</a>
+            {{-- Links derecha --}}
+            <div class="ba-links ba-links--right">
+                <a class="ba-navlink {{ request()->routeIs('blue-light') ? 'is-active' : '' }}" href="{{ route('blue-light') }}">Rituales</a>
+                <span class="ba-sep">&#10022;</span>
+                <a class="ba-navlink {{ request()->routeIs('landing.quiz*') ? 'is-active' : '' }}" href="{{ route('landing.quiz') }}">Quiz de piel</a>
             </div>
 
-            {{-- Cart + Mobile toggle --}}
-            <div class="flex items-center space-x-4">
-                {{-- Cart button --}}
-                <button @click="$dispatch('toggle-cart-drawer')" class="relative transition-colors" style="color:#2E2A26;" id="cart-badge" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='#2E2A26'">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                    </svg>
-                    <span id="cart-count"
-                          class="absolute -top-2 -right-2 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center transition-transform {{ $cartCount > 0 ? 'scale-100' : 'scale-0' }}"
-                          style="background:#D9B56D;">
-                        {{ $cartCount }}
-                    </span>
-                </button>
+            {{-- Cuenta --}}
+            <a href="{{ auth('customer')->check() ? route('account.dashboard') : route('customer.login') }}"
+               class="ba-cart relative" style="margin-right:2px;"
+               aria-label="{{ auth('customer')->check() ? 'Mi cuenta' : 'Ingresar' }}"
+               title="{{ auth('customer')->check() ? 'Mi cuenta' : 'Ingresar' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+                @if(auth('customer')->check())
+                <span class="absolute -top-1 -right-1 rounded-full" style="width:9px;height:9px;background:#7C9B7E;border:2px solid #fff;"></span>
+                @endif
+            </a>
 
-                {{-- Mobile menu button --}}
-                <button @click="mobileMenuOpen = !mobileMenuOpen" class="md:hidden transition-colors" style="color:#2E2A26;">
-                    <svg x-show="!mobileMenuOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
-                    <svg x-show="mobileMenuOpen" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
+            {{-- Carrito --}}
+            <button @click="$dispatch('toggle-cart-drawer')" class="ba-cart relative" id="cart-badge" aria-label="Carrito">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                </svg>
+                <span id="cart-count"
+                      class="absolute -top-2 -right-2 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center transition-transform {{ $cartCount > 0 ? 'scale-100' : 'scale-0' }}"
+                      style="background:#D9B56D;">
+                    {{ $cartCount }}
+                </span>
+            </button>
         </div>
 
         {{-- Mobile Navigation --}}
@@ -74,11 +108,14 @@
             <div class="py-4 space-y-3 md:hidden">
                 <a href="{{ route('home') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Inicio</a>
                 <a href="{{ route('products.index') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Productos</a>
-                <a href="{{ route('products.index', ['type' => 'toallitas']) }}" class="block text-sm transition-colors" style="color:#2E2A26;">Sets</a>
                 <a href="{{ route('blue-light') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Rituales</a>
                 <a href="{{ route('landing.quiz') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Quiz de piel</a>
-                <a href="{{ route('blog.index') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Blog</a>
                 <button @click="$dispatch('toggle-cart-drawer'); mobileMenuOpen = false" class="block text-sm transition-colors" style="color:#2E2A26;">Carrito</button>
+                @if(auth('customer')->check())
+                <a href="{{ route('account.dashboard') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Mi cuenta</a>
+                @else
+                <a href="{{ route('customer.login') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Ingresar / Registrarme</a>
+                @endif
             </div>
         </div>
     </nav>
@@ -116,11 +153,11 @@
          x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="translate-x-0"
          x-transition:leave-end="translate-x-full"
-         class="absolute top-0 right-0 h-full w-full max-w-md shadow-2xl flex flex-col"
-         style="background:#ffffff;border-left:1px solid #e5e7eb;">
+         class="absolute top-0 right-0 w-full max-w-md max-h-screen shadow-2xl flex flex-col"
+         style="background:#ffffff;border-left:1px solid #e5e7eb;border-bottom-left-radius:20px;">
 
         {{-- Header --}}
-        <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid #e5e7eb;">
+        <div class="flex items-center justify-between px-6 py-4 shrink-0" style="border-bottom:1px solid #e5e7eb;">
             <h2 class="font-brand text-lg font-semibold" style="color:#2E2A26;">Tu carrito</h2>
             <button @click="close()" class="transition-colors" style="color:#9ca3af;" onmouseover="this.style.color='#2E2A26'" onmouseout="this.style.color='#9ca3af'">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -129,11 +166,11 @@
             </button>
         </div>
 
-        {{-- Items --}}
-        <div class="flex-1 overflow-y-auto px-6 py-4">
+        {{-- Items (lo único que hace scroll) --}}
+        <div class="overflow-y-auto px-6 py-4 min-h-0" style="flex:1 1 auto;">
             {{-- Empty state --}}
             <template x-if="items.length === 0">
-                <div class="flex flex-col items-center justify-center h-full text-center">
+                <div class="flex flex-col items-center justify-center text-center" style="padding:48px 0;">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4" style="color:#d1d5db;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                     </svg>
@@ -160,7 +197,7 @@
                         </template>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <a :href="'/lentes/' + item.slug" class="text-sm font-medium transition-colors line-clamp-1" style="color:#2E2A26;" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='#2E2A26'" x-text="item.name"></a>
+                        <a :href="'/productos/' + item.slug" class="text-sm font-medium transition-colors line-clamp-1" style="color:#2E2A26;" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='#2E2A26'" x-text="item.name"></a>
                         <p x-show="item.variant" class="text-xs mt-0.5" style="color:#9ca3af;" x-text="item.variant"></p>
                         <p class="text-sm font-semibold mt-1" style="color:#D9B56D;" x-text="'$' + fmt(item.unit_price)"></p>
                         <div class="flex items-center gap-2 mt-2">
@@ -217,7 +254,7 @@
 
         {{-- Footer: Totals + CTA --}}
         <template x-if="items.length > 0">
-            <div class="px-6 py-4 space-y-3" style="border-top:1px solid #e5e7eb;background:#f9fafb;">
+            <div class="px-6 py-4 space-y-3 shrink-0" style="border-top:1px solid #e5e7eb;background:#f9fafb;border-bottom-left-radius:20px;">
                 {{-- Subtotal --}}
                 <div class="flex justify-between text-sm">
                     <span style="color:#6b7280;">Subtotal</span>
@@ -345,7 +382,7 @@ function cartDrawer() {
         freeThreshold: {{ $cartFreeThreshold }},
         total: {{ $cartTotal }},
         toallitasData: @json($toallitasJson),
-        couponOpen: false,
+        couponOpen: true,
         couponInput: '',
         couponLoading: false,
         couponError: '',

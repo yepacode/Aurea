@@ -165,16 +165,16 @@ class StorefrontController extends Controller
         if (empty($faqItems)) {
             $faqItems = [
                 [
-                    'question' => '¿Qué es la luz azul?',
-                    'answer' => 'La luz azul es una porción del espectro de luz visible con longitud de onda entre 380 y 500 nanómetros. Es emitida por el sol, pantallas digitales, LEDs y luces fluorescentes.',
+                    'question' => '¿Cada cuánto debo hacer mi ritual de piel?',
+                    'answer' => 'Lo ideal es una rutina diaria simple (mañana y noche) y un ritual más completo 1 o 2 veces por semana. La constancia es lo que marca la diferencia.',
                 ],
                 [
-                    'question' => '¿Por qué es dañina la luz azul?',
-                    'answer' => 'La exposición prolongada puede causar fatiga visual digital, dolores de cabeza, ojos secos y alteraciones en el ciclo circadiano que afectan la calidad del sueño.',
+                    'question' => '¿Los productos son aptos para todo tipo de piel?',
+                    'answer' => 'Sí. En Belleza Áurea encuentras opciones para piel seca, mixta, grasa y sensible. Si tienes dudas, nuestro Quiz de piel te recomienda los productos ideales para ti.',
                 ],
                 [
-                    'question' => '¿Quién debería usar lentes con protección de luz azul?',
-                    'answer' => 'Cualquier persona que pase más de 4 horas diarias frente a pantallas: trabajadores de oficina, gamers, estudiantes y usuarios frecuentes de dispositivos móviles.',
+                    'question' => '¿Hacen envíos a toda Colombia?',
+                    'answer' => 'Sí, enviamos a todo el país. El costo y el tiempo de entrega dependen de tu ciudad; lo ves calculado en el carrito antes de pagar.',
                 ],
             ];
         }
@@ -183,7 +183,7 @@ class StorefrontController extends Controller
 
         $breadcrumbSchema = $this->seo->breadcrumbSchema([
             ['name' => 'Inicio', 'url' => url('/')],
-            ['name' => '¿Qué es la luz azul?', 'url' => route('blue-light')],
+            ['name' => 'Rituales', 'url' => route('blue-light')],
         ]);
 
         $seoSettings = SeoSetting::getForPage('blue-light');
@@ -205,5 +205,27 @@ class StorefrontController extends Controller
         $seoSettings = SeoSetting::getForPage('shipping-returns');
 
         return view('storefront.pages.envios-y-devoluciones', compact('page', 'seoSettings'));
+    }
+
+    public function about(): View
+    {
+        $seoSettings = SeoSetting::getForPage('about');
+
+        return view('storefront.pages.sobre-nosotras', compact('seoSettings'));
+    }
+
+    public function terms(): View
+    {
+        return view('storefront.pages.terminos');
+    }
+
+    public function privacy(): View
+    {
+        return view('storefront.pages.privacidad');
+    }
+
+    public function cookies(): View
+    {
+        return view('storefront.pages.cookies');
     }
 }

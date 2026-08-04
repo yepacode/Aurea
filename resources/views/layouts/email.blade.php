@@ -42,9 +42,9 @@
                             <p style="margin:0;font-size:13px;color:#4B5563;">
                                 <a href="{{ route('products.index') }}" style="color:#D9B56D;text-decoration:none;">Ver catálogo</a>
                                 &nbsp;&middot;&nbsp;
-                                <a href="{{ route('blog.index') }}" style="color:#D9B56D;text-decoration:none;">Blog</a>
+                                <a href="{{ route('blue-light') }}" style="color:#D9B56D;text-decoration:none;">Rituales</a>
                                 &nbsp;&middot;&nbsp;
-                                <a href="{{ route('blue-light') }}" style="color:#D9B56D;text-decoration:none;">Luz azul</a>
+                                <a href="{{ route('contact') }}" style="color:#D9B56D;text-decoration:none;">Contacto</a>
                             </p>
                         </td>
                     </tr>

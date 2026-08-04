@@ -41,4 +41,13 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'epayco' => [
+        'public_key'  => env('EPAYCO_PUBLIC_KEY'),
+        'private_key' => env('EPAYCO_PRIVATE_KEY'),
+        'p_cust_id'   => env('EPAYCO_P_CUST_ID'),   // P_CUST_ID_CLIENTE
+        'p_key'       => env('EPAYCO_P_KEY'),        // P_KEY (para validar la firma del webhook)
+        'test'        => env('EPAYCO_TEST', true),   // true = sandbox
+        'currency'    => env('EPAYCO_CURRENCY', 'cop'),
+    ],
+
 ];

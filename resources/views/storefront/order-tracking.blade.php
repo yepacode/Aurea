@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', "Pedido #{$order->id} | Belleza Áurea")
+@section('robots', 'noindex, nofollow')
 
 @section('content')
 <section class="py-12 md:py-20">
@@ -168,17 +169,17 @@
                         @if(!empty($bankDetails['clabe']))
                         <div class="bg-blue-50/50 rounded-lg p-4 space-y-2 text-sm">
                             @if($bankDetails['bank_name'])
-                            <div class="flex justify-between"><span class="text-text-muted">Banco:</span><span class="font-semibold text-text-dark">{{ $bankDetails['bank_name'] }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Banco:</span><span class="font-semibold text-text-dark" style="text-align:right;overflow-wrap:anywhere;min-width:0;">{{ $bankDetails['bank_name'] }}</span></div>
                             @endif
                             @if($bankDetails['account_holder'])
-                            <div class="flex justify-between"><span class="text-text-muted">Beneficiario:</span><span class="font-semibold text-text-dark">{{ $bankDetails['account_holder'] }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Beneficiario:</span><span class="font-semibold text-text-dark" style="text-align:right;overflow-wrap:anywhere;min-width:0;">{{ $bankDetails['account_holder'] }}</span></div>
                             @endif
-                            <div class="flex justify-between"><span class="text-text-muted">CLABE:</span><span class="font-bold text-text-dark font-mono tracking-wider">{{ $bankDetails['clabe'] }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">CLABE:</span><span class="font-bold text-text-dark font-mono" style="text-align:right;word-break:break-all;min-width:0;">{{ $bankDetails['clabe'] }}</span></div>
                             @if($bankDetails['account_number'])
-                            <div class="flex justify-between"><span class="text-text-muted">No. cuenta:</span><span class="font-semibold text-text-dark">{{ $bankDetails['account_number'] }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">No. cuenta:</span><span class="font-semibold text-text-dark" style="text-align:right;word-break:break-all;min-width:0;">{{ $bankDetails['account_number'] }}</span></div>
                             @endif
-                            <div class="flex justify-between"><span class="text-text-muted">Referencia:</span><span class="font-bold text-secondary">Pedido #{{ $order->id }}</span></div>
-                            <div class="flex justify-between"><span class="text-text-muted">Monto:</span><span class="font-bold text-secondary text-base">${{ number_format($order->total, 0, ',', '.') }} MXN</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Referencia:</span><span class="font-bold text-secondary" style="text-align:right;overflow-wrap:anywhere;min-width:0;">Pedido #{{ $order->id }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Monto:</span><span class="font-bold text-secondary text-base" style="text-align:right;">${{ number_format($order->total, 0, ',', '.') }}</span></div>
                         </div>
                         @endif
 
@@ -321,21 +322,30 @@
                 {{-- Customer --}}
                 <div class="bg-white border border-border-light rounded-xl p-6">
                     <h3 class="font-brand font-bold text-text-dark mb-3">Datos del cliente</h3>
-                    <div class="space-y-1 text-sm">
-                        <p class="font-medium text-text-dark">{{ $order->customer->name }}</p>
-                        <p class="text-text-muted">{{ $order->customer->email }}</p>
+                    <div class="space-y-1 text-sm" style="min-width:0;">
+                        <p class="font-medium text-text-dark" style="overflow-wrap:anywhere;">{{ $order->customer->name }}</p>
+                        <p class="text-text-muted" style="overflow-wrap:anywhere;">{{ $order->customer->email }}</p>
                         @if($order->customer->phone)
-                            <p class="text-text-muted">{{ $order->customer->phone }}</p>
+                            <p class="text-text-muted" style="overflow-wrap:anywhere;">{{ $order->customer->phone }}</p>
                         @endif
                     </div>
                 </div>
 
                 {{-- Help --}}
+                @php
+                    $helpEmail = \Illuminate\Support\Str::startsWith(trim((string) config('legal.email')), '[') ? null : config('legal.email');
+                @endphp
                 <div class="bg-primary/5 border border-primary/10 rounded-xl p-6 text-center">
                     <p class="text-sm text-text-muted">¿Necesitas ayuda?</p>
-                    <a href="mailto:contacto@nuvionglass.com.mx" class="text-sm font-semibold text-primary hover:underline">
-                        contacto@nuvionglass.com.mx
-                    </a>
+                    @if($helpEmail)
+                        <a href="mailto:{{ $helpEmail }}" class="text-sm font-semibold text-primary hover:underline" style="overflow-wrap:anywhere;display:inline-block;max-width:100%;">
+                            {{ $helpEmail }}
+                        </a>
+                    @else
+                        <a href="{{ route('contact') }}" class="text-sm font-semibold text-primary hover:underline">
+                            Escríbenos aquí
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

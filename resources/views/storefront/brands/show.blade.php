@@ -2,12 +2,18 @@
 
 @section('title', $seo['title'])
 @section('meta_description', $seo['description'])
+@section('robots', $seo['robots'])
 @section('canonical', $seo['canonical'])
-@section('og_title', $seo['title'])
-@section('og_description', $seo['description'])
-@if($brand->logo_path)
-@section('og_image', $brand->logo_url)
-@endif
+@if(!empty($seo['keywords']))@section('keywords', $seo['keywords'])@endif
+@section('og_type', $seo['og_type'])
+@section('og_title', $seo['og_title'])
+@section('og_description', $seo['og_description'])
+@section('og_image', $seo['og_image'])
+@section('twitter_card', $seo['twitter_card'])
+@section('twitter_title', $seo['twitter_title'])
+@section('twitter_description', $seo['twitter_description'])
+@section('twitter_image', $seo['twitter_image'])
+@if(!empty($seo['custom_schema']))@section('custom_schema', $seo['custom_schema'])@endif
 
 @push('schema')
 <script type="application/ld+json">{!! $brandSchema !!}</script>

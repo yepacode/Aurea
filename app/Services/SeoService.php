@@ -26,7 +26,70 @@ class SeoService
             'twitter_title' => $title,
             'twitter_description' => $description,
             'twitter_image' => $image ?? asset('images/og-default.jpg'),
+            'keywords' => null,
+            'robots' => 'index, follow',
+            'custom_schema' => null,
         ];
+    }
+
+    /**
+     * Aplica los overrides de SEO por-ítem (guardados desde el admin) sobre
+     * el arreglo meta base: canónica, OG, Twitter, keywords, robots y JSON-LD.
+     *
+     * @param  object  $item   modelo con columnas SEO
+     * @param  string  $ogCol  columna de imagen OG del modelo
+     * @param  string  $twCol  columna de imagen Twitter del modelo
+     */
+    public function applyItemSeo(array $meta, object $item, string $ogCol = 'og_image_path', string $twCol = 'twitter_image_path'): array
+    {
+        if (! empty($item->canonical_url)) {
+            $meta['canonical'] = $item->canonical_url;
+        }
+        if (! empty($item->og_type)) {
+            $meta['og_type'] = $item->og_type;
+        }
+        if (! empty($item->og_title)) {
+            $meta['og_title'] = $item->og_title;
+        }
+        if (! empty($item->og_description)) {
+            $meta['og_description'] = $item->og_description;
+        }
+        if (! empty($item->{$ogCol})) {
+            $og = asset('storage/'.$item->{$ogCol});
+            $meta['og_image'] = $og;
+            $meta['twitter_image'] = $og;
+        }
+
+        // Twitter: usa sus propios campos o cae al equivalente OG
+        if (! empty($item->twitter_card)) {
+            $meta['twitter_card'] = $item->twitter_card;
+        }
+        $meta['twitter_title'] = $item->twitter_title ?: $meta['og_title'];
+        $meta['twitter_description'] = $item->twitter_description ?: $meta['og_description'];
+        if (! empty($item->{$twCol})) {
+            $meta['twitter_image'] = asset('storage/'.$item->{$twCol});
+        }
+
+        // Keywords: meta_keywords o, en su defecto, la palabra clave principal
+        $kw = $item->meta_keywords ?? null;
+        if (empty($kw) && ! empty($item->focus_keyword)) {
+            $kw = $item->focus_keyword;
+        }
+        if (! empty($kw)) {
+            $meta['keywords'] = $kw;
+        }
+
+        // Robots
+        $index = ! empty($item->noindex) ? 'noindex' : 'index';
+        $follow = ! empty($item->nofollow) ? 'nofollow' : 'follow';
+        $meta['robots'] = "{$index}, {$follow}";
+
+        // JSON-LD personalizado
+        if (! empty($item->custom_schema_markup)) {
+            $meta['custom_schema'] = $item->custom_schema_markup;
+        }
+
+        return $meta;
     }
 
     /**
@@ -34,17 +97,19 @@ class SeoService
      */
     public function forProduct(Product $product): array
     {
-        $title = $product->meta_title ?: "{$product->name} | nuvion - glass";
+        $title = $product->meta_title ?: "{$product->name} | Belleza Áurea";
         $description = $product->meta_description ?: mb_substr(strip_tags($product->description), 0, 160);
         $image = is_array($product->images) ? ($product->images[0] ?? null) : null;
 
-        return $this->meta(
+        $meta = $this->meta(
             $title,
             $description,
             $image ? asset("storage/{$image}") : null,
             route('products.show', $product->slug),
             'product',
         );
+
+        return $this->applyItemSeo($meta, $product, 'og_image_path', 'twitter_image_path');
     }
 
     /**
@@ -52,29 +117,14 @@ class SeoService
      */
     public function forBlogPost(BlogPost $post): array
     {
-        $title = $post->meta_title ?: "{$post->title} | nuvion - glass";
+        $title = $post->meta_title ?: "{$post->title} | Belleza Áurea";
         $description = $post->meta_description ?: mb_substr(strip_tags($post->excerpt ?? $post->content), 0, 160);
         $image = $post->image ? asset("storage/{$post->image}") : null;
         $canonical = $post->canonical_url ?: route('blog.show', $post->slug);
 
         $meta = $this->meta($title, $description, $image, $canonical, 'article');
 
-        // Override with OG-specific fields if set
-        if ($post->og_title) {
-            $meta['og_title'] = $post->og_title;
-            $meta['twitter_title'] = $post->og_title;
-        }
-        if ($post->og_description) {
-            $meta['og_description'] = $post->og_description;
-            $meta['twitter_description'] = $post->og_description;
-        }
-        if ($post->og_image) {
-            $ogImage = asset("storage/{$post->og_image}");
-            $meta['og_image'] = $ogImage;
-            $meta['twitter_image'] = $ogImage;
-        }
-
-        return $meta;
+        return $this->applyItemSeo($meta, $post, 'og_image', 'twitter_image_path');
     }
 
     /**
@@ -82,19 +132,50 @@ class SeoService
      */
     public function organizationSchema(): string
     {
-        return $this->toJsonLd([
+        $legal = config('legal', []);
+        $usable = fn ($v) => $v && ! \Illuminate\Support\Str::startsWith(trim((string) $v), '[');
+
+        $data = [
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
-            'name' => 'nuvion - glass',
+            'name' => 'Belleza Áurea',
             'url' => url('/'),
-            'logo' => asset('images/logo.png'),
-            'description' => 'Lentes con protección de luz azul. Protege tus ojos de las pantallas con estilo.',
-            'contactPoint' => [
-                '@type' => 'ContactPoint',
-                'contactType' => 'customer service',
-                'availableLanguage' => 'Spanish',
-            ],
-        ]);
+            'logo' => asset('img/brand/logo-principal.png'),
+            'description' => 'Distribuidora de insumos y cosmética profesional de belleza en Colombia: uñas, piel, maquillaje, cabello y estética.',
+        ];
+
+        // Punto de contacto (usa datos reales de config/legal.php cuando existan)
+        $contact = ['@type' => 'ContactPoint', 'contactType' => 'customer service', 'availableLanguage' => 'Spanish'];
+        if ($usable($legal['phone'] ?? null)) {
+            $contact['telephone'] = $legal['phone'];
+        }
+        if ($usable($legal['email'] ?? null)) {
+            $contact['email'] = $legal['email'];
+        }
+        $data['contactPoint'] = $contact;
+
+        // Dirección
+        if ($usable($legal['address'] ?? null) || $usable($legal['city'] ?? null)) {
+            $data['address'] = array_filter([
+                '@type' => 'PostalAddress',
+                'streetAddress' => $usable($legal['address'] ?? null) ? $legal['address'] : null,
+                'addressLocality' => $usable($legal['city'] ?? null) ? $legal['city'] : null,
+                'addressCountry' => 'CO',
+            ]);
+        }
+
+        // sameAs — perfiles sociales (desde la página de contacto en el admin)
+        $contact = \App\Models\ContactPageSetting::getCurrent();
+        $sameAs = array_values(array_filter([
+            $contact->instagram_url ?? null,
+            $contact->facebook_url ?? null,
+            $contact->tiktok_url ?? null,
+        ]));
+        if (! empty($sameAs)) {
+            $data['sameAs'] = $sameAs;
+        }
+
+        return $this->toJsonLd($data);
     }
 
     /**
@@ -142,6 +223,26 @@ class SeoService
                     '@type' => 'Organization',
                     'name'  => 'Belleza Áurea',
                     'url'   => url('/'),
+                ],
+                'shippingDetails' => [
+                    '@type' => 'OfferShippingDetails',
+                    'shippingRate' => [
+                        '@type'    => 'MonetaryAmount',
+                        'value'    => (string) (float) \App\Models\ShippingSetting::get('default_price', 0),
+                        'currency' => 'COP',
+                    ],
+                    'shippingDestination' => [
+                        '@type'          => 'DefinedRegion',
+                        'addressCountry' => 'CO',
+                    ],
+                ],
+                'hasMerchantReturnPolicy' => [
+                    '@type'                => 'MerchantReturnPolicy',
+                    'applicableCountry'    => 'CO',
+                    'returnPolicyCategory' => 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                    'merchantReturnDays'   => (int) config('legal.retracto_dias', 5),
+                    'returnMethod'         => 'https://schema.org/ReturnByMail',
+                    'returnFees'           => 'https://schema.org/ReturnShippingFees',
                 ],
             ],
         ];
@@ -194,10 +295,25 @@ class SeoService
             $schema['keywords'] = $product->focus_keyword;
         }
 
-        // Key features → ItemList (AI-friendly bullets)
-        if (! empty($product->key_features) && is_array($product->key_features)) {
-            $schema['hasMeasurement'] = null; // placeholder
-            unset($schema['hasMeasurement']);
+        // Reseñas → aggregateRating + review (estrellas en Google)
+        $reviews = $product->relationLoaded('approvedReviews')
+            ? $product->approvedReviews
+            : $product->approvedReviews()->get();
+        if ($reviews->count() > 0) {
+            $schema['aggregateRating'] = [
+                '@type'       => 'AggregateRating',
+                'ratingValue' => round((float) $reviews->avg('rating'), 1),
+                'reviewCount' => $reviews->count(),
+                'bestRating'  => 5,
+                'worstRating' => 1,
+            ];
+            $schema['review'] = $reviews->take(10)->map(fn ($r) => [
+                '@type'         => 'Review',
+                'reviewRating'  => ['@type' => 'Rating', 'ratingValue' => $r->rating, 'bestRating' => 5, 'worstRating' => 1],
+                'author'        => ['@type' => 'Person', 'name' => $r->author_name],
+                'datePublished' => $r->created_at?->toDateString(),
+                'reviewBody'    => $r->comment,
+            ])->values()->all();
         }
 
         return $this->toJsonLd($schema);
@@ -254,12 +370,12 @@ class SeoService
             'dateModified' => $post->updated_at->toIso8601String(),
             'author' => [
                 '@type' => 'Organization',
-                'name' => $post->author_name ?? 'nuvion glass',
+                'name' => $post->author_name ?? 'Belleza Áurea',
                 'url' => url('/'),
             ],
             'publisher' => [
                 '@type' => 'Organization',
-                'name' => 'nuvion glass',
+                'name' => 'Belleza Áurea',
                 'logo' => [
                     '@type' => 'ImageObject',
                     'url' => asset('img/isotipo.png'),

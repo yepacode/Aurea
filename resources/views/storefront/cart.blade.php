@@ -1,9 +1,10 @@
 @extends('layouts.app')
 
 @section('title', 'Carrito de compras | Belleza Áurea')
+@section('robots', 'noindex, follow')
 
 @section('content')
-<section class="py-12" style="background:#FBF8F2;min-height:100vh;" x-data="cartPage()">
+<section class="py-12 flex-1" style="background:#FBF8F2;" x-data="cartPage()">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {{-- Header --}}
@@ -23,7 +24,7 @@
                 <h2 class="text-xl font-semibold mb-2" style="color:#2E2A26;">Tu carrito está vacío</h2>
                 <p class="mb-6" style="color:#9ca3af;">Agrega productos para comenzar tu compra</p>
                 <a href="{{ route('products.index') }}" class="inline-block text-white px-8 py-3 rounded-lg font-medium transition-colors" style="background:#D9B56D;" onmouseover="this.style.background='#BE9A53'" onmouseout="this.style.background='#D9B56D'">
-                    Explorar lentes
+                    Explorar productos
                 </a>
             </div>
         </template>
@@ -59,7 +60,7 @@
                                     </template>
                                 </div>
                                 <div class="flex flex-col justify-center min-w-0">
-                                    <a :href="'/lentes/' + item.slug" class="text-sm font-medium line-clamp-2 transition-colors" style="color:#2E2A26;" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='#2E2A26'" x-text="item.name"></a>
+                                    <a :href="'/productos/' + item.slug" class="text-sm font-medium line-clamp-2 transition-colors" style="color:#2E2A26;" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='#2E2A26'" x-text="item.name"></a>
                                     <p x-show="item.variant" class="text-xs mt-1" style="color:#9ca3af;" x-text="item.variant"></p>
                                     <p class="md:hidden text-sm font-semibold mt-1" style="color:#D9B56D;" x-text="'$' + fmt(item.unit_price)"></p>
                                 </div>
@@ -117,7 +118,7 @@
 
                 {{-- Summary sidebar (1/3) --}}
                 <div class="lg:col-span-1">
-                    <div class="sticky top-24 rounded-2xl p-6 space-y-4" style="background:#ffffff;border:1px solid #e5e7eb;box-shadow:0 4px 16px rgba(0,0,0,0.04);">
+                    <div class="sticky rounded-2xl p-6 space-y-4" style="top:150px;background:linear-gradient(160deg,#FEFCF8,#F8F2E8);border:1px solid rgba(217,181,109,.18);box-shadow:0 30px 60px -34px rgba(120,92,44,.4);">
                         <h2 class="font-brand text-lg font-semibold" style="color:#2E2A26;">Resumen del pedido</h2>
 
                         <div class="space-y-3 text-sm">
@@ -214,10 +215,10 @@
                         </div>
 
                         <a href="{{ route('checkout.index') }}"
-                           class="block w-full text-white text-center py-3.5 rounded-xl font-medium transition-all"
-                           style="background:#D9B56D;box-shadow:0 4px 12px rgba(55,138,221,0.25);"
-                           onmouseover="this.style.background='#BE9A53';this.style.boxShadow='0 6px 16px rgba(55,138,221,0.35)'"
-                           onmouseout="this.style.background='#D9B56D';this.style.boxShadow='0 4px 12px rgba(55,138,221,0.25)'">
+                           class="block w-full text-white text-center py-4 font-semibold transition-all"
+                           style="background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);border-radius:999px;letter-spacing:.12em;text-transform:uppercase;font-size:13px;box-shadow:0 16px 32px -12px rgba(190,154,83,.65);"
+                           onmouseover="this.style.boxShadow='0 22px 44px -12px rgba(190,154,83,.85)';this.style.transform='translateY(-2px)'"
+                           onmouseout="this.style.boxShadow='0 16px 32px -12px rgba(190,154,83,.65)';this.style.transform='translateY(0)'">
                             Finalizar compra
                         </a>
 

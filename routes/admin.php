@@ -73,6 +73,12 @@ Route::resource('blog', BlogAdminController::class);
 // Discount codes CRUD
 Route::resource('discount-codes', DiscountCodeAdminController::class)->except(['show']);
 
+// Reseñas (moderación)
+Route::get('reviews', [\App\Http\Controllers\Admin\AdminReviewController::class, 'index'])->name('reviews.index');
+Route::put('reviews/{review}/approve', [\App\Http\Controllers\Admin\AdminReviewController::class, 'approve'])->name('reviews.approve');
+Route::put('reviews/{review}/unapprove', [\App\Http\Controllers\Admin\AdminReviewController::class, 'unapprove'])->name('reviews.unapprove');
+Route::delete('reviews/{review}', [\App\Http\Controllers\Admin\AdminReviewController::class, 'destroy'])->name('reviews.destroy');
+
 // Shipping management
 Route::get('shipping', [ShippingAdminController::class, 'index'])->name('shipping.index');
 Route::put('shipping/settings', [ShippingAdminController::class, 'updateSettings'])->name('shipping.settings');
@@ -83,6 +89,10 @@ Route::delete('shipping/rates/{shippingRate}', [ShippingAdminController::class, 
 // Bank transfer settings
 Route::get('bank-transfer', [BankTransferAdminController::class, 'index'])->name('bank-transfer.index');
 Route::put('bank-transfer/settings', [BankTransferAdminController::class, 'updateSettings'])->name('bank-transfer.settings');
+
+// Pasarela de pago (Stripe) settings
+Route::get('pasarela-pago', [\App\Http\Controllers\Admin\PaymentSettingsAdminController::class, 'index'])->name('payments.index');
+Route::put('pasarela-pago', [\App\Http\Controllers\Admin\PaymentSettingsAdminController::class, 'update'])->name('payments.update');
 
 // Infographics CRUD
 Route::resource('infographics', InfographicAdminController::class)->except(['show']);

@@ -17,9 +17,9 @@ class OrderShipped extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Tu pedido #{$this->order->id} va en camino — nuvion glass",
+            subject: "Tu pedido #{$this->order->id} va en camino — Belleza Áurea",
             replyTo: [
-                new Address(config('mail.contacto'), 'Nuvion Glass'),
+                new Address(config('mail.contacto'), 'Belleza Áurea'),
             ],
         );
     }

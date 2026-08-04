@@ -122,7 +122,7 @@
             <td align="center" style="border-top:1px solid #E5E7EB;padding:20px 0 0;">
                 <p style="margin:0 0 4px;font-size:13px;color:#9CA3AF;">¿Tienes dudas sobre tu envío?</p>
                 <p style="margin:0;font-size:13px;">
-                    <a href="mailto:contacto@nuvionglass.com.mx" style="color:#D9B56D;text-decoration:none;font-weight:600;">contacto@nuvionglass.com.mx</a>
+                    <a href="mailto:contacto@bellezaaurea.com" style="color:#D9B56D;text-decoration:none;font-weight:600;">contacto@bellezaaurea.com</a>
                 </p>
             </td>
         </tr>

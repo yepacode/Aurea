@@ -36,7 +36,7 @@ class CartController extends Controller
         $validated = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'variant_id' => 'nullable|integer|exists:product_variants,id',
-            'qty' => 'integer|min:1|max:10',
+            'qty' => 'integer|min:1|max:10000',
         ]);
 
         $productId = (int) $validated['product_id'];
@@ -75,7 +75,7 @@ class CartController extends Controller
     public function update(Request $request, string $itemId): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
-            'qty' => 'required|integer|min:0|max:10',
+            'qty' => 'required|integer|min:0|max:10000',
         ]);
 
         $newQty = (int) $validated['qty'];

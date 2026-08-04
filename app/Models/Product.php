@@ -25,9 +25,20 @@ class Product extends Model
         'images',
         'meta_title',
         'meta_description',
-        'og_image_path',
+        'meta_keywords',
         'focus_keyword',
+        'canonical_url',
         'noindex',
+        'nofollow',
+        'og_type',
+        'og_title',
+        'og_description',
+        'og_image_path',
+        'twitter_card',
+        'twitter_title',
+        'twitter_description',
+        'twitter_image_path',
+        'custom_schema_markup',
         'key_features',     // JSON array de bullets
         'how_to_use',       // text — instrucciones de uso
         'ingredients',      // text — lista de ingredientes (INCI)
@@ -56,6 +67,7 @@ class Product extends Model
             'key_features'  => 'array',
             'weight_value'  => 'decimal:2',
             'noindex'       => 'boolean',
+            'nofollow'      => 'boolean',
             'is_cruelty_free' => 'boolean',
             'is_vegan'      => 'boolean',
             'is_active'     => 'boolean',
@@ -107,6 +119,28 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    public function approvedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class)->where('is_approved', true)->latest();
+    }
+
+    // ── Reseñas / rating ──
+
+    public function getAverageRatingAttribute(): float
+    {
+        return round((float) $this->approvedReviews()->avg('rating'), 1);
+    }
+
+    public function getReviewsCountAttribute(): int
+    {
+        return (int) $this->approvedReviews()->count();
     }
 
     // ── Scopes ──
@@ -168,6 +202,40 @@ class Product extends Model
         return (int) $this->stock;
     }
 
+    /** Umbral para mostrar "¡Últimas unidades!". */
+    public const LOW_STOCK_THRESHOLD = 5;
+
+    /**
+     * ¿Queda poco stock? (para señal de urgencia honesta)
+     */
+    public function getIsLowStockAttribute(): bool
+    {
+        $available = $this->availableStock();
+
+        return $available > 0 && $available <= self::LOW_STOCK_THRESHOLD;
+    }
+
+    /** Unidades disponibles (para "Solo quedan N"). */
+    public function getLowStockCountAttribute(): int
+    {
+        return $this->availableStock();
+    }
+
+    /**
+     * IDs de los productos más vendidos (por unidades en pedidos pagados).
+     * Devuelve colección vacía si aún no hay ventas.
+     */
+    public static function bestSellerIds(int $limit = 8): \Illuminate\Support\Collection
+    {
+        return \App\Models\OrderItem::query()
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.payment_status', 'paid')
+            ->groupBy('order_items.product_id')
+            ->orderByRaw('SUM(order_items.qty) DESC')
+            ->limit($limit)
+            ->pluck('order_items.product_id');
+    }
+
     /**
      * Get the primary type label for display.
      */
@@ -187,11 +255,7 @@ class Product extends Model
 
     public function getBadgeTextAttribute(): ?string
     {
-        if (! $this->badge_2x1) {
-            return null;
-        }
-
-        if (! $this->hasAnyType(['miopia', 'lectura', 'sin_graduacion'])) {
+        if (! $this->qualifiesFor2x1()) {
             return null;
         }
 
@@ -199,6 +263,15 @@ class Product extends Model
     }
 
     // ── 2x1 Logic ──
+
+    /**
+     * ¿Este producto entra en la promo 2x1?
+     * Configurable por producto (badge_2x1) o por categoría (promo_2x1).
+     */
+    public function qualifiesFor2x1(): bool
+    {
+        return (bool) ($this->badge_2x1 || optional($this->category)->promo_2x1);
+    }
 
     /**
      * Calculate 2x1 discount for a collection of cart items.
@@ -216,11 +289,7 @@ class Product extends Model
         foreach ($items as $item) {
             $product = $item['product'];
 
-            if (! $product->badge_2x1) {
-                continue;
-            }
-
-            if (! $product->hasAnyType(['miopia', 'lectura', 'sin_graduacion'])) {
+            if (! $product->qualifiesFor2x1()) {
                 continue;
             }
 

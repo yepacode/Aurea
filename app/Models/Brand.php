@@ -14,7 +14,11 @@ class Brand extends Model
         'short_description', 'long_description',
         'website_url', 'country_origin',
         'is_featured', 'is_active', 'sort_order',
-        'meta_title', 'meta_description',
+        'meta_title', 'meta_description', 'meta_keywords', 'focus_keyword',
+        'canonical_url', 'noindex', 'nofollow',
+        'og_type', 'og_title', 'og_description', 'og_image_path',
+        'twitter_card', 'twitter_title', 'twitter_description', 'twitter_image_path',
+        'custom_schema_markup',
     ];
 
     protected function casts(): array
@@ -23,6 +27,8 @@ class Brand extends Model
             'is_featured' => 'boolean',
             'is_active'   => 'boolean',
             'sort_order'  => 'integer',
+            'noindex'     => 'boolean',
+            'nofollow'    => 'boolean',
         ];
     }
 
