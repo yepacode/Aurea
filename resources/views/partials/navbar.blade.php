@@ -26,17 +26,31 @@
         .ba-logo{justify-self:center;display:flex;align-items:center;text-decoration:none;}
         .ba-logo img{width:auto;display:block;}
         .ba-logo .lg{height:126px;} .ba-logo .sm{height:62px;display:none;}
-        .ba-cart{position:absolute;right:clamp(16px,4vw,40px);top:50%;transform:translateY(-50%);
-            color:#2E2A26;background:none;border:none;cursor:pointer;transition:color .3s ease;padding:0;}
+        /* Acciones (cuenta + carrito) agrupadas a la derecha — ya no se enciman */
+        .ba-actions{position:absolute;right:clamp(16px,4vw,40px);top:50%;transform:translateY(-50%);
+            display:flex;align-items:center;gap:18px;z-index:75;}
+        .ba-cart{color:#2E2A26;background:none;border:none;cursor:pointer;transition:color .3s ease;
+            padding:0;display:inline-flex;align-items:center;}
         .ba-cart:hover{color:#BE9A53;}
         .ba-burger{position:absolute;left:clamp(14px,4vw,30px);top:50%;transform:translateY(-50%);
-            color:#2E2A26;background:none;border:none;cursor:pointer;padding:0;}
+            color:#2E2A26;background:none;border:none;cursor:pointer;padding:0;z-index:80;}
         @media(max-width:920px){
-            .ba-bar{grid-template-columns:1fr;height:78px;padding:0 16px;}
+            .ba-bar{grid-template-columns:1fr;height:88px;padding:0 12px;}
             .ba-links{display:none;}
-            .ba-logo .lg{display:none;} .ba-logo .sm{display:block;}
+            .ba-logo .lg{display:block;height:76px;max-width:56vw;} .ba-logo .sm{display:none;}
+            .ba-actions{gap:14px;right:12px;}
         }
         @media(min-width:921px){ .ba-burger{display:none;} }
+        /* Menú móvil a pantalla completa */
+        .ba-mobile-menu{position:fixed;inset:0;z-index:70;background:#F7F3ED;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:32px;}
+        .ba-mobile-menu .mm-link{font-family:'Playfair Display',serif;font-size:26px;font-weight:600;
+            color:#2E2A26;text-decoration:none;background:none;border:none;cursor:pointer;padding:10px 14px;transition:color .25s;}
+        .ba-mobile-menu .mm-link:hover{color:#BE9A53;}
+        .ba-mobile-menu .mm-sep{width:44px;height:1px;background:#D9B56D;opacity:.5;margin:6px 0;}
+        .ba-mobile-close{position:absolute;top:24px;right:24px;background:none;border:none;color:#8E7E70;
+            font-size:30px;line-height:1;cursor:pointer;padding:6px;}
+        .ba-mobile-close:hover{color:#2E2A26;}
     </style>
     <nav>
         <div class="ba-bar">
@@ -70,9 +84,10 @@
                 <a class="ba-navlink {{ request()->routeIs('landing.quiz*') ? 'is-active' : '' }}" href="{{ route('landing.quiz') }}">Quiz de piel</a>
             </div>
 
+            <div class="ba-actions">
             {{-- Cuenta --}}
             <a href="{{ auth('customer')->check() ? route('account.dashboard') : route('customer.login') }}"
-               class="ba-cart relative" style="margin-right:2px;"
+               class="ba-cart relative"
                aria-label="{{ auth('customer')->check() ? 'Mi cuenta' : 'Ingresar' }}"
                title="{{ auth('customer')->check() ? 'Mi cuenta' : 'Ingresar' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
@@ -94,29 +109,31 @@
                     {{ $cartCount }}
                 </span>
             </button>
+            </div>{{-- /.ba-actions --}}
         </div>
 
-        {{-- Mobile Navigation --}}
+        {{-- Menú móvil — pantalla completa --}}
         <div x-show="mobileMenuOpen" x-cloak
              x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 -translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
              x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-2"
-             style="border-top:1px solid rgba(0,0,0,0.08);">
-            <div class="py-4 space-y-3 md:hidden">
-                <a href="{{ route('home') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Inicio</a>
-                <a href="{{ route('products.index') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Productos</a>
-                <a href="{{ route('blue-light') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Rituales</a>
-                <a href="{{ route('landing.quiz') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Quiz de piel</a>
-                <button @click="$dispatch('toggle-cart-drawer'); mobileMenuOpen = false" class="block text-sm transition-colors" style="color:#2E2A26;">Carrito</button>
-                @if(auth('customer')->check())
-                <a href="{{ route('account.dashboard') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Mi cuenta</a>
-                @else
-                <a href="{{ route('customer.login') }}" class="block text-sm transition-colors" style="color:#2E2A26;">Ingresar / Registrarme</a>
-                @endif
-            </div>
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="ba-mobile-menu"
+             @click.self="mobileMenuOpen = false">
+            <button class="ba-mobile-close" @click="mobileMenuOpen = false" aria-label="Cerrar menú">&times;</button>
+            <a href="{{ route('home') }}" class="mm-link">Inicio</a>
+            <a href="{{ route('products.index') }}" class="mm-link">Productos</a>
+            <a href="{{ route('blue-light') }}" class="mm-link">Rituales</a>
+            <a href="{{ route('landing.quiz') }}" class="mm-link">Quiz de piel</a>
+            <span class="mm-sep"></span>
+            <button @click="$dispatch('toggle-cart-drawer'); mobileMenuOpen = false" class="mm-link">Carrito</button>
+            @if(auth('customer')->check())
+            <a href="{{ route('account.dashboard') }}" class="mm-link">Mi cuenta</a>
+            @else
+            <a href="{{ route('customer.login') }}" class="mm-link">Ingresar / Registrarme</a>
+            @endif
         </div>
     </nav>
 </header>

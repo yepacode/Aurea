@@ -2,12 +2,15 @@
      POPUP DE BIENVENIDA — cupón 10% por suscripción (Alpine)
      Se muestra una sola vez por navegador (localStorage).
      ============================================================ --}}
+<style>
+    .aurea-welcome-ov{position:fixed;inset:0;z-index:95;background:rgba(46,42,38,.55);
+        -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+        display:flex;align-items:center;justify-content:center;padding:20px;}
+</style>
 <div x-data="baWelcomePopup()" x-init="init()" x-cloak
      x-show="show"
      @keydown.escape.window="close()"
-     style="display:none;position:fixed;inset:0;z-index:95;background:rgba(46,42,38,.55);
-            -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
-            display:flex;align-items:center;justify-content:center;padding:20px;"
+     class="aurea-welcome-ov"
      x-transition.opacity
      @click.self="close()">
 

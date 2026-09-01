@@ -686,14 +686,16 @@
     @endif
 
     {{-- ============================================================
-         LIGHTBOX
+         LIGHTBOX — componente propio + evento global (abre el zoom desde cualquier scope)
          ============================================================ --}}
+    <style>.ba-lightbox-ov{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;}</style>
     @if(! empty($displayImages))
-    <div x-show="lightboxOpen" x-cloak
-         style="position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.9);
-                display:flex;align-items:center;justify-content:center;"
-         @keydown.escape.window="lightboxOpen = false">
-        <button @click="lightboxOpen = false"
+    <div x-data="{ open:false, activeImage:0 }" x-cloak x-show="open"
+         class="ba-lightbox-ov"
+         @open-lightbox.window="open=true; activeImage=($event.detail && $event.detail.index) || 0"
+         @keydown.escape.window="open=false"
+         @click.self="open=false">
+        <button @click="open=false"
                 style="position:absolute;top:16px;right:16px;background:none;border:none;
                        color:rgba(255,255,255,0.7);cursor:pointer;z-index:10;"
                 onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">
@@ -1056,7 +1058,7 @@ function productDetail() {
         },
 
         openLightbox() {
-            this.lightboxOpen = true;
+            window.dispatchEvent(new CustomEvent('open-lightbox', { detail: { index: this.activeImage } }));
         },
 
         async addToCart() {

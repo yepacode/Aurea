@@ -96,7 +96,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Mensaje pre-llenado</label>
                             <textarea name="whatsapp_message" rows="2"
-                                      placeholder="Hola, me interesa información sobre los lentes Belleza Áurea"
+                                      placeholder="Hola, me interesa información sobre los productos de Belleza Áurea"
                                       class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">{{ $page->whatsapp_message }}</textarea>
                             <p class="text-xs text-gray-400 mt-1">Texto que verá el cliente cargado en WhatsApp al hacer clic.</p>
                         </div>

@@ -15,7 +15,12 @@ class BrandController extends Controller
      */
     public function index(): View
     {
-        $brands = Brand::active()->ordered()->withCount('activeProducts')->get();
+        // Solo marcas que YA tienen productos activos, para no mostrar
+        // páginas de marca vacías ("Próximamente") mientras no se asignen.
+        $brands = Brand::active()->ordered()
+            ->whereHas('activeProducts')
+            ->withCount('activeProducts')
+            ->get();
 
         $s = SeoSetting::getForPage('brands');
         $seo = [

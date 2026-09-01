@@ -77,10 +77,11 @@
                     @php
                         $blogCategories = [
                             '' => '— Detectar automáticamente por keyword —',
-                            'salud-visual' => 'Salud visual',
-                            'luz-azul' => 'Luz azul',
-                            'habitos' => 'Hábitos digitales',
-                            'lentes' => 'Lentes',
+                            'skincare' => 'Skincare',
+                            'unas' => 'Uñas',
+                            'maquillaje' => 'Maquillaje',
+                            'cabello' => 'Cabello',
+                            'rituales' => 'Rituales',
                         ];
                         $currentCat = old('category', $post->category);
                     @endphp
