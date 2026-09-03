@@ -33,8 +33,8 @@ return [
 
     // Datos de contacto para PQR y ejercicio de derechos (Habeas Data).
     'email'        => '[correo@bellezaaurea.com]',
-    'phone'        => '[+57 000 000 0000]',
-    'whatsapp'     => '[+57 000 000 0000]',
+    'phone'        => '+57 317 0453950',
+    'whatsapp'     => '573170453950',
 
     // Sitio web (por defecto toma la URL de la app).
     'website'      => env('APP_URL', 'https://bellezaaurea.com'),
