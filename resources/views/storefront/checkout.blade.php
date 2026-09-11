@@ -246,7 +246,7 @@
                             {{-- ePayco (PSE, tarjetas, Nequi, efectivo) --}}
                             <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
                                    :class="form.payment_method === 'epayco' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
-                                <input type="radio" x-model="form.payment_method" value="epayco" class="text-primary focus:ring-primary">
+                                <input type="radio" name="payment_method" x-model="form.payment_method" value="epayco" class="text-primary focus:ring-primary">
                                 <div class="flex-1">
                                     <span class="text-sm font-semibold text-text-dark">PSE, tarjetas, Nequi y efectivo</span>
                                     <p class="text-xs text-text-muted mt-0.5">Pago seguro con ePayco</p>
@@ -257,7 +257,7 @@
                             {{-- Transfer --}}
                             <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
                                    :class="form.payment_method === 'transfer' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
-                                <input type="radio" x-model="form.payment_method" value="transfer" class="text-primary focus:ring-primary">
+                                <input type="radio" name="payment_method" x-model="form.payment_method" value="transfer" class="text-primary focus:ring-primary">
                                 <div class="flex-1">
                                     <span class="text-sm font-semibold text-text-dark">Transferencia bancaria</span>
                                     <p class="text-xs text-text-muted mt-0.5">Recibirás los datos bancarios por correo</p>
@@ -268,7 +268,7 @@
                             {{-- Contra entrega --}}
                             <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
                                    :class="form.payment_method === 'cash_on_delivery' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
-                                <input type="radio" x-model="form.payment_method" value="cash_on_delivery" class="text-primary focus:ring-primary">
+                                <input type="radio" name="payment_method" x-model="form.payment_method" value="cash_on_delivery" class="text-primary focus:ring-primary">
                                 <div class="flex-1">
                                     <span class="text-sm font-semibold text-text-dark">Pago contra entrega</span>
                                     <p class="text-xs text-text-muted mt-0.5">Paga en efectivo al recibir tu pedido</p>

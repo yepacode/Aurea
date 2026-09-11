@@ -16,7 +16,7 @@
 <body class="bg-bg text-text font-body min-h-screen flex items-center justify-center antialiased">
     <div class="w-full max-w-md px-6">
         <div class="text-center mb-8">
-            <img src="{{ asset('img/brand/logo-transparent.png') }}" alt="Belleza Áurea" class="h-36 object-contain mx-auto mb-3">
+            <img src="{{ asset('img/brand/logo-transparent.png') }}" alt="Belleza Áurea" class="object-contain mx-auto mb-3" style="height:144px;max-width:200px;width:auto;">
             <div>
                 <span style="font-family:'Playfair Display',serif;font-size:30px;font-weight:600;color:#2E2A26;letter-spacing:0.02em;">Belleza</span>
                 <span style="font-family:'Playfair Display',serif;font-size:30px;font-weight:600;color:#D9B56D;font-style:italic;margin-left:6px;">Áurea</span>

@@ -2437,7 +2437,7 @@
                 <span>Explorar catálogo completo</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
-            <a href="https://wa.me/573000000000?text=Hola%2C+quiero+armar+un+pedido+mayorista" class="ba-btn-ghost" target="_blank" rel="noopener">
+            <a href="{{ \App\Models\ContactPageSetting::whatsappUrl() }}" class="ba-btn-ghost" target="_blank" rel="noopener">
                 Hablar por WhatsApp
             </a>
         </div>
