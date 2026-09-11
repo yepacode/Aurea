@@ -23,7 +23,17 @@
         $totalAllOrders = $customer->orders()->sum('total');
     @endphp
 
-    <div class="max-w-5xl space-y-6">
+    <style>
+        .cs-wrap{max-width:100%;min-width:0;}
+        .cs-wrap .bg-white{min-width:0;max-width:100%;}
+        .cs-wrap .grid > *{min-width:0;}
+        .cs-wrap a, .cs-wrap p{overflow-wrap:anywhere;word-break:break-word;}
+        @media(max-width:640px){
+            .cs-wrap .p-6{padding:16px !important;}
+            .cs-wrap table{min-width:520px;}
+        }
+    </style>
+    <div class="cs-wrap max-w-5xl space-y-6">
         <a href="{{ route('admin.customers.index') }}" class="text-sm text-gray-500 hover:text-gray-700">&larr; Volver al listado</a>
 
         {{-- Cabecera del cliente --}}

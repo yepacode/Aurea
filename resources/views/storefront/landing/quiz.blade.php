@@ -125,7 +125,7 @@
                         <a :href="p.url" class="group bg-surface rounded-2xl border border-border overflow-hidden transition-all hover:-translate-y-1 hover:border-primary/50" style="text-decoration:none;">
                             <div class="aspect-[4/5] bg-bg overflow-hidden">
                                 <template x-if="p.image">
-                                    <img :src="'/storage/' + p.image" :alt="p.name" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
+                                    <img :src="'/storage/' + p.image" :alt="p.name" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;padding:12px;" class="transition-transform duration-700 group-hover:scale-105">
                                 </template>
                             </div>
                             <div class="p-4">

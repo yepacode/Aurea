@@ -4,7 +4,18 @@
 @section('robots', 'noindex, nofollow')
 
 @section('content')
-<section class="py-12 md:py-20">
+<style>
+    .ot-wrap{max-width:100%;min-width:0;}
+    .ot-wrap .grid > *{min-width:0;}
+    .ot-wrap p, .ot-wrap a{overflow-wrap:anywhere;}
+    @media(max-width:640px){
+        .ot-timeline-line{margin:0 20px !important;}
+        .ot-timeline-icon{width:32px !important;height:32px !important;}
+        .ot-timeline-icon svg{width:16px !important;height:16px !important;}
+        .ot-progress-top{top:16px !important;}
+    }
+</style>
+<section class="ot-wrap py-12 md:py-20">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {{-- Header --}}
@@ -41,8 +52,8 @@
             <div class="bg-white border border-border-light rounded-xl p-6 md:p-8 mb-8">
                 <div class="flex items-center justify-between relative">
                     {{-- Progress line --}}
-                    <div class="absolute top-5 left-0 right-0 h-0.5 bg-muted mx-10 md:mx-16"></div>
-                    <div class="absolute top-5 left-0 h-0.5 bg-primary mx-10 md:mx-16 transition-all duration-500"
+                    <div class="ot-progress-top absolute top-5 left-0 right-0 h-0.5 bg-muted ot-timeline-line mx-6 md:mx-16"></div>
+                    <div class="ot-progress-top absolute top-5 left-0 h-0.5 bg-primary ot-timeline-line mx-6 md:mx-16 transition-all duration-500"
                          style="width: {{ $currentIndex > 0 ? ($currentIndex / (count($statuses) - 1)) * (100 - 15) : 0 }}%"></div>
 
                     @foreach($statuses as $key => $info)
@@ -51,8 +62,8 @@
                             $isActive = $index <= $currentIndex;
                             $isCurrent = $index === $currentIndex;
                         @endphp
-                        <div class="flex flex-col items-center relative z-10 flex-1">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
+                        <div class="flex flex-col items-center relative z-10 flex-1" style="min-width:0;">
+                            <div class="ot-timeline-icon w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300
                                 {{ $isCurrent ? 'bg-primary text-white ring-4 ring-primary/20 scale-110' : ($isActive ? 'bg-primary text-white' : 'bg-muted text-text-muted') }}">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="{{ $info['icon'] }}"/>
@@ -229,7 +240,7 @@
                         @if($item->product && $item->product->images)
                             <img src="{{ asset('storage/' . ($item->product->images[0] ?? '')) }}"
                                  alt="{{ $item->product->name }}"
-                                 class="w-16 h-16 object-cover rounded-lg bg-bg-light">
+                                 class="w-16 h-16 rounded-lg bg-bg-light" style="object-fit:contain;padding:4px;background:linear-gradient(155deg,#FBF8F2,#F3ECDF);">
                         @else
                             <div class="w-16 h-16 bg-bg-light rounded-lg flex items-center justify-center">
                                 <svg class="w-6 h-6 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">

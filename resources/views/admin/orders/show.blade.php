@@ -4,10 +4,26 @@
 @section('page_title', 'Orden #' . $order->id)
 
 @section('content')
-    <div class="max-w-5xl space-y-6">
-        <div class="flex items-center justify-between">
+    <style>
+        /* Order-show responsive — evita overflow horizontal en móvil */
+        .os-wrap{max-width:100%;min-width:0;}
+        .os-wrap .bg-white{min-width:0;max-width:100%;overflow:hidden;}
+        .os-wrap .grid > *{min-width:0;}
+        .os-wrap table{min-width:520px;}
+        .os-scroll-x{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -6px;padding:0 6px;}
+        .os-kv{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;min-width:0;}
+        .os-kv > *{min-width:0;}
+        .os-kv .os-v{text-align:right;word-break:break-all;overflow-wrap:anywhere;}
+        @media(max-width:640px){
+            .os-wrap .p-6{padding:16px !important;}
+            .os-wrap h2{font-size:1rem !important;}
+            .os-wrap .gap-6{gap:16px !important;}
+        }
+    </style>
+    <div class="os-wrap max-w-5xl space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2" style="min-width:0;">
             <a href="{{ route('admin.orders.index') }}" class="text-sm text-gray-500 hover:text-gray-700">&larr; Volver al listado</a>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
                 <span class="text-sm text-gray-400">{{ $order->created_at->format('d/m/Y H:i') }}</span>
                 <form method="POST" action="{{ route('admin.orders.destroy', $order) }}"
                       onsubmit="return confirm('¿Eliminar la orden #{{ $order->id }}? Esta acción no se puede deshacer.')">
@@ -29,6 +45,7 @@
                 {{-- Products --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h2 class="text-lg font-semibold text-gray-800 mb-4">Productos</h2>
+                    <div class="os-scroll-x">
                     <table class="w-full">
                         <thead class="text-left text-xs font-medium text-gray-500 uppercase">
                             <tr>
@@ -82,6 +99,7 @@
                             </tr>
                         </tfoot>
                     </table>
+                    </div>
 
                     @if($order->notes)
                         <div class="mt-6 pt-4 border-t border-gray-200">
@@ -101,15 +119,15 @@
                     </h2>
 
                     @if($order->tracking_number)
-                        <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                            <div class="flex items-center justify-between">
-                                <div>
+                        <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg" style="min-width:0;">
+                            <div class="flex items-start justify-between gap-3 flex-wrap" style="min-width:0;">
+                                <div style="min-width:0;">
                                     <p class="text-xs font-semibold text-blue-800 uppercase tracking-wide">Paquetería</p>
-                                    <p class="text-sm font-medium text-gray-800">{{ $order->shipping_carrier ?? '—' }}</p>
+                                    <p class="text-sm font-medium text-gray-800" style="word-break:break-word;">{{ $order->shipping_carrier ?? '—' }}</p>
                                 </div>
-                                <div class="text-right">
+                                <div class="text-right" style="min-width:0;">
                                     <p class="text-xs font-semibold text-blue-800 uppercase tracking-wide">No. de guía</p>
-                                    <p class="text-sm font-bold text-blue-900 font-mono tracking-wider">{{ $order->tracking_number }}</p>
+                                    <p class="text-sm font-bold text-blue-900 font-mono tracking-wider" style="word-break:break-all;">{{ $order->tracking_number }}</p>
                                 </div>
                             </div>
                             @if($order->tracking_url)
@@ -267,9 +285,9 @@
                     </form>
 
                     <div class="mt-4 pt-4 border-t border-gray-100 space-y-2 text-xs text-gray-500">
-                        <div class="flex justify-between">
+                        <div class="os-kv">
                             <span>Método de pago</span>
-                            <span class="font-medium text-gray-700">
+                            <span class="font-medium text-gray-700 os-v">
                                 @switch($order->payment_method)
                                     @case('card') Tarjeta @break
                                     @case('transfer') Transferencia @break
@@ -279,9 +297,9 @@
                                 @endswitch
                             </span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="os-kv">
                             <span>Estado del pago</span>
-                            <span class="font-medium {{ $order->payment_status === 'paid' ? 'text-green-600' : ($order->payment_status === 'failed' ? 'text-red-600' : 'text-yellow-600') }}">
+                            <span class="font-medium os-v {{ $order->payment_status === 'paid' ? 'text-green-600' : ($order->payment_status === 'failed' ? 'text-red-600' : 'text-yellow-600') }}">
                                 @switch($order->payment_status)
                                     @case('paid') Pagado @break
                                     @case('pending') Pendiente @break
@@ -293,12 +311,64 @@
                             </span>
                         </div>
 
-                        {{-- Referencia de la pasarela (ePayco ref_payco) — la necesitas para reclamos --}}
-                        @if($order->payment_reference)
-                        <div class="flex justify-between items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 -mx-1">
-                            <span class="text-amber-800 font-medium">Ref. pago (ePayco)</span>
-                            <span class="font-mono font-bold text-amber-900 text-[11px] select-all cursor-text"
-                                  title="Número de referencia de la transacción — úsalo para reclamos a ePayco">{{ $order->payment_reference }}</span>
+                        {{-- Datos transaccionales de la pasarela (ePayco) — todos los que devuelve el pago; sirven para reclamos y para explicarle al cliente qué pasó --}}
+                        @if($order->payment_reference || $order->payment_response_reason)
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 -mx-1 space-y-1.5" style="min-width:0;">
+                            <p class="text-[10px] uppercase tracking-wider text-amber-800 font-semibold">Datos ePayco (para reclamos)</p>
+                            @if($order->payment_reference)
+                            <div class="flex justify-between items-start gap-2 text-[11px]">
+                                <span class="text-amber-800 flex-shrink-0">Ref. pago</span>
+                                <span class="font-mono font-bold text-amber-900 select-all cursor-text text-right" style="word-break:break-all;">{{ $order->payment_reference }}</span>
+                            </div>
+                            @endif
+                            @if($order->payment_transaction_id && $order->payment_transaction_id !== $order->payment_reference)
+                            <div class="flex justify-between items-start gap-2 text-[11px]">
+                                <span class="text-amber-800 flex-shrink-0">ID transacción</span>
+                                <span class="font-mono text-amber-900 select-all text-right" style="word-break:break-all;">{{ $order->payment_transaction_id }}</span>
+                            </div>
+                            @endif
+                            @if($order->payment_response_reason)
+                            <div class="flex justify-between items-start gap-2 text-[11px]">
+                                <span class="text-amber-800 flex-shrink-0">Motivo</span>
+                                <span class="text-amber-900 font-medium text-right">{{ $order->payment_response_reason }}</span>
+                            </div>
+                            @endif
+                            @if($order->payment_franchise)
+                            <div class="flex justify-between items-start gap-2 text-[11px]">
+                                <span class="text-amber-800 flex-shrink-0">Franquicia</span>
+                                <span class="text-amber-900 uppercase text-right">{{ $order->payment_franchise }}</span>
+                            </div>
+                            @endif
+                            @if($order->payment_bank)
+                            <div class="flex justify-between items-start gap-2 text-[11px]">
+                                <span class="text-amber-800 flex-shrink-0">Banco</span>
+                                <span class="text-amber-900 text-right">{{ $order->payment_bank }}</span>
+                            </div>
+                            @endif
+                            @if($order->payment_authorization && $order->payment_authorization !== $order->payment_transaction_id)
+                            <div class="flex justify-between items-start gap-2 text-[11px]">
+                                <span class="text-amber-800 flex-shrink-0">Autorización</span>
+                                <span class="font-mono text-amber-900 select-all text-right" style="word-break:break-all;">{{ $order->payment_authorization }}</span>
+                            </div>
+                            @endif
+
+                            @if(is_array($order->payment_raw_response) && count($order->payment_raw_response) > 0)
+                            <details class="pt-1 mt-1 border-t border-amber-200">
+                                <summary class="text-[10px] uppercase tracking-wider text-amber-800 font-semibold cursor-pointer select-none">
+                                    Ver TODOS los campos que devolvió ePayco ({{ count($order->payment_raw_response) }})
+                                </summary>
+                                <div class="mt-2 space-y-1 max-h-64 overflow-y-auto pr-1" style="min-width:0;">
+                                    @foreach($order->payment_raw_response as $k => $v)
+                                        @if($v !== '' && $v !== null && !is_array($v))
+                                        <div class="flex justify-between items-start gap-2 text-[10px] leading-tight py-0.5 border-b border-amber-100 last:border-b-0">
+                                            <span class="text-amber-800 font-mono flex-shrink-0" style="word-break:break-all;">{{ $k }}</span>
+                                            <span class="text-amber-900 text-right select-all" style="word-break:break-all;">{{ (string) $v }}</span>
+                                        </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </details>
+                            @endif
                         </div>
                         @endif
 
@@ -426,9 +496,10 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h2 class="text-sm font-semibold text-gray-800 mb-2">Link de seguimiento para el cliente</h2>
                     <p class="text-xs text-gray-500 mb-2">Copia esta URL y compártela por WhatsApp o correo.</p>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2" style="min-width:0;">
                         <input type="text" value="{{ route('order.track', $order->tracking_token) }}" readonly
-                               class="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-gray-600 font-mono" id="tracking-link">
+                               style="flex:1 1 0%;min-width:0;"
+                               class="text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-gray-600 font-mono" id="tracking-link">
                         <button type="button"
                                 onclick="navigator.clipboard.writeText(document.getElementById('tracking-link').value); this.textContent='Copiado!'; setTimeout(() => this.textContent='Copiar', 2000)"
                                 class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded font-medium transition-colors shrink-0">
@@ -445,28 +516,28 @@
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                     <h2 class="text-sm font-semibold text-gray-800 mb-3">Historial y trazabilidad</h2>
                     <dl class="space-y-2 text-xs">
-                        <div class="flex justify-between gap-2">
+                        <div class="os-kv">
                             <dt class="text-gray-500">Creación</dt>
-                            <dd class="text-gray-800 font-medium">{{ $order->created_at->format('d/m/Y H:i') }}</dd>
+                            <dd class="text-gray-800 font-medium os-v">{{ $order->created_at->format('d/m/Y H:i') }}</dd>
                         </div>
-                        <div class="flex justify-between gap-2">
+                        <div class="os-kv">
                             <dt class="text-gray-500">Última actualización</dt>
-                            <dd class="text-gray-800 font-medium">{{ $order->updated_at->format('d/m/Y H:i') }}</dd>
+                            <dd class="text-gray-800 font-medium os-v">{{ $order->updated_at->format('d/m/Y H:i') }}</dd>
                         </div>
                         @if($hasStockDecrementedAt && $order->stock_decremented_at)
                             <div class="flex justify-between gap-2">
                                 <dt class="text-gray-500">Stock descontado</dt>
-                                <dd class="text-gray-800 font-medium">{{ \Illuminate\Support\Carbon::parse($order->stock_decremented_at)->format('d/m/Y H:i') }}</dd>
+                                <dd class="text-gray-800 font-medium os-v">{{ \Illuminate\Support\Carbon::parse($order->stock_decremented_at)->format('d/m/Y H:i') }}</dd>
                             </div>
                         @endif
-                        <div class="flex justify-between gap-2">
+                        <div class="os-kv">
                             <dt class="text-gray-500">ID interno</dt>
-                            <dd class="text-gray-800 font-mono">#{{ $order->id }}</dd>
+                            <dd class="text-gray-800 font-mono os-v">#{{ $order->id }}</dd>
                         </div>
                         @if($order->payment_reference)
                             <div class="flex justify-between gap-2">
                                 <dt class="text-gray-500">Ref. pasarela</dt>
-                                <dd class="text-gray-800 font-mono select-all">{{ $order->payment_reference }}</dd>
+                                <dd class="text-gray-800 font-mono os-v select-all">{{ $order->payment_reference }}</dd>
                             </div>
                         @endif
                     </dl>

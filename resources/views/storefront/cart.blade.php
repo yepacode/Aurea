@@ -49,7 +49,7 @@
                             <div class="col-span-12 md:col-span-6 flex gap-4">
                                 <div class="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden flex-shrink-0" style="background:#ffffff;border:1px solid #e5e7eb;">
                                     <template x-if="item.image">
-                                        <img :src="'/storage/' + item.image" :alt="item.name" class="w-full h-full object-cover">
+                                        <img :src="'/storage/' + item.image" :alt="item.name" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;padding:6px;">
                                     </template>
                                     <template x-if="!item.image">
                                         <div class="w-full h-full flex items-center justify-center" style="background:linear-gradient(135deg,#FBF4E6,#E8D1C5);">

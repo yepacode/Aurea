@@ -19,6 +19,13 @@ class Order extends Model
         'payment_status',
         'payment_reference',
         'payment_receipt',
+        'payment_transaction_id',
+        'payment_response_code',
+        'payment_response_reason',
+        'payment_franchise',
+        'payment_bank',
+        'payment_authorization',
+        'payment_raw_response',
         'stripe_payment_intent_id',
         'discount_code',
         'discount_amount',
@@ -52,6 +59,7 @@ class Order extends Model
             'discount_coupon' => 'decimal:2',
             'total' => 'decimal:2',
             'stock_decremented_at' => 'datetime',
+            'payment_raw_response' => 'array',
         ];
     }
 

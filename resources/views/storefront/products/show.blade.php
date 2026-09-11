@@ -494,7 +494,7 @@
     @if($product->how_to_use || $product->ingredients)
     <section style="background:#FBF8F2;padding:64px 24px;">
         <div style="max-width:960px;margin:0 auto;">
-            <div style="display:grid;grid-template-columns:{{ ($product->how_to_use && $product->ingredients) ? '1fr 1fr' : '1fr' }};gap:48px;">
+            <div class="pdp-howto-grid" style="display:grid;grid-template-columns:{{ ($product->how_to_use && $product->ingredients) ? '1fr 1fr' : '1fr' }};gap:48px;">
 
                 {{-- Modo de uso --}}
                 @if($product->how_to_use)
@@ -641,10 +641,12 @@
     @media(max-width:900px){.relx-grid{grid-template-columns:repeat(2,1fr);}}
     .relx-card{display:block;text-decoration:none;color:inherit;}
     .relx-card__img{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;margin-bottom:12px;
+        display:flex;align-items:center;justify-content:center;padding:12px;
+        background:linear-gradient(155deg,#FBF8F2,#F3ECDF);
         border:1px solid rgba(217,181,109,.2);background:linear-gradient(155deg,#FBF8F2,#F3ECDF);
         transition:box-shadow .5s cubic-bezier(.2,.7,.3,1),border-color .5s,transform .5s cubic-bezier(.2,.7,.3,1);}
     .relx-card:hover .relx-card__img{border-color:rgba(217,181,109,.5);box-shadow:0 26px 50px -22px rgba(190,154,83,.45);transform:translateY(-5px);}
-    .relx-card__img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.3s cubic-bezier(.2,.7,.3,1), filter .5s ease;}
+    .relx-card__img img{position:relative;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;transition:transform 1.3s cubic-bezier(.2,.7,.3,1), filter .5s ease;}
     .relx-card:hover .relx-card__img img{transform:scale(1.07);}
     @media(hover:hover){.relx-card__img img{filter:saturate(.8) brightness(1.02) contrast(.96);}.relx-card:hover .relx-card__img img{filter:none;}}
     .relx-card__brand{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#BE9A53;margin:0 0 4px;}
@@ -1159,6 +1161,9 @@ function productDetail() {
 }
 @media (max-width: 480px) {
     .related-grid { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 768px) {
+    .pdp-howto-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
 }
 </style>
 @endpush

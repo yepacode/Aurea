@@ -79,7 +79,11 @@
             $titulo = $pagoProceso ? 'Pago en proceso' : 'Tu pedido está creado — falta completar el pago';
             $variante = 'aviso';
         } elseif ($pagoFallo) {
+            // Mostrarle al cliente el motivo real que devolvió la pasarela.
             $titulo = 'El pago fue rechazado';
+            if (! empty($order->payment_response_reason)) {
+                $titulo .= ' — '.$order->payment_response_reason;
+            }
             $variante = 'error';
         } elseif ($esTransfer) {
             $titulo = '¡Pedido registrado!';

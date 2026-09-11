@@ -14,14 +14,47 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    {{-- Responsive admin: sidebar overlay on mobile, resized paddings, no horizontal overflow --}}
+    <style>
+        html,body{max-width:100%;overflow-x:hidden;}
+        .admin-main-wrap{min-width:0;}
+        @media (max-width: 767.98px){
+            .admin-sidebar{
+                position:fixed !important;
+                top:0;left:0;bottom:0;z-index:60;
+                width:260px !important;
+                transform:translateX(-100%);
+                transition:transform .28s ease;
+                box-shadow:0 10px 40px rgba(0,0,0,.25);
+            }
+            .admin-sidebar.is-open{transform:translateX(0);}
+            .admin-backdrop{
+                position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:55;
+            }
+            .admin-main-wrap{width:100%;}
+            .admin-header{padding:12px 14px !important;}
+            .admin-header h1{font-size:15px !important;}
+            .admin-main{padding:14px !important;}
+        }
+        @media (max-width: 380px){
+            .admin-main{padding:10px !important;}
+        }
+    </style>
     @stack('head')
 </head>
 
-<body class="bg-gray-100 text-gray-900 font-body min-h-screen" x-data="{ sidebarOpen: true }">
+<body class="bg-gray-100 text-gray-900 font-body min-h-screen"
+      x-data="{ sidebarOpen: window.innerWidth >= 768, isMobile: window.innerWidth < 768 }"
+      x-init="window.addEventListener('resize', () => { isMobile = window.innerWidth < 768; if (!isMobile && !sidebarOpen) sidebarOpen = true; })">
     <div class="flex min-h-screen">
+        {{-- Mobile backdrop --}}
+        <div x-show="isMobile && sidebarOpen" x-cloak @click="sidebarOpen = false"
+             class="admin-backdrop md:hidden"></div>
+
         {{-- Sidebar --}}
-        <aside :class="sidebarOpen ? 'w-64' : 'w-16'"
-               class="text-white transition-all duration-300 flex flex-col shrink-0"
+        <aside :class="{ 'w-64': sidebarOpen && !isMobile, 'w-16': !sidebarOpen && !isMobile, 'is-open': isMobile && sidebarOpen }"
+               class="admin-sidebar text-white transition-all duration-300 flex flex-col shrink-0"
                style="background:#2E2A26;">
             <div class="p-4" style="border-bottom:1px solid rgba(232,204,146,0.15);">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-2">
@@ -296,22 +329,22 @@
         </aside>
 
         {{-- Main content --}}
-        <div class="flex-1 flex flex-col min-w-0">
+        <div class="admin-main-wrap flex-1 flex flex-col min-w-0" style="max-width:100%;">
             {{-- Top bar --}}
-            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 hover:text-gray-700">
+            <header class="admin-header bg-white shadow-sm border-b border-gray-200 px-6 py-4 flex items-center justify-between" style="min-width:0;gap:8px;">
+                <div class="flex items-center space-x-3 min-w-0" style="min-width:0;">
+                    <button @click="sidebarOpen = !sidebarOpen" class="text-gray-500 hover:text-gray-700 shrink-0" aria-label="Menú">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
                         </svg>
                     </button>
-                    <h1 class="text-lg font-semibold text-gray-800">@yield('page_title', 'Dashboard')</h1>
+                    <h1 class="text-lg font-semibold text-gray-800 truncate" style="min-width:0;">@yield('page_title', 'Dashboard')</h1>
                 </div>
-                <a href="{{ route('home') }}" target="_blank" class="text-sm text-secondary hover:underline">Ver tienda &rarr;</a>
+                <a href="{{ route('home') }}" target="_blank" class="text-sm text-secondary hover:underline shrink-0 whitespace-nowrap">Ver tienda &rarr;</a>
             </header>
 
             {{-- Page content --}}
-            <main class="flex-1 p-6">
+            <main class="admin-main flex-1 p-6" style="min-width:0;max-width:100%;">
                 @if(session('success'))
                     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"
                          x-transition class="mb-6 bg-green-100 border border-green-300 text-green-800 px-4 py-3 rounded-lg">

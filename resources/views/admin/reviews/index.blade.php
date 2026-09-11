@@ -4,7 +4,10 @@
 @section('page_title', 'Reseñas')
 
 @section('content')
-<div class="max-w-4xl mx-auto space-y-8">
+<style>
+    .rv-wrap p, .rv-wrap strong{overflow-wrap:anywhere;word-break:break-word;}
+</style>
+<div class="rv-wrap max-w-4xl mx-auto space-y-8" style="min-width:0;max-width:100%;">
 
     @if(session('success'))
     <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">{{ session('success') }}</div>
@@ -25,8 +28,8 @@
         <div class="space-y-3">
             @foreach($pending as $r)
             <div class="bg-white rounded-xl border border-amber-200 p-4">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="min-w-0">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4" style="min-width:0;">
+                    <div class="min-w-0" style="min-width:0;">
                         <p class="text-sm"><span style="color:#D9B56D;letter-spacing:1px;">{{ $stars($r->rating) }}</span>
                            <strong class="text-gray-900 ml-1">{{ $r->author_name }}</strong>
                            <span class="text-gray-400 text-xs ml-1">· {{ optional($r->product)->name }}</span></p>
@@ -59,8 +62,8 @@
         <div class="space-y-3">
             @foreach($approved as $r)
             <div class="bg-white rounded-xl border border-gray-200 p-4">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="min-w-0">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4" style="min-width:0;">
+                    <div class="min-w-0" style="min-width:0;">
                         <p class="text-sm"><span style="color:#D9B56D;letter-spacing:1px;">{{ $stars($r->rating) }}</span>
                            <strong class="text-gray-900 ml-1">{{ $r->author_name }}</strong>
                            <span class="text-gray-400 text-xs ml-1">· {{ optional($r->product)->name }}</span></p>

@@ -37,6 +37,35 @@ class EpaycoController extends Controller
     }
 
     /**
+     * Toma el payload de ePayco (webhook o API validation) y arma el arreglo
+     * completo de datos que guardamos en `orders`. Guardar TODO permite:
+     *  - Mostrarle al cliente el motivo real de un rechazo.
+     *  - Hacer reclamos con toda la info (transaction id, autorización, banco,
+     *    franquicia, referencia).
+     * Los campos del webhook usan prefijo x_; los de la API validation llegan
+     * con el MISMO nombre (x_...). Así el helper funciona para ambos.
+     */
+    private function mapEpaycoPayload(array $data, int $cod): array
+    {
+        $map = $this->mapStatus($cod);
+
+        return [
+            'payment_status'         => $map['payment_status'],
+            'status'                 => $map['status'],
+            'payment_reference'      => $data['x_ref_payco'] ?? null,
+            'payment_transaction_id' => $data['x_transaction_id'] ?? null,
+            'payment_response_code'  => (string) $cod,
+            'payment_response_reason'=> $data['x_response_reason_text'] ?? ($data['x_response'] ?? null),
+            'payment_franchise'      => $data['x_franchise'] ?? null,
+            'payment_bank'           => $data['x_bank_name'] ?? null,
+            'payment_authorization'  => $data['x_approval_code'] ?? ($data['x_transaction_id'] ?? null),
+            // Payload COMPLETO: guardamos TODO lo que devuelve la pasarela
+            // (aunque no lo mostremos hoy). Nunca perdemos información.
+            'payment_raw_response'   => $data,
+        ];
+    }
+
+    /**
      * Página que abre el widget de pago de ePayco para un pedido.
      */
     public function pay(Order $order)
@@ -88,14 +117,13 @@ class EpaycoController extends Controller
                 $order = $orderId ? Order::find($orderId) : null;
 
                 if ($order && $order->payment_status !== 'paid') {
-                    $map = $this->mapStatus((int) ($data['x_cod_response'] ?? 0));
-                    $order->update([
-                        'payment_status'    => $map['payment_status'],
-                        'status'            => $map['status'],
-                        'payment_reference' => $ref,
-                    ]);
+                    // Aseguramos que el ref quede en el payload (la API lo devuelve
+                    // como x_ref_payco pero la URL de retorno lo trae como ref_payco).
+                    $data['x_ref_payco'] = $data['x_ref_payco'] ?? $ref;
+                    $update = $this->mapEpaycoPayload($data, (int) ($data['x_cod_response'] ?? 0));
+                    $order->update($update);
 
-                    if ($map['payment_status'] === 'paid') {
+                    if ($update['payment_status'] === 'paid') {
                         $this->checkout->decrementStockForOrder($order->refresh());
                     }
                 }
@@ -152,14 +180,10 @@ class EpaycoController extends Controller
 
         // No degradar un pago ya aprobado.
         if ($order->payment_status !== 'paid') {
-            $map = $this->mapStatus($cod);
-            $order->update([
-                'payment_status'    => $map['payment_status'],
-                'status'            => $map['status'],
-                'payment_reference' => $refPayco,
-            ]);
+            $update = $this->mapEpaycoPayload($request->all(), $cod);
+            $order->update($update);
 
-            if ($map['payment_status'] === 'paid') {
+            if ($update['payment_status'] === 'paid') {
                 $this->checkout->decrementStockForOrder($order->refresh());
             }
         }

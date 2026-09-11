@@ -82,9 +82,10 @@
 .pcard{position:relative;display:block;text-decoration:none;color:inherit;isolation:isolate;padding-bottom:6px;}
 .pcard__img{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;margin-bottom:16px;
     border:1px solid rgba(217,181,109,.2);background:linear-gradient(155deg,#FBF8F2,#F3ECDF);
+    display:flex;align-items:center;justify-content:center;padding:12px;
     transition:box-shadow .5s cubic-bezier(.2,.7,.3,1),border-color .5s ease,transform .5s cubic-bezier(.2,.7,.3,1);}
 .pcard:hover .pcard__img{border-color:rgba(217,181,109,.55);box-shadow:0 30px 56px -24px rgba(190,154,83,.45);transform:translateY(-6px);}
-.pcard__img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+.pcard__img img{position:relative;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;
     transition:transform 1.4s cubic-bezier(.2,.7,.3,1), filter .5s ease;}
 .pcard:hover .pcard__img img{transform:scale(1.07);}
 /* Calma el color chillón de las fotos de proveedor — solo en escritorio (con hover);

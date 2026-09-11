@@ -95,7 +95,7 @@
                 <a href="{{ route('products.show', $p->slug) }}" style="display:block;text-decoration:none;color:inherit;">
                     <div style="aspect-ratio:4/5;background:#FBF8F2;border-radius:2px;overflow:hidden;margin-bottom:18px;position:relative;">
                         @if(!empty($p->images))
-                            <img src="{{ asset('storage/'.$p->images[0]) }}" alt="{{ $p->name }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;transition:transform 1.2s ease;">
+                            <img src="{{ asset('storage/'.$p->images[0]) }}" alt="{{ $p->name }}" loading="lazy" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;transition:transform 1.2s ease;">
                         @else
                             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#D9B56D;font-family:'Playfair Display',serif;font-style:italic;">
                                 Próximamente
