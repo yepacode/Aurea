@@ -24,10 +24,6 @@
     <div class="legal-wrap">
         <p class="legal-meta">Última actualización: {{ config('legal.updated_at') }}</p>
 
-        <div class="legal-note">
-            <strong>Documento de plantilla.</strong> Ajusta la lista de cookies a las que realmente utiliza tu sitio (analítica, pasarela de pago, pixel de redes, etc.) y haz revisar el texto por tu abogado antes de publicarlo.
-        </div>
-
         <div class="legal-prose">
             <h2 id="c1"><span class="num">1.</span>¿Qué son las cookies?</h2>
             <p>Las cookies son pequeños archivos de texto que un sitio web almacena en tu dispositivo cuando lo visitas. Permiten que el sitio recuerde tus acciones y preferencias (como el contenido del carrito o el idioma) durante un tiempo, para que no tengas que volver a configurarlas cada vez.</p>

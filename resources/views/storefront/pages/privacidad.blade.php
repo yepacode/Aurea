@@ -30,10 +30,6 @@
     <div class="legal-wrap">
         <p class="legal-meta">Última actualización: {{ config('legal.updated_at') }}</p>
 
-        <div class="legal-note">
-            <strong>Documento de plantilla.</strong> Reemplaza los campos resaltados (entre corchetes) por los datos reales de la empresa y haz revisar este texto por tu abogado antes de publicarlo. Elaborado como guía conforme a la Ley 1581 de 2012 y el Decreto 1377 de 2013 de Colombia.
-        </div>
-
         <div class="legal-toc">
             <h4>Contenido</h4>
             <ol>
@@ -55,7 +51,17 @@
 
         <div class="legal-prose">
             <h2 id="p1"><span class="num">1.</span>Responsable del tratamiento</h2>
-            <p>El responsable del tratamiento de los datos personales recolectados a través de este sitio es {!! $ph($company) !!} («{{ $brand }}»), identificada con NIT {!! $ph($nit) !!}, con domicilio en {!! $ph($address) !!}, {!! $ph($city) !!}, {{ $country }}.</p>
+            @php
+                $p1 = 'El responsable del tratamiento de los datos personales recolectados a través de este sitio es '.e($company ?: $brand).' («'.e($brand).'»)';
+                if ($nit) { $p1 .= ', identificada con NIT '.e($nit); }
+                $loc = '';
+                if ($address && $city && $city !== $address) { $loc = e($address).', '.e($city); }
+                elseif ($address) { $loc = e($address); }
+                elseif ($city) { $loc = e($city); }
+                if ($loc !== '') { $p1 .= ', con domicilio en '.$loc.', '.e($country); }
+                $p1 .= '.';
+            @endphp
+            <p>{!! $p1 !!}</p>
             <ul>
                 <li>Correo de contacto: {!! $ph($email) !!}</li>
                 <li>Teléfono: {!! $ph($phone) !!}</li>
@@ -129,9 +135,17 @@
 
             <div class="legal-contact">
                 <h3>Ejerce tus derechos de Habeas Data</h3>
-                <p>Responsable: {!! $ph($company) !!} — NIT {!! $ph($nit) !!}</p>
-                <p>Correo: {!! $ph($email) !!} · Tel: {!! $ph($phone) !!}</p>
-                <p>{!! $ph($address) !!}, {!! $ph($city) !!}, {{ $country }}</p>
+                @php
+                    $foot1 = 'Responsable: '.e($company ?: $brand).($nit ? ' — NIT '.e($nit) : '');
+                    $foot2 = 'Correo: '.e($email).($phone ? ' · Tel: '.e($phone) : '');
+                    if ($address && $city && $city !== $address) { $foot3 = e($address).', '.e($city).', '.e($country); }
+                    elseif ($address) { $foot3 = e($address).', '.e($country); }
+                    elseif ($city) { $foot3 = e($city).', '.e($country); }
+                    else { $foot3 = e($country); }
+                @endphp
+                <p>{!! $foot1 !!}</p>
+                <p>{!! $foot2 !!}</p>
+                <p>{!! $foot3 !!}</p>
             </div>
         </div>
     </div>

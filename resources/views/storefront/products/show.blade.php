@@ -120,13 +120,15 @@
                     @endif
                 @else
                     <div style="width:100%;height:400px;border-radius:16px;position:relative;
-                                background:linear-gradient(135deg,#0f1b3d,#1a3a6e);
-                                display:flex;align-items:center;justify-content:center;">
-                        <svg style="width:64px;height:64px;color:rgba(255,255,255,0.1);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.75" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="0.75" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                        </svg>
-
+                                background:linear-gradient(155deg,#FBF8F2,#F1EBDF);
+                                display:flex;align-items:center;justify-content:center;
+                                border:1px solid rgba(217,181,109,.2);">
+                        <div style="text-align:center;padding:24px;">
+                            <svg style="width:56px;height:56px;color:#D9B56D;opacity:.6;margin:0 auto 12px;display:block;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.4" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                            </svg>
+                            <p style="font-family:'Playfair Display',serif;font-style:italic;color:#BE9A53;font-size:15px;margin:0;">{{ $product->name }}</p>
+                        </div>
                     </div>
                 @endif
             </div>

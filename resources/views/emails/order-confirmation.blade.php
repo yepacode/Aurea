@@ -108,7 +108,7 @@
                     </tr>
                     <tr>
                         <td style="padding:8px 0 0;font-size:20px;font-weight:700;color:#2E2A26;">Total</td>
-                        <td align="right" style="padding:8px 0 0;font-size:20px;font-weight:700;color:#2E2A26;">${{ number_format($order->total, 0, ',', '.') }} MXN</td>
+                        <td align="right" style="padding:8px 0 0;font-size:20px;font-weight:700;color:#2E2A26;">${{ number_format($order->total, 0, ',', '.') }} COP</td>
                     </tr>
                 </table>
             </td>
@@ -131,7 +131,15 @@
     </table>
 
     {{-- Bank transfer details --}}
-    @if($order->payment_method === 'transfer' && !empty($bankDetails['clabe']))
+    @php
+        // Rellena los campos colombianos si el Mail no los pasó (compat).
+        foreach (['account_type','document_type','document_number','account_number','bank_name','account_holder','reference_instructions','additional_notes'] as $__k) {
+            if (! array_key_exists($__k, $bankDetails ?? [])) {
+                $bankDetails[$__k] = \App\Models\BankTransferSetting::get($__k, '');
+            }
+        }
+    @endphp
+    @if($order->payment_method === 'transfer' && ($bankDetails['account_number'] ?? '') !== '')
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
         <tr>
             <td style="padding:0;border-radius:8px;overflow:hidden;border:1px solid #E8CC92;">
@@ -144,23 +152,29 @@
                     <tr>
                         <td style="background-color:#FBF4E6;padding:16px;">
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#2E2A26;">
-                                @if($bankDetails['bank_name'])
-                                <tr><td style="padding:4px 0;color:#6B7280;width:130px;">Banco:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['bank_name'] }}</td></tr>
+                                @if(!empty($bankDetails['bank_name']))
+                                <tr><td style="padding:4px 0;color:#6B7280;width:150px;">Banco:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['bank_name'] }}</td></tr>
                                 @endif
-                                @if($bankDetails['account_holder'])
-                                <tr><td style="padding:4px 0;color:#6B7280;">Beneficiario:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                                @if(!empty($bankDetails['account_holder']))
+                                <tr><td style="padding:4px 0;color:#6B7280;">Titular:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
                                 @endif
-                                <tr><td style="padding:4px 0;color:#6B7280;">CLABE:</td><td style="padding:4px 0;font-weight:700;font-family:monospace;letter-spacing:2px;font-size:15px;">{{ $bankDetails['clabe'] }}</td></tr>
-                                @if($bankDetails['account_number'])
-                                <tr><td style="padding:4px 0;color:#6B7280;">No. cuenta:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_number'] }}</td></tr>
+                                @if(!empty($bankDetails['account_type']))
+                                <tr><td style="padding:4px 0;color:#6B7280;">Tipo de cuenta:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_type'] }}</td></tr>
+                                @endif
+                                <tr><td style="padding:4px 0;color:#6B7280;">Nº de cuenta:</td><td style="padding:4px 0;font-weight:700;font-family:monospace;letter-spacing:2px;font-size:15px;">{{ $bankDetails['account_number'] }}</td></tr>
+                                @if(!empty($bankDetails['document_type']))
+                                <tr><td style="padding:4px 0;color:#6B7280;">Tipo de documento:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['document_type'] }}</td></tr>
+                                @endif
+                                @if(!empty($bankDetails['document_number']))
+                                <tr><td style="padding:4px 0;color:#6B7280;">Nº de documento:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['document_number'] }}</td></tr>
                                 @endif
                                 <tr><td style="padding:4px 0;color:#6B7280;">Referencia:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;">Pedido #{{ $order->id }}</td></tr>
-                                <tr><td style="padding:4px 0;color:#6B7280;">Monto:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;font-size:16px;">${{ number_format($order->total, 0, ',', '.') }} MXN</td></tr>
+                                <tr><td style="padding:4px 0;color:#6B7280;">Monto:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;font-size:16px;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
                             </table>
-                            @if($bankDetails['reference_instructions'])
+                            @if(!empty($bankDetails['reference_instructions']))
                             <p style="margin:12px 0 0;font-size:13px;color:#4B5563;">{{ $bankDetails['reference_instructions'] }}</p>
                             @endif
-                            @if($bankDetails['additional_notes'])
+                            @if(!empty($bankDetails['additional_notes']))
                             <p style="margin:8px 0 0;font-size:13px;color:#6B7280;font-style:italic;">{{ $bankDetails['additional_notes'] }}</p>
                             @endif
                         </td>
@@ -195,6 +209,35 @@
             </td>
         </tr>
     </table>
+
+    {{-- Bloque: Activar cuenta (solo invitados sin contraseña) --}}
+    @if($order->customer && ! $order->customer->hasAccount())
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;background:#FBF4E6;border:1px solid #E8CC92;border-radius:8px;">
+        <tr>
+            <td style="padding:20px;text-align:center;">
+                <p style="margin:0 0 8px;font-family:Georgia,serif;font-size:16px;color:#2E2A26;font-weight:600;">Activa tu cuenta 🌸</p>
+                <p style="margin:0 0 14px;font-size:14px;color:#6B6157;line-height:1.55;">Guardamos tu perfil para que puedas seguir tus pedidos y comprar más rápido. Activa tu cuenta creando una contraseña:</p>
+                <a href="{{ url('/cuenta/olvide-contrasena?email=' . urlencode($order->customer->email)) }}"
+                   style="display:inline-block;padding:12px 22px;background:#D9B56D;color:#fff;text-decoration:none;border-radius:999px;font-family:Helvetica,sans-serif;font-size:13px;font-weight:600;">
+                    Activar mi cuenta
+                </a>
+                <p style="margin:12px 0 0;font-size:12px;color:#9A8F82;">Correo: {{ $order->customer->email }}</p>
+            </td>
+        </tr>
+    </table>
+    @endif
+
+    {{-- Link de seguimiento (siempre visible y guardable) --}}
+    @if($order->tracking_token)
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">
+        <tr>
+            <td style="padding:16px;background:#F7F3ED;border-radius:8px;text-align:center;">
+                <p style="margin:0 0 8px;font-size:13px;color:#6B6157;">Link de seguimiento (guárdalo):</p>
+                <a href="{{ route('order.track', $order->tracking_token) }}" style="color:#BE9A53;font-family:ui-monospace,monospace;font-size:13px;text-decoration:underline;word-break:break-all;">{{ route('order.track', $order->tracking_token) }}</a>
+            </td>
+        </tr>
+    </table>
+    @endif
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
         <tr>

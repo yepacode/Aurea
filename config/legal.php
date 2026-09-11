@@ -5,10 +5,9 @@
 | Datos legales de la empresa (Belleza Áurea)
 |--------------------------------------------------------------------------
 |
-| EDITA SOLO ESTE ARCHIVO para completar la información legal. Todos los
-| valores entre corchetes [ ] son PLACEHOLDERS: reemplázalos por los datos
-| reales de la empresa y valida el contenido con tu abogado antes de
-| publicar. Estos datos alimentan automáticamente las páginas:
+| EDITA SOLO ESTE ARCHIVO para completar la información legal. Los valores
+| que estén en blanco ('') se ocultarán automáticamente en las vistas.
+| Estos datos alimentan automáticamente las páginas:
 |   - Términos y condiciones        (/terminos-y-condiciones)
 |   - Política de privacidad        (/politica-de-privacidad)
 |   - Política de cookies           (/politica-de-cookies)
@@ -21,18 +20,18 @@ return [
     'brand_name'   => 'Belleza Áurea',
 
     // Razón social (nombre legal registrado en Cámara de Comercio).
-    'company_name' => '[RAZÓN SOCIAL S.A.S.]',
+    'company_name' => 'Belleza Áurea',
 
     // Identificación tributaria.
-    'nit'          => '[NIT 000.000.000-0]',
+    'nit'          => '',
 
     // Domicilio / dirección de notificaciones.
-    'address'      => '[DIRECCIÓN]',
-    'city'         => '[CIUDAD]',
+    'address'      => 'Bucaramanga, Colombia',
+    'city'         => 'Bucaramanga',
     'country'      => 'Colombia',
 
     // Datos de contacto para PQR y ejercicio de derechos (Habeas Data).
-    'email'        => '[correo@bellezaaurea.com]',
+    'email'        => 'contacto@bellezaaurea.com',
     'phone'        => '+57 317 0453950',
     'whatsapp'     => '573170453950',
 

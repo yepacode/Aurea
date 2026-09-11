@@ -86,34 +86,6 @@
                         </div>
                     </template>
 
-                    {{-- Toallitas suggestion --}}
-                    <template x-if="!items.some(i => i.type && i.type.includes('toallitas')) && toallitasData.length > 0">
-                        <div style="border-top:1px solid #e5e7eb;padding:16px 4px 0;margin-top:8px;">
-                            <p style="font-size:12px;font-weight:500;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">
-                                Complementa tu compra
-                            </p>
-                            <template x-for="t in toallitasData" :key="t.id">
-                                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6;">
-                                    <div style="width:48px;height:48px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,#FBF4E6,#E8D1C5);display:flex;align-items:center;justify-content:center;">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                                            <rect x="4" y="7" width="16" height="12" rx="2" stroke="#D9B56D" stroke-width="1.5"/>
-                                            <path d="M8 11h8M8 14h5" stroke="#D9B56D" stroke-width="1.2" stroke-linecap="round"/>
-                                        </svg>
-                                    </div>
-                                    <div style="flex:1;min-width:0;">
-                                        <p style="font-size:13px;font-weight:500;color:#2E2A26;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" x-text="t.name"></p>
-                                        <p style="font-size:12px;color:#6b7280;margin:0;" x-text="'$' + fmt(t.price)"></p>
-                                    </div>
-                                    <button @click="addToallita(t.id)"
-                                            style="flex-shrink:0;padding:6px 14px;background:#FBF4E6;color:#BE9A53;border:1px solid #E8CC92;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;font-family:inherit;"
-                                            onmouseover="this.style.background='#D9B56D';this.style.color='#fff';this.style.borderColor='#D9B56D'"
-                                            onmouseout="this.style.background='#FBF4E6';this.style.color='#BE9A53';this.style.borderColor='#E8CC92'">
-                                        + Agregar
-                                    </button>
-                                </div>
-                            </template>
-                        </div>
-                    </template>
                 </div>
 
                 {{-- Summary sidebar (1/3) --}}
@@ -250,12 +222,6 @@
 @endsection
 
 @push('scripts')
-@php
-    $toallitasJson = \App\Models\Product::active()->where('type', 'toallitas')->get()->map(function($t) {
-        return ['id' => $t->id, 'name' => $t->name, 'slug' => $t->slug, 'price' => $t->price, 'image' => $t->images[0] ?? null];
-    })->values();
-@endphp
-
 <script>
 function cartPage() {
     return {
@@ -269,7 +235,6 @@ function cartPage() {
         shipping: {{ $shipping }},
         freeThreshold: {{ $free_threshold ?? 999 }},
         total: {{ $total }},
-        toallitasData: @json($toallitasJson),
         couponOpen: false,
         couponInput: '',
         couponLoading: false,
@@ -277,7 +242,7 @@ function cartPage() {
         couponSuccess: '',
 
         fmt(n) {
-            return Number(n).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+            return Math.round(Number(n) || 0).toLocaleString('es-CO');
         },
 
         updateBadge(count) {
@@ -328,19 +293,6 @@ function cartPage() {
                 const data = await res.json();
                 if (res.ok) this.syncFromResponse(data);
             } catch (e) { console.error('Error removing item:', e); }
-        },
-
-        async addToallita(id) {
-            try {
-                const res = await fetch('/carrito/agregar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                    body: JSON.stringify({ product_id: id, qty: 1 }),
-                });
-                const data = await res.json();
-                if (res.ok) this.syncFromResponse(data);
-            } catch (e) { console.error('Error adding toallita:', e); }
         },
 
         async applyCoupon() {

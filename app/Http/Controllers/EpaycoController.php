@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Services\CheckoutService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,8 @@ use Illuminate\Support\Facades\Log;
  */
 class EpaycoController extends Controller
 {
+    public function __construct(private CheckoutService $checkout) {}
+
     /** Códigos de respuesta de ePayco → estado interno del pedido. */
     private function mapStatus(int $cod): array
     {
@@ -38,6 +41,16 @@ class EpaycoController extends Controller
      */
     public function pay(Order $order)
     {
+        // Solo autoriza a quien creó el pedido en esta sesión, o al cliente
+        // dueño autenticado. Otro caso => 403 (evita exponer datos ni permitir
+        // que un tercero pague/abra el widget con nombre y correo de la víctima).
+        if ((int) session('current_order_id') !== (int) $order->id) {
+            $authCustomer = \Illuminate\Support\Facades\Auth::guard('customer')->user();
+            if (! $authCustomer || (int) $order->customer_id !== (int) $authCustomer->id) {
+                abort(403);
+            }
+        }
+
         if ($order->payment_status === 'paid') {
             return redirect()->route('checkout.confirmation', $order->id)
                 ->with('success', 'Este pedido ya fue pagado.');
@@ -81,6 +94,10 @@ class EpaycoController extends Controller
                         'status'            => $map['status'],
                         'payment_reference' => $ref,
                     ]);
+
+                    if ($map['payment_status'] === 'paid') {
+                        $this->checkout->decrementStockForOrder($order->refresh());
+                    }
                 }
             }
         } catch (\Throwable $e) {
@@ -141,6 +158,10 @@ class EpaycoController extends Controller
                 'status'            => $map['status'],
                 'payment_reference' => $refPayco,
             ]);
+
+            if ($map['payment_status'] === 'paid') {
+                $this->checkout->decrementStockForOrder($order->refresh());
+            }
         }
 
         return response('ok', 200);

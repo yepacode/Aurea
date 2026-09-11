@@ -3,10 +3,6 @@
 @section('title', 'Checkout | Belleza Áurea')
 @section('robots', 'noindex, nofollow')
 
-@push('head')
-    <script src="https://js.stripe.com/v3/"></script>
-@endpush
-
 @section('content')
 
     <style>
@@ -103,6 +99,16 @@
                 <span style="color:#8E7E70;">Checkout</span>
             </nav>
             <h1 class="font-brand font-semibold" style="font-family:'Playfair Display',serif;color:#2E2A26;font-size:clamp(30px,4vw,46px);">Finalizar compra</h1>
+
+            @guest('customer')
+            <div style="max-width:900px;margin:16px auto 0;padding:14px 20px;background:linear-gradient(180deg,#FCFAF5,#F6EFE1);border:1px solid rgba(217,181,109,.35);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                <span style="font-size:14px;color:#6B6157;">¿Ya tienes cuenta con nosotras? Inicia sesión para autollenar tus datos.</span>
+                <a href="{{ route('customer.login') }}?redirect={{ urlencode(url('/checkout')) }}"
+                   style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#2E2A26;color:#fff;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border-radius:999px;">
+                   Iniciar sesión →
+                </a>
+            </div>
+            @endguest
         </div>
     </section>
 
@@ -161,6 +167,15 @@
                                        class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
                                        placeholder="Calle, número, barrio">
                                 <p x-show="errors.address" x-text="errors.address" class="text-danger text-xs mt-1"></p>
+                            </div>
+
+                            {{-- Ciudad / Municipio --}}
+                            <div>
+                                <label for="city" class="block text-sm font-medium text-text-muted mb-1.5">Ciudad / Municipio *</label>
+                                <input type="text" id="city" x-model="form.city"
+                                       class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
+                                       placeholder="Bucaramanga, Medellín, ...">
+                                <p x-show="errors.city" x-text="errors.city" class="text-danger text-xs mt-1"></p>
                             </div>
 
                             {{-- Departamento --}}
@@ -228,17 +243,6 @@
                         </h2>
 
                         <div class="space-y-3">
-                            {{-- Card --}}
-                            <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
-                                   :class="form.payment_method === 'card' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
-                                <input type="radio" x-model="form.payment_method" value="card" class="text-primary focus:ring-primary">
-                                <div class="flex-1">
-                                    <span class="text-sm font-semibold text-text-dark">Tarjeta de crédito / débito</span>
-                                    <p class="text-xs text-text-muted mt-0.5">Pago seguro con Stripe</p>
-                                </div>
-                                <svg class="w-8 h-5" style="color:#BE9A53;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
-                            </label>
-
                             {{-- ePayco (PSE, tarjetas, Nequi, efectivo) --}}
                             <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
                                    :class="form.payment_method === 'epayco' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
@@ -261,17 +265,17 @@
                                 <svg class="w-5 h-5" style="color:#BE9A53;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21"/></svg>
                             </label>
 
-                        </div>
+                            {{-- Contra entrega --}}
+                            <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
+                                   :class="form.payment_method === 'cash_on_delivery' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
+                                <input type="radio" x-model="form.payment_method" value="cash_on_delivery" class="text-primary focus:ring-primary">
+                                <div class="flex-1">
+                                    <span class="text-sm font-semibold text-text-dark">Pago contra entrega</span>
+                                    <p class="text-xs text-text-muted mt-0.5">Paga en efectivo al recibir tu pedido</p>
+                                </div>
+                                <svg class="w-6 h-5" style="color:#BE9A53;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.5 12h3"/></svg>
+                            </label>
 
-                        {{-- Stripe Card Element --}}
-                        <div x-show="form.payment_method === 'card'" x-transition class="mt-6">
-                            <label class="block text-sm font-medium text-text-muted mb-2">Datos de la tarjeta</label>
-                            <div id="card-element" class="border border-border-light rounded-xl px-4 py-3.5 bg-white focus-within:border-secondary/50 focus-within:ring-2 focus-within:ring-secondary/10 transition-colors"></div>
-                            <p x-show="cardError" x-text="cardError" class="text-danger text-xs mt-2"></p>
-                            <div class="mt-3 flex items-center gap-2 text-xs text-text-muted/60">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
-                                Pago seguro encriptado con Stripe
-                            </div>
                         </div>
                     </div>
 
@@ -331,15 +335,6 @@
                                     @if($item['variant'])
                                         @if($item['variant']->value)
                                         <p class="text-xs text-text-muted/60">{{ $item['variant']->value }}</p>
-                                        @endif
-                                        @if($item['variant']->graduation)
-                                        @php
-                                            $gradTypeLabels = ['miopia' => 'Miopía', 'lectura' => 'Lectura', 'sin_graduacion' => 'Sin graduación'];
-                                            $gradTypeLabel = $gradTypeLabels[$item['variant']->graduation_type] ?? null;
-                                        @endphp
-                                        <p class="text-xs text-text-muted/60">
-                                            Graduación: <span class="font-medium text-text-dark">{{ $item['variant']->graduation }}</span>@if($gradTypeLabel) <span class="text-text-muted/50">({{ $gradTypeLabel }})</span>@endif
-                                        </p>
                                         @endif
                                     @endif
                                     <p class="text-xs text-text-muted/60">Cant: {{ $item['qty'] }}</p>
@@ -487,19 +482,15 @@ function checkoutForm() {
             email: @js($prefill['email'] ?? ''),
             phone: @js($prefill['phone'] ?? ''),
             address: @js($prefill['address'] ?? ''),
+            city: @js($prefill['city'] ?? ''),
             state: @js($prefill['state'] ?? ''),
             zip_code: @js($prefill['zip_code'] ?? ''),
             payment_method: 'epayco',
-            stripe_payment_intent_id: '',
             notes: '',
         },
         errors: {},
-        cardError: '',
         generalError: '',
         processing: false,
-        stripe: null,
-        cardElement: null,
-        cardMounted: false,
         couponInput: '',
         couponError: '',
         applyingCoupon: false,
@@ -516,36 +507,9 @@ function checkoutForm() {
         },
 
         init() {
-            this.stripe = Stripe('{{ config("services.stripe.key") }}');
-            const elements = this.stripe.elements();
-            this.cardElement = elements.create('card', {
-                style: {
-                    base: {
-                        fontFamily: '"Montserrat", sans-serif',
-                        fontSize: '15px',
-                        color: '#2E2A26',
-                        '::placeholder': { color: '#B8AC9A' },
-                    },
-                    invalid: { color: '#C0392B' },
-                },
-                hidePostalCode: true,
-            });
-
-            this.$watch('form.payment_method', (val) => {
-                if (val === 'card') {
-                    this.$nextTick(() => this.mountCard());
-                }
-            });
-
             // Recalculate shipping when state changes
             this.$watch('form.state', (val) => {
                 if (val) this.recalculateShipping();
-            });
-
-            this.$nextTick(() => {
-                if (this.form.payment_method === 'card') {
-                    this.mountCard();
-                }
             });
         },
 
@@ -567,17 +531,6 @@ function checkoutForm() {
                 }
             } catch (e) {
                 console.error('Error recalculating shipping:', e);
-            }
-        },
-
-        mountCard() {
-            const el = document.getElementById('card-element');
-            if (el && !this.cardMounted) {
-                this.cardElement.mount('#card-element');
-                this.cardMounted = true;
-                this.cardElement.on('change', (event) => {
-                    this.cardError = event.error ? event.error.message : '';
-                });
             }
         },
 
@@ -649,7 +602,6 @@ function checkoutForm() {
         async handleSubmit() {
             this.processing = true;
             this.errors = {};
-            this.cardError = '';
             this.generalError = '';
 
             if (!this.validate()) {
@@ -657,15 +609,11 @@ function checkoutForm() {
                 return;
             }
 
-            if (this.form.payment_method === 'card') {
-                await this.handleCardPayment();
-            } else {
-                await this.submitOrder();
-            }
+            await this.submitOrder();
         },
 
         validate() {
-            const required = { name: 'Nombre', email: 'Email', address: 'Dirección', state: 'Estado', zip_code: 'Código postal' };
+            const required = { name: 'Nombre', email: 'Email', address: 'Dirección', city: 'Ciudad', state: 'Departamento', zip_code: 'Código postal' };
             for (const [field, label] of Object.entries(required)) {
                 if (!this.form[field]?.trim()) {
                     this.errors[field] = `${label} es requerido.`;
@@ -679,51 +627,6 @@ function checkoutForm() {
                 if (firstError) firstError.closest('div')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             return Object.keys(this.errors).length === 0;
-        },
-
-        async handleCardPayment() {
-            try {
-                const res = await fetch('{{ route("checkout.createPaymentIntent") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ state: this.form.state }),
-                });
-
-                if (!res.ok) {
-                    const data = await res.json();
-                    this.generalError = data.message || 'Error al preparar el pago.';
-                    this.processing = false;
-                    return;
-                }
-
-                const { clientSecret } = await res.json();
-
-                const { error, paymentIntent } = await this.stripe.confirmCardPayment(
-                    clientSecret,
-                    { payment_method: { card: this.cardElement } }
-                );
-
-                if (error) {
-                    this.cardError = error.message;
-                    this.processing = false;
-                    return;
-                }
-
-                if (paymentIntent.status === 'succeeded' || paymentIntent.status === 'processing') {
-                    this.form.stripe_payment_intent_id = paymentIntent.id;
-                    await this.submitOrder();
-                } else {
-                    this.generalError = 'El pago no fue completado. Intenta de nuevo.';
-                    this.processing = false;
-                }
-            } catch (e) {
-                this.generalError = 'Error inesperado. Intenta de nuevo.';
-                this.processing = false;
-            }
         },
 
         async submitOrder() {

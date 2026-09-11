@@ -274,6 +274,7 @@
                                     @case('card') Tarjeta @break
                                     @case('transfer') Transferencia @break
                                     @case('cash_on_delivery') Contra entrega @break
+                                    @case('epayco') ePayco (PSE/Tarjeta/Nequi) @break
                                     @default {{ $order->payment_method ?? '—' }}
                                 @endswitch
                             </span>
@@ -291,6 +292,15 @@
                                 @endswitch
                             </span>
                         </div>
+
+                        {{-- Referencia de la pasarela (ePayco ref_payco) — la necesitas para reclamos --}}
+                        @if($order->payment_reference)
+                        <div class="flex justify-between items-center gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 -mx-1">
+                            <span class="text-amber-800 font-medium">Ref. pago (ePayco)</span>
+                            <span class="font-mono font-bold text-amber-900 text-[11px] select-all cursor-text"
+                                  title="Número de referencia de la transacción — úsalo para reclamos a ePayco">{{ $order->payment_reference }}</span>
+                        </div>
+                        @endif
 
                         {{-- Cambiar manualmente el estado del pago (sirve cuando el cliente pagó por fuera, p. ej. transferencia confirmada por WhatsApp) --}}
                         <form method="POST" action="{{ route('admin.orders.payment-status', $order) }}" class="pt-2 border-t border-gray-100">
@@ -414,17 +424,53 @@
                 {{-- Tracking link for customer --}}
                 @if($order->tracking_token)
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <h2 class="text-sm font-semibold text-gray-800 mb-2">Link de seguimiento</h2>
+                    <h2 class="text-sm font-semibold text-gray-800 mb-2">Link de seguimiento para el cliente</h2>
+                    <p class="text-xs text-gray-500 mb-2">Copia esta URL y compártela por WhatsApp o correo.</p>
                     <div class="flex items-center gap-2">
                         <input type="text" value="{{ route('order.track', $order->tracking_token) }}" readonly
                                class="flex-1 text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-gray-600 font-mono" id="tracking-link">
-                        <button onclick="navigator.clipboard.writeText(document.getElementById('tracking-link').value); this.textContent='Copiado!'; setTimeout(() => this.textContent='Copiar', 2000)"
-                                class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded font-medium transition-colors">
+                        <button type="button"
+                                onclick="navigator.clipboard.writeText(document.getElementById('tracking-link').value); this.textContent='Copiado!'; setTimeout(() => this.textContent='Copiar', 2000)"
+                                class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded font-medium transition-colors shrink-0">
                             Copiar
                         </button>
                     </div>
                 </div>
                 @endif
+
+                {{-- Historial y trazabilidad --}}
+                @php
+                    $hasStockDecrementedAt = \Illuminate\Support\Facades\Schema::hasColumn('orders', 'stock_decremented_at');
+                @endphp
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h2 class="text-sm font-semibold text-gray-800 mb-3">Historial y trazabilidad</h2>
+                    <dl class="space-y-2 text-xs">
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-gray-500">Creación</dt>
+                            <dd class="text-gray-800 font-medium">{{ $order->created_at->format('d/m/Y H:i') }}</dd>
+                        </div>
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-gray-500">Última actualización</dt>
+                            <dd class="text-gray-800 font-medium">{{ $order->updated_at->format('d/m/Y H:i') }}</dd>
+                        </div>
+                        @if($hasStockDecrementedAt && $order->stock_decremented_at)
+                            <div class="flex justify-between gap-2">
+                                <dt class="text-gray-500">Stock descontado</dt>
+                                <dd class="text-gray-800 font-medium">{{ \Illuminate\Support\Carbon::parse($order->stock_decremented_at)->format('d/m/Y H:i') }}</dd>
+                            </div>
+                        @endif
+                        <div class="flex justify-between gap-2">
+                            <dt class="text-gray-500">ID interno</dt>
+                            <dd class="text-gray-800 font-mono">#{{ $order->id }}</dd>
+                        </div>
+                        @if($order->payment_reference)
+                            <div class="flex justify-between gap-2">
+                                <dt class="text-gray-500">Ref. pasarela</dt>
+                                <dd class="text-gray-800 font-mono select-all">{{ $order->payment_reference }}</dd>
+                            </div>
+                        @endif
+                    </dl>
+                </div>
             </div>
         </div>
     </div>

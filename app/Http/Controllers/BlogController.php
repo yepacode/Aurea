@@ -23,19 +23,21 @@ class BlogController extends Controller
         // Asigna una categoría a cada post a partir de su focus_keyword.
         // Las claves coinciden con los data-filter de los botones.
         $categoryLabels = [
-            'salud-visual' => 'Salud visual',
-            'luz-azul' => 'Luz azul',
-            'habitos' => 'Hábitos digitales',
-            'lentes' => 'Lentes',
+            'skincare'   => 'Skincare',
+            'unas'       => 'Uñas',
+            'maquillaje' => 'Maquillaje',
+            'cabello'    => 'Cabello',
+            'rituales'   => 'Rituales',
         ];
 
         $validKeys = array_keys($categoryLabels);
         $categorize = function (?string $keyword) use ($validKeys): string {
-            $kw = mb_strtolower($keyword ?? '');
-            if (str_contains($kw, 'lentes')) return 'lentes';
-            if (str_contains($kw, 'pantalla') || str_contains($kw, 'horas')) return 'habitos';
-            if (str_contains($kw, 'luz azul')) return 'luz-azul';
-            return 'salud-visual';
+            $t = mb_strtolower($keyword ?? '');
+            if (str_contains($t, 'esmalte') || str_contains($t, 'uña') || str_contains($t, 'unas') || str_contains($t, 'manicure')) return 'unas';
+            if (str_contains($t, 'labial') || str_contains($t, 'sombra') || str_contains($t, 'rubor') || str_contains($t, 'maquillaje')) return 'maquillaje';
+            if (str_contains($t, 'cabello') || str_contains($t, 'pelo') || str_contains($t, 'shampoo') || str_contains($t, 'peluqueria')) return 'cabello';
+            if (str_contains($t, 'ritual') || str_contains($t, 'rutina')) return 'rituales';
+            return 'skincare'; // fallback razonable para belleza
         };
 
         // Si el admin eligió categoría manual la usamos; si no, la inferimos del keyword.

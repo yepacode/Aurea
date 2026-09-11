@@ -165,6 +165,13 @@ class CheckoutController extends Controller
 
     public function createPaymentIntent(Request $request): JsonResponse
     {
+        // Guard de raíz: si Stripe no está configurado (el caso actual, se usa
+        // ePayco), no exponemos el endpoint. Sin este guard, un POST directo
+        // pediría crear un PaymentIntent con secret vacío y reventaría con 500.
+        if (empty(config('services.stripe.secret'))) {
+            return response()->json(['message' => 'Método de pago no disponible.'], 404);
+        }
+
         if ($this->cart->isEmpty()) {
             return response()->json(['message' => 'El carrito está vacío.'], 422);
         }
@@ -197,15 +204,21 @@ class CheckoutController extends Controller
 
     public function process(Request $request): RedirectResponse|JsonResponse
     {
+        // Métodos válidos: solo 'card' si Stripe está configurado; siempre los otros.
+        $allowedMethods = ['transfer', 'cash_on_delivery', 'epayco'];
+        if (! empty(config('services.stripe.secret'))) {
+            $allowedMethods[] = 'card';
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
             'address' => 'required|string|max:500',
-            'city' => 'nullable|string|max:100',
+            'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
             'zip_code' => 'required|string|max:10',
-            'payment_method' => 'required|in:transfer,cash_on_delivery,card,epayco',
+            'payment_method' => 'required|in:'.implode(',', $allowedMethods),
             'stripe_payment_intent_id' => 'required_if:payment_method,card|nullable|string',
             'notes' => 'nullable|string|max:1000',
         ]);
@@ -238,6 +251,10 @@ class CheckoutController extends Controller
 
         session()->forget('discount_code_id');
 
+        // Enlaza este pedido a la sesión actual para autorizar el acceso a
+        // /epayco/pagar/{id} y /checkout/confirmacion/{id} sin exponer PII.
+        session(['current_order_id' => $order->id]);
+
         // ePayco: el pedido queda pendiente y se envía al widget de pago.
         $redirect = $validated['payment_method'] === 'epayco'
             ? route('epayco.pay', $order->id)
@@ -255,11 +272,31 @@ class CheckoutController extends Controller
 
     public function confirmation(Order $order): View
     {
+        $this->authorizeOrderAccess($order);
+
         $order->load(['items.product', 'items.variant', 'customer']);
 
         return view('storefront.checkout-confirmation', [
             'order' => $order,
         ]);
+    }
+
+    /**
+     * Autoriza el acceso a una orden por ID: la sesión actual la creó, o el
+     * cliente autenticado es su dueño. Cualquier otro caso => 403.
+     */
+    private function authorizeOrderAccess(Order $order): void
+    {
+        if ((int) session('current_order_id') === (int) $order->id) {
+            return;
+        }
+
+        $authCustomer = \Illuminate\Support\Facades\Auth::guard('customer')->user();
+        if ($authCustomer && (int) $order->customer_id === (int) $authCustomer->id) {
+            return;
+        }
+
+        abort(403);
     }
 
     public function track(string $tracking_token): View
@@ -271,10 +308,14 @@ class CheckoutController extends Controller
         $bankDetails = [];
         if ($order->payment_method === 'transfer') {
             $bankDetails = [
-                'bank_name' => \App\Models\BankTransferSetting::get('bank_name', ''),
-                'account_holder' => \App\Models\BankTransferSetting::get('account_holder', ''),
-                'clabe' => \App\Models\BankTransferSetting::get('clabe', ''),
-                'account_number' => \App\Models\BankTransferSetting::get('account_number', ''),
+                'bank_name'       => \App\Models\BankTransferSetting::get('bank_name', ''),
+                'account_holder'  => \App\Models\BankTransferSetting::get('account_holder', ''),
+                'account_type'    => \App\Models\BankTransferSetting::get('account_type', ''),
+                'account_number'  => \App\Models\BankTransferSetting::get('account_number', ''),
+                'document_type'   => \App\Models\BankTransferSetting::get('document_type', ''),
+                'document_number' => \App\Models\BankTransferSetting::get('document_number', ''),
+                'reference_instructions' => \App\Models\BankTransferSetting::get('reference_instructions', ''),
+                'additional_notes'       => \App\Models\BankTransferSetting::get('additional_notes', ''),
             ];
         }
 

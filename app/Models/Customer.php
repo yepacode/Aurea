@@ -65,4 +65,9 @@ class Customer extends Authenticatable
     {
         return ! empty($this->password);
     }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\CustomerResetPasswordNotification($token));
+    }
 }

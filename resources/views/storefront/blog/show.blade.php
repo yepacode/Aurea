@@ -323,7 +323,7 @@
      ════════════════════════════════════════════════════════════════ --}}
 <section class="fw-section" style="background:var(--color-background-primary); padding:48px 24px;">
     <div style="max-width:1100px; margin:0 auto; text-align:center; margin-bottom:32px;">
-        <p style="font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#D9B56D; margin-bottom:8px;">PROTEGE TU VISIÓN</p>
+        <p style="font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#D9B56D; margin-bottom:8px;">NUESTROS FAVORITOS</p>
         <h2 class="font-brand" style="font-size:24px; font-weight:700; color:var(--color-text-primary); margin:0 0 6px;">Nuestros productos</h2>
         <p style="font-size:14px; color:var(--color-text-secondary); margin:0;">Insumos y cosmética de belleza, con envío a toda Colombia</p>
     </div>

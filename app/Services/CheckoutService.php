@@ -33,6 +33,12 @@ class CheckoutService
             return $order;
         });
 
+        // Si el pedido nace ya pagado (tarjeta capturada) descontamos ahora;
+        // los flujos que arrancan en 'pending' descuentan al confirmarse.
+        if ($order->payment_status === 'paid') {
+            $this->decrementStockForOrder($order);
+        }
+
         $order->load('items.product', 'items.variant', 'customer');
 
         try {
@@ -69,6 +75,14 @@ class CheckoutService
             ]);
 
             return $authCustomer;
+        }
+
+        // Si el email ya pertenece a un cliente con cuenta registrada (con
+        // contraseña), NO tocamos su perfil desde un flujo de invitado. Los
+        // datos de envío para ESTE pedido viven en $order->shipping_address.
+        $existing = Customer::where('email', $data['email'])->first();
+        if ($existing && $existing->hasAccount()) {
+            return $existing;
         }
 
         return Customer::updateOrCreate(
@@ -122,9 +136,12 @@ class CheckoutService
     }
 
     /**
-     * Create order items from cart contents and decrement inventory.
-     * Esta funcion corre dentro de la transaccion del checkout (ver process()),
-     * asi que cualquier fallo revierte tanto la orden como los descuentos de stock.
+     * Create order items from cart contents. El stock SOLO se decrementa aquí
+     * si el pedido ya está pagado (por ejemplo tarjeta capturada). Para pagos
+     * pendientes (ePayco / transferencia / contra entrega) el stock se
+     * decrementa después, idempotentemente, en decrementStockForOrder(),
+     * cuando el pago pasa a 'paid'. Esta función corre dentro de la
+     * transacción del checkout (ver process()).
      */
     private function createOrderItems(Order $order): void
     {
@@ -136,13 +153,38 @@ class CheckoutService
                 'unit_price' => $item['unit_price'],
                 'total' => $item['total'],
             ]);
-
-            $this->decrementInventory(
-                productId: (int) $item['product_id'],
-                variantId: $item['variant_id'] ? (int) $item['variant_id'] : null,
-                qty: (int) $item['qty'],
-            );
         }
+    }
+
+    /**
+     * Idempotent: decrementa el stock de una orden UNA sola vez. Marcamos
+     * `stock_decremented_at` para que llamadas repetidas (webhook + retorno,
+     * reintentos) no descuenten dos veces.
+     */
+    public function decrementStockForOrder(Order $order): void
+    {
+        // Idempotencia: si ya se descontó, no hacemos nada.
+        if (! empty($order->stock_decremented_at)) {
+            return;
+        }
+
+        DB::transaction(function () use ($order) {
+            // Re-check dentro de la transacción por si dos hilos llegan a la vez.
+            $fresh = Order::whereKey($order->id)->lockForUpdate()->first();
+            if (! $fresh || ! empty($fresh->stock_decremented_at)) {
+                return;
+            }
+
+            foreach ($order->items()->get() as $item) {
+                $this->decrementInventory(
+                    productId: (int) $item->product_id,
+                    variantId: $item->variant_id ? (int) $item->variant_id : null,
+                    qty: (int) $item->qty,
+                );
+            }
+
+            $fresh->update(['stock_decremented_at' => now()]);
+        });
     }
 
     /**

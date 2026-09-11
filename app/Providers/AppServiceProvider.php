@@ -77,9 +77,6 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
-            // Toallitas for cart suggestion
-            $toallitas = Product::active()->whereJsonContains('type', 'toallitas')->get();
-
             $view->with('cartCount', $cart->count());
             $view->with('cartItemsJson', $itemsJson);
             $view->with('cartSubtotal', $subtotal);
@@ -91,7 +88,8 @@ class AppServiceProvider extends ServiceProvider
             $view->with('cartShipping', $shipping);
             $view->with('cartFreeThreshold', $threshold);
             $view->with('cartTotal', max(0, $subtotalConDescuento - $couponDiscount + $shipping));
-            $view->with('toallitasCarrito', $toallitas);
+            // Nota: se retiró la consulta de "toallitas" (dead code de la etapa
+            // óptica: no aplica a belleza y cargaba productos en cada request).
         });
     }
 

@@ -132,6 +132,14 @@ Route::put('pages/quiz', [AdminQuizPageController::class, 'update'])->name('page
 // Testimonials CRUD
 Route::resource('testimonials', TestimonialAdminController::class)->except(['show']);
 
+// Customers (visor)
+Route::get('customers', [\App\Http\Controllers\Admin\CustomerAdminController::class, 'index'])->name('customers.index');
+Route::get('customers/{customer}', [\App\Http\Controllers\Admin\CustomerAdminController::class, 'show'])->name('customers.show');
+
+// Stock notifications (avisos de "avísame cuando vuelva")
+Route::get('stock-notifications', [\App\Http\Controllers\Admin\StockNotificationAdminController::class, 'index'])->name('stock-notifications.index');
+Route::delete('stock-notifications/{stockNotification}', [\App\Http\Controllers\Admin\StockNotificationAdminController::class, 'destroy'])->name('stock-notifications.destroy');
+
 // SEO settings
 Route::get('seo', [AdminSeoController::class, 'index'])->name('seo.index');
 Route::get('seo/{pageKey}', [AdminSeoController::class, 'edit'])->name('seo.edit');

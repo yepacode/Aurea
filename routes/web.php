@@ -117,9 +117,12 @@ Route::middleware('auth:customer')->group(function () {
     Route::delete('/cuenta/direcciones/{address}', [AddressController::class, 'destroy'])->name('account.addresses.destroy');
 });
 
-// Blog
-Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
-Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
+// Blog — el cliente no maneja "blog"; se conservan los nombres de ruta para
+// no romper llamadas a route('blog.index') / route('blog.show') existentes,
+// pero se redirige 301 a la sección editorial /rituales.
+Route::redirect('/blog', '/rituales', 301)->name('blog.index');
+Route::get('/blog/{slug}', fn (string $slug) => redirect()->route('ritual.show', ['slug' => $slug], 301))
+    ->name('blog.show');
 
 // Lead capture
 Route::post('/leads', [LeadController::class, 'store'])->name('leads.store');

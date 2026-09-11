@@ -35,7 +35,7 @@
         <div class="spinner" id="spin"></div>
         <h1>Abriendo el pago seguro…</h1>
         <div class="amount">${{ number_format($order->total, 0, ',', '.') }} <small>COP</small></div>
-        <p>Serás atendido por <strong>ePayco</strong> (PSE, tarjetas, Nequi y efectivo). Si la ventana no abre sola, toca el botón.</p>
+        <p>Serás atendido por <strong>ePayco</strong> (PSE, tarjetas, Nequi y efectivo) para completar el pago de tu pedido. Si la ventana no abre sola, toca el botón.</p>
         <button class="btn" id="payBtn" type="button">Pagar ahora</button>
         <br>
         <a class="ghost" href="{{ route('checkout.index') }}">Volver al checkout</a>

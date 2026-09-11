@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class BankTransferSetting extends Model
 {
-    protected $fillable = ['key', 'value'];
+    protected $fillable = [
+        'key',
+        'value',
+        'account_type',
+        'document_type',
+        'document_number',
+    ];
 
     public static function get(string $key, mixed $default = null): mixed
     {

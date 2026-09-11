@@ -62,8 +62,8 @@
                                 <label class="block text-xs font-medium text-gray-600 mb-1">Tipo a filtrar (<code>?type=</code>)</label>
                                 <input type="text" name="category_cards[{{ $i }}][link_param]" value="{{ $card['link_param'] }}"
                                        class="w-full rounded-lg border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500"
-                                       placeholder="miopia">
-                                <p class="text-xs text-gray-400 mt-1">Valores válidos: <code>miopia</code>, <code>lectura</code>, <code>sin_graduacion</code>, <code>toallitas</code>. Para varios separa por coma (ej: <code>miopia,lectura</code>). Vacío = lleva al catálogo completo.</p>
+                                       placeholder="principal">
+                                <p class="text-xs text-gray-400 mt-1">Si dejas vacío, el enlace lleva al catálogo completo. Si vas a filtrar por un tipo específico, usa el valor exacto que tenga tu producto (por defecto: <code>principal</code>). Para varios separa por coma (ej: <code>skincare,cabello</code>).</p>
                             </div>
                         </div>
                         <div class="mt-2">

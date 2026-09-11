@@ -134,7 +134,7 @@
                     </tr>
                     <tr>
                         <td style="padding:8px 0 0;font-size:20px;font-weight:700;color:#2E2A26;">Total</td>
-                        <td align="right" style="padding:8px 0 0;font-size:20px;font-weight:700;color:#2E2A26;">${{ number_format($order->total, 0, ',', '.') }} MXN</td>
+                        <td align="right" style="padding:8px 0 0;font-size:20px;font-weight:700;color:#2E2A26;">${{ number_format($order->total, 0, ',', '.') }} COP</td>
                     </tr>
                 </table>
             </td>

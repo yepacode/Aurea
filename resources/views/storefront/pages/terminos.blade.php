@@ -30,10 +30,6 @@
     <div class="legal-wrap">
         <p class="legal-meta">Última actualización: {{ config('legal.updated_at') }}</p>
 
-        <div class="legal-note">
-            <strong>Documento de plantilla.</strong> Reemplaza los campos resaltados (entre corchetes) por los datos reales de la empresa y haz revisar este texto por tu abogado antes de publicarlo. Este contenido es una guía general y no constituye asesoría jurídica.
-        </div>
-
         <div class="legal-toc">
             <h4>Contenido</h4>
             <ol>
@@ -57,7 +53,13 @@
 
         <div class="legal-prose">
             <h2 id="t1"><span class="num">1.</span>Identificación y aceptación</h2>
-            <p>El presente sitio web y tienda en línea <strong>{{ $brand }}</strong> es operado por {!! $ph($company) !!}, identificada con NIT {!! $ph($nit) !!}, con domicilio en {!! $ph($city) !!}, {{ $country }} (en adelante, «{{ $brand }}», «nosotros» o «el titular»).</p>
+            @php
+                $t1 = 'El presente sitio web y tienda en línea <strong>'.e($brand).'</strong> es operado por '.e($company ?: $brand);
+                if ($nit)  { $t1 .= ', identificada con NIT '.e($nit); }
+                if ($city) { $t1 .= ', con domicilio en '.e($city).', '.e($country); }
+                $t1 .= ' (en adelante, «'.e($brand).'», «nosotros» o «el titular»).';
+            @endphp
+            <p>{!! $t1 !!}</p>
             <p>Al navegar, registrarse o realizar una compra en este sitio, el usuario declara que ha leído, entendido y aceptado íntegramente estos Términos y Condiciones, así como la <a href="{{ route('legal.privacy') }}">Política de Privacidad</a> y la <a href="{{ route('legal.cookies') }}">Política de Cookies</a>. Si no está de acuerdo, debe abstenerse de utilizar el sitio.</p>
 
             <h2 id="t2"><span class="num">2.</span>Objeto</h2>
@@ -105,13 +107,13 @@
             <p>{{ $brand }} podrá modificar estos Términos y Condiciones en cualquier momento. Los cambios regirán desde su publicación en el sitio. Se recomienda revisarlos periódicamente.</p>
 
             <h2 id="t15"><span class="num">15.</span>Ley aplicable y jurisdicción</h2>
-            <p>Estos términos se rigen por las leyes de la República de {{ $country }}. Cualquier controversia se someterá a los jueces y tribunales competentes de {!! $ph($city) !!}, sin perjuicio de los mecanismos de protección al consumidor ante la Superintendencia de Industria y Comercio (SIC).</p>
+            <p>Estos términos se rigen por las leyes de la República de {{ $country }}. Cualquier controversia se someterá a los jueces y tribunales competentes{{ $city ? ' de '.$city : '' }}, sin perjuicio de los mecanismos de protección al consumidor ante la Superintendencia de Industria y Comercio (SIC).</p>
 
             <div class="legal-contact">
                 <h3>¿Dudas sobre estos términos?</h3>
                 <p>Escríbenos y con gusto te ayudamos.</p>
                 <p>Correo: {!! $ph($email) !!}</p>
-                <p>{{ $company !== '[RAZÓN SOCIAL S.A.S.]' ? $company : '' }} {!! $ph($city) !!}, {{ $country }}</p>
+                <p>{{ trim(($company ?: $brand).' '.$city) }}, {{ $country }}</p>
             </div>
         </div>
     </div>

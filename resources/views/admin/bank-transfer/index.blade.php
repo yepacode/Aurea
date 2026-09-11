@@ -28,7 +28,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Banco *</label>
                     <input type="text" name="bank_name" value="{{ old('bank_name', $bankName) }}"
-                           placeholder="Ej: BBVA, Banorte, Santander..."
+                           placeholder="Ej: Bancolombia, Davivienda, BBVA..."
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
                 <div>
@@ -41,15 +41,37 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">CLABE interbancaria * (18 dígitos)</label>
-                    <input type="text" name="clabe" value="{{ old('clabe', $clabe) }}"
-                           placeholder="000000000000000000" maxlength="18"
-                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm font-mono tracking-wider">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de cuenta</label>
+                    <select name="account_type"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <option value="">— Selecciona —</option>
+                        <option value="Ahorros"  @selected(old('account_type', $accountType) === 'Ahorros')>Ahorros</option>
+                        <option value="Corriente" @selected(old('account_type', $accountType) === 'Corriente')>Corriente</option>
+                    </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Número de cuenta (opcional)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Número de cuenta</label>
                     <input type="text" name="account_number" value="{{ old('account_number', $accountNumber) }}"
                            placeholder="Número de cuenta"
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm font-mono tracking-wider">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de documento</label>
+                    <select name="document_type"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        <option value="">— Selecciona —</option>
+                        <option value="CC"  @selected(old('document_type', $documentType) === 'CC')>Cédula de ciudadanía (CC)</option>
+                        <option value="NIT" @selected(old('document_type', $documentType) === 'NIT')>NIT</option>
+                        <option value="CE"  @selected(old('document_type', $documentType) === 'CE')>Cédula de extranjería (CE)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nº de documento</label>
+                    <input type="text" name="document_number" value="{{ old('document_number', $documentNumber) }}"
+                           placeholder="Número de documento del titular"
                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
             </div>

@@ -26,7 +26,7 @@
 
                 <div>
                     <label for="email" style="display:block;font-size:13px;font-weight:600;color:#4B4541;margin-bottom:6px;">Correo electrónico</label>
-                    <input type="email" id="email" name="email" value="{{ old('email') }}" required autofocus
+                    <input type="email" id="email" name="email" value="{{ old('email', request()->query('email','')) }}" required autofocus
                            style="width:100%;color:#2E2A26;background:#fff;border:1px solid #E5DCC9;border-radius:12px;padding:11px 14px;font-size:15px;outline:none;">
                     @error('email') <p style="color:#C97B6B;font-size:13px;margin:6px 0 0;">{{ $message }}</p> @enderror
                 </div>

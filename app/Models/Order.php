@@ -30,6 +30,7 @@ class Order extends Model
         'tracking_url',
         'notes',
         'tracking_token',
+        'stock_decremented_at',
     ];
 
     protected static function booted(): void
@@ -50,6 +51,7 @@ class Order extends Model
             'discount_2x1' => 'decimal:2',
             'discount_coupon' => 'decimal:2',
             'total' => 'decimal:2',
+            'stock_decremented_at' => 'datetime',
         ];
     }
 
