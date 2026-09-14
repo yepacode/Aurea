@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class Customer extends Authenticatable
 {
@@ -27,7 +29,52 @@ class Customer extends Authenticatable
         'wholesaler_requested_at',
         'wholesaler_approved_at',
         'wholesaler_notes',
+        'referral_code',
+        'referred_by_customer_id',
+        'referral_source',
     ];
+
+    /**
+     * Al crear: asegurar un código de referida único (formato 3 letras + 4 dígitos).
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Customer $customer) {
+            if (empty($customer->referral_code)) {
+                $customer->referral_code = static::generateUniqueReferralCode($customer->name ?? '');
+            }
+        });
+    }
+
+    /**
+     * Genera un código con 3 letras del nombre + 4 dígitos (ej. "YEP1234").
+     * Reintenta hasta encontrar uno libre en la tabla.
+     */
+    public static function generateUniqueReferralCode(string $seedName = ''): string
+    {
+        // 3 letras: primeras del nombre limpio; si no hay suficientes, se rellena aleatorio.
+        $letters = Str::of($seedName)
+            ->ascii()
+            ->upper()
+            ->replaceMatches('/[^A-Z]/', '')
+            ->substr(0, 3)
+            ->toString();
+
+        while (strlen($letters) < 3) {
+            $letters .= chr(random_int(ord('A'), ord('Z')));
+        }
+
+        // Hasta 10 intentos con 4 dígitos aleatorios; luego cae a random_bytes.
+        for ($i = 0; $i < 10; $i++) {
+            $candidate = $letters . str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+            if (! static::where('referral_code', $candidate)->exists()) {
+                return $candidate;
+            }
+        }
+
+        // Fallback ultra-defensivo.
+        return $letters . strtoupper(Str::random(6));
+    }
 
     protected $hidden = [
         'password',
@@ -113,6 +160,30 @@ class Customer extends Authenticatable
     {
         return $this->addresses()->where('is_default', true)->first()
             ?? $this->addresses()->first();
+    }
+
+    /**
+     * Referidas que esta cliente HIZO (personas que se registraron con su código).
+     */
+    public function referralsMade(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'referrer_customer_id');
+    }
+
+    /**
+     * Registro de MI propia relación como referida (si alguien me refirió).
+     */
+    public function referralReceived(): HasMany
+    {
+        return $this->hasMany(Referral::class, 'referred_customer_id');
+    }
+
+    /**
+     * La cliente que me refirió (si existe).
+     */
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class, 'referred_by_customer_id');
     }
 
     /** ¿Tiene cuenta con contraseña? (los invitados no). */

@@ -11,6 +11,7 @@
         ['route' => 'account.orders',    'label' => 'Mis pedidos', 'active' => request()->routeIs('account.orders') || request()->routeIs('account.order')],
         ['route' => 'account.wishlist',  'label' => 'Mis favoritos', 'active' => request()->routeIs('account.wishlist')],
         ['route' => 'account.loyalty',   'label' => 'Mis puntos ⭐', 'active' => request()->routeIs('account.loyalty')],
+        ['route' => 'account.referrals', 'label' => 'Referidos 💛', 'active' => request()->routeIs('account.referrals')],
         ['route' => 'account.wholesale.request', 'label' => $wholesaleLabels[$wholesaleStatus] ?? 'Programa mayorista 🏪', 'active' => request()->routeIs('account.wholesale.*')],
         ['route' => 'account.addresses', 'label' => 'Mis direcciones', 'active' => request()->routeIs('account.addresses')],
         ['route' => 'account.profile',   'label' => 'Mis datos',   'active' => request()->routeIs('account.profile')],

@@ -151,6 +151,10 @@ Route::middleware('auth:customer')->group(function () {
     Route::get('/cuenta/puntos', [\App\Http\Controllers\Account\LoyaltyController::class, 'index'])
         ->name('account.loyalty');
 
+    // Programa "Recomienda y gana"
+    Route::get('/cuenta/referidos', [\App\Http\Controllers\Account\ReferralsController::class, 'index'])
+        ->name('account.referrals');
+
     // Programa de mayoristas / distribuidoras
     Route::get('/cuenta/mayorista/solicitar', [\App\Http\Controllers\Account\WholesaleController::class, 'show'])
         ->name('account.wholesale.request');

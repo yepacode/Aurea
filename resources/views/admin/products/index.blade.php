@@ -4,9 +4,98 @@
 @section('page_title', 'Productos')
 
 @section('content')
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6"
+         x-data="{ salesOpen: false, stockOpen: false, from: '', to: '', threshold: 10 }">
         <p class="text-gray-500">{{ $products->total() }} productos en total.</p>
         <div class="flex flex-wrap items-center gap-2">
+            <button type="button" @click="salesOpen = true"
+                    class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style="background:#FBF4E6;color:#BE9A53;border:1px solid #E8CC92;"
+                    onmouseover="this.style.background='#E8CC92';this.style.color='#2E2A26'"
+                    onmouseout="this.style.background='#FBF4E6';this.style.color='#BE9A53'"
+                    title="CSV con unidades vendidas e ingreso por producto (solo pedidos pagados)">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l4-4 4 4 5-6"/></svg>
+                Ventas por producto
+            </button>
+            <button type="button" @click="stockOpen = true"
+                    class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style="background:#FEE9E5;color:#B04A2E;border:1px solid #F1B9A9;"
+                    onmouseover="this.style.background='#F1B9A9';this.style.color='#2E2A26'"
+                    onmouseout="this.style.background='#FEE9E5';this.style.color='#B04A2E'"
+                    title="Productos activos con stock por debajo del umbral">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/></svg>
+                Inventario bajo
+            </button>
+
+            {{-- Modal Ventas por producto --}}
+            <div x-show="salesOpen" x-cloak @keydown.escape.window="salesOpen = false"
+                 class="fixed inset-0 z-[70] flex items-center justify-center px-4"
+                 style="background:rgba(20,17,13,0.55);">
+                <div @click.outside="salesOpen = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Ventas por producto (CSV)</h3>
+                            <p class="text-xs text-gray-500 mt-1">Solo cuenta pedidos con pago aprobado.</p>
+                        </div>
+                        <button type="button" @click="salesOpen = false" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="block"><span class="text-xs font-medium text-gray-600">Desde</span>
+                            <input type="date" x-model="from" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"></label>
+                        <label class="block"><span class="text-xs font-medium text-gray-600">Hasta</span>
+                            <input type="date" x-model="to" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"></label>
+                    </div>
+                    <div class="mt-6 flex items-center justify-end gap-2">
+                        <button type="button" @click="salesOpen = false" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancelar</button>
+                        <button type="button"
+                                @click="
+                                    let p = new URLSearchParams();
+                                    if (from) p.set('from', from);
+                                    if (to) p.set('to', to);
+                                    let qs = p.toString();
+                                    window.location = '{{ route('admin.reports.sales-by-product') }}' + (qs ? ('?' + qs) : '');
+                                    salesOpen = false;
+                                "
+                                class="inline-flex items-center px-5 py-2 rounded-lg text-sm font-semibold text-white"
+                                style="background:#D9B56D;"
+                                onmouseover="this.style.background='#BE9A53'"
+                                onmouseout="this.style.background='#D9B56D'">Descargar CSV</button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal Inventario bajo --}}
+            <div x-show="stockOpen" x-cloak @keydown.escape.window="stockOpen = false"
+                 class="fixed inset-0 z-[70] flex items-center justify-center px-4"
+                 style="background:rgba(20,17,13,0.55);">
+                <div @click.outside="stockOpen = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+                    <div class="flex items-start justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900">Inventario bajo (CSV)</h3>
+                            <p class="text-xs text-gray-500 mt-1">Productos activos con stock por debajo del umbral.</p>
+                        </div>
+                        <button type="button" @click="stockOpen = false" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
+                    </div>
+                    <label class="block"><span class="text-xs font-medium text-gray-600">Umbral (stock ≤)</span>
+                        <input type="number" min="0" max="9999" x-model.number="threshold" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"></label>
+                    <div class="mt-6 flex items-center justify-end gap-2">
+                        <button type="button" @click="stockOpen = false" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancelar</button>
+                        <button type="button"
+                                @click="
+                                    let p = new URLSearchParams();
+                                    if (threshold !== '' && threshold !== null) p.set('threshold', threshold);
+                                    let qs = p.toString();
+                                    window.location = '{{ route('admin.reports.low-stock') }}' + (qs ? ('?' + qs) : '');
+                                    stockOpen = false;
+                                "
+                                class="inline-flex items-center px-5 py-2 rounded-lg text-sm font-semibold text-white"
+                                style="background:#D9B56D;"
+                                onmouseover="this.style.background='#BE9A53'"
+                                onmouseout="this.style.background='#D9B56D'">Descargar CSV</button>
+                    </div>
+                </div>
+            </div>
+
             <a href="{{ route('admin.products.export') }}"
                class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors"
                style="background:#FFFFFF;color:#6B6157;border:1px solid #D1C7BC;"

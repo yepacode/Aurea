@@ -152,6 +152,13 @@
                         </svg>
                         <span x-show="sidebarOpen">Clientes</span>
                     </a>
+                    <a href="{{ route('admin.referrals.index') }}"
+                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.referrals.*') ? 'bg-white/10' : '' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.5 12.75l6 6 9-13.5"/>
+                        </svg>
+                        <span x-show="sidebarOpen">Referidas 💛</span>
+                    </a>
                     @php
                         $wholesalePending = \App\Models\Customer::where('wholesaler_status', 'pending')->count();
                     @endphp
@@ -204,6 +211,49 @@
                         </svg>
                         <span x-show="sidebarOpen">Notificaciones push 🔔</span>
                     </a>
+
+                    {{-- Reportes descargables --}}
+                    <div x-data="{ openReports: {{ request()->routeIs('admin.reports.*') ? 'true' : 'false' }} }">
+                        <button type="button" @click="openReports = !openReports"
+                                class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.reports.*') ? 'bg-white/10' : '' }}">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M7 15l4-4 4 4 5-6"/>
+                                </svg>
+                                <span x-show="sidebarOpen">Reportes 📈</span>
+                            </div>
+                            <svg x-show="sidebarOpen" :class="openReports && 'rotate-180'" class="w-4 h-4 text-white/40 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                            </svg>
+                        </button>
+                        <div x-show="openReports && sidebarOpen" x-collapse class="ml-8 space-y-0.5">
+                            <a href="{{ route('admin.reports.orders') }}"
+                               class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs text-white/70">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                                <span>Pedidos</span>
+                            </a>
+                            <a href="{{ route('admin.reports.sales-by-product') }}"
+                               class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs text-white/70">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                                <span>Ventas por producto</span>
+                            </a>
+                            <a href="{{ route('admin.reports.customers') }}"
+                               class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs text-white/70">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                                <span>Clientes</span>
+                            </a>
+                            <a href="{{ route('admin.reports.low-stock') }}"
+                               class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs text-white/70">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                                <span>Inventario bajo</span>
+                            </a>
+                            <a href="{{ route('admin.reports.loyalty') }}"
+                               class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs text-white/70">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                                <span>Puntos (fidelización)</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- ── GRUPO: Contenido ── --}}

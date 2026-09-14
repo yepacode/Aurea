@@ -241,6 +241,9 @@
     {{-- Navigation --}}
     @include('partials.navbar')
 
+    {{-- Banner del programa "Recomienda y gana" cuando llega con ?ref=XXX --}}
+    @include('partials.referral-banner')
+
     {{-- Flash Messages --}}
     @if(session('success'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 4000)"

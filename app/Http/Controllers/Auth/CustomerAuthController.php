@@ -3,20 +3,30 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\CaptureReferral;
 use App\Models\Customer;
+use App\Models\Referral;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CustomerAuthController extends Controller
 {
-    public function showRegister(): View
+    public function showRegister(Request $request): View
     {
-        return view('account.register');
+        // Si viene con un código de referida en sesión mostramos "vienes referida por…".
+        $referrer = null;
+        $refCode = $request->session()->get('referral_code');
+        if ($refCode) {
+            $referrer = Customer::where('referral_code', $refCode)->first();
+        }
+
+        return view('account.register', compact('referrer'));
     }
 
     public function register(Request $request): RedirectResponse
@@ -44,11 +54,16 @@ class CustomerAuthController extends Controller
             'password.min'         => 'La contraseña debe tener al menos 8 caracteres.',
         ]);
 
+        // Programa "Recomienda y gana": ¿hay un código de referida en sesión?
+        $referralCode  = $request->session()->get('referral_code');
+        $referralSrc   = $request->session()->get('referral_source');
+        $referrer      = $referralCode ? Customer::where('referral_code', $referralCode)->first() : null;
+
         // Envolvemos en transacción y capturamos UNIQUE violations para cerrar
         // la ventana TOCTOU entre la validación y la escritura (el índice
         // UNIQUE(email) en customers es la garantía final).
         try {
-            $customer = DB::transaction(function () use ($data) {
+            $customer = DB::transaction(function () use ($data, $referrer, $referralSrc) {
                 $existing = Customer::where('email', $data['email'])->lockForUpdate()->first();
 
                 if ($existing && $existing->hasAccount()) {
@@ -60,11 +75,19 @@ class CustomerAuthController extends Controller
                 if ($existing) {
                     // Cliente que compró como invitado: se "actualiza" a cuenta
                     // conservando su historial de pedidos.
-                    $existing->update([
+                    $update = [
                         'name'     => $data['name'],
                         'phone'    => $data['phone'] ?? $existing->phone,
                         'password' => $data['password'],
-                    ]);
+                    ];
+
+                    // Solo asignamos referrer si aún no tiene uno (y no somos nosotras mismas).
+                    if ($referrer && ! $existing->referred_by_customer_id && $referrer->id !== $existing->id) {
+                        $update['referred_by_customer_id'] = $referrer->id;
+                        $update['referral_source'] = $referralSrc;
+                    }
+
+                    $existing->update($update);
 
                     return $existing;
                 }
@@ -74,6 +97,8 @@ class CustomerAuthController extends Controller
                     'email'    => $data['email'],
                     'phone'    => $data['phone'] ?? null,
                     'password' => $data['password'],
+                    'referred_by_customer_id' => $referrer?->id,
+                    'referral_source'         => $referrer ? $referralSrc : null,
                 ]);
             });
         } catch (QueryException $e) {
@@ -85,6 +110,22 @@ class CustomerAuthController extends Controller
             }
             throw $e;
         }
+
+        // Registrar la referida en pending (idempotente por UNIQUE(referred_customer_id)).
+        if ($customer->referred_by_customer_id && $customer->referred_by_customer_id !== $customer->id) {
+            Referral::firstOrCreate(
+                ['referred_customer_id' => $customer->id],
+                [
+                    'referrer_customer_id' => $customer->referred_by_customer_id,
+                    'status'               => 'pending',
+                ],
+            );
+        }
+
+        // Ya consumimos la referida: limpiamos sesión y cookies para no re-aplicar.
+        $request->session()->forget(['referral_code', 'referral_source']);
+        Cookie::queue(Cookie::forget(CaptureReferral::COOKIE_KEY));
+        Cookie::queue(Cookie::forget(CaptureReferral::COOKIE_SOURCE_KEY));
 
         Auth::guard('customer')->login($customer);
         $request->session()->regenerate();

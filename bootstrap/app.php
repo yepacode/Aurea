@@ -22,6 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
 
+        // Programa "Recomienda y gana": captura ?ref=XXX en sesión + cookie 30 días.
+        // Se agrega al grupo web para que corra en todas las páginas públicas.
+        $middleware->web(append: [
+            \App\Http\Middleware\CaptureReferral::class,
+        ]);
+
         // Cualquier invitado (a /cuenta o a /admin) va al login unificado.
         $middleware->redirectGuestsTo(fn () => route('login'));
 

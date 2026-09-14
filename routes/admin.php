@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DashboardAdminController;
 use App\Http\Controllers\Admin\ProductAdminController;
 use App\Http\Controllers\Admin\ProductImportController;
 use App\Http\Controllers\Admin\ProductImageImportController;
@@ -37,7 +37,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Dashboard
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/', [DashboardAdminController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [DashboardAdminController::class, 'index'])->name('dashboard.alias');
 
 // Categories CRUD
 Route::resource('categories', CategoryAdminController::class)->except(['show']);
@@ -153,6 +154,9 @@ Route::resource('testimonials', TestimonialAdminController::class)->except(['sho
 Route::get('customers', [\App\Http\Controllers\Admin\CustomerAdminController::class, 'index'])->name('customers.index');
 Route::get('customers/{customer}', [\App\Http\Controllers\Admin\CustomerAdminController::class, 'show'])->name('customers.show');
 
+// Programa "Recomienda y gana" (tracking)
+Route::get('referrals', [\App\Http\Controllers\Admin\ReferralAdminController::class, 'index'])->name('referrals.index');
+
 // Mayoristas — solicitudes y aprobación
 Route::get('wholesale/requests', [\App\Http\Controllers\Admin\WholesaleAdminController::class, 'index'])->name('wholesale.index');
 Route::patch('wholesale/requests/{id}/approve', [\App\Http\Controllers\Admin\WholesaleAdminController::class, 'approve'])->name('wholesale.approve');
@@ -168,6 +172,15 @@ Route::get('nps', [\App\Http\Controllers\Admin\NpsAdminController::class, 'index
 // Notificaciones push (broadcast marketing)
 Route::get('push',  [\App\Http\Controllers\Admin\PushAdminController::class, 'index'])->name('push.index');
 Route::post('push', [\App\Http\Controllers\Admin\PushAdminController::class, 'send'])->name('push.send');
+
+// Reportes descargables (CSV) — pedidos, ventas, clientes, inventario, puntos.
+Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\Admin\ReportsAdminController::class)->group(function () {
+    Route::get('orders',            'orders')->name('orders');
+    Route::get('sales-by-product',  'salesByProduct')->name('sales-by-product');
+    Route::get('customers',         'customers')->name('customers');
+    Route::get('low-stock',         'lowStock')->name('low-stock');
+    Route::get('loyalty',           'loyalty')->name('loyalty');
+});
 
 // SEO settings
 Route::get('seo', [AdminSeoController::class, 'index'])->name('seo.index');

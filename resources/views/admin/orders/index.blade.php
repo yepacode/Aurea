@@ -41,17 +41,108 @@
         ];
     @endphp
 
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6"
+         x-data="{ reportOpen: false, from: '', to: '', status: '', payment_status: '', payment_method: '' }">
         <p class="text-gray-500">{{ $orders->total() }} pedidos en total.</p>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
             <a href="{{ route('admin.orders.export') }}" class="inline-flex items-center bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
                 Exportar CSV
             </a>
+            <button type="button" @click="reportOpen = true"
+                    class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    style="background:#FBF4E6;color:#BE9A53;border:1px solid #E8CC92;"
+                    onmouseover="this.style.background='#E8CC92';this.style.color='#2E2A26'"
+                    onmouseout="this.style.background='#FBF4E6';this.style.color='#BE9A53'"
+                    title="Reporte con filtros por fecha, estado y método">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l4-4 4 4 5-6"/></svg>
+                Reporte con filtros
+            </button>
             <a href="{{ route('admin.orders.create') }}" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                 Nuevo pedido
             </a>
+        </div>
+
+        {{-- Modal reporte de pedidos --}}
+        <div x-show="reportOpen" x-cloak @keydown.escape.window="reportOpen = false"
+             class="fixed inset-0 z-[70] flex items-center justify-center px-4"
+             style="background:rgba(20,17,13,0.55);">
+            <div @click.outside="reportOpen = false"
+                 class="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6"
+                 x-transition.opacity>
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Reporte de pedidos (CSV)</h3>
+                        <p class="text-xs text-gray-500 mt-1">Descarga en Excel con acentos correctos (BOM UTF-8).</p>
+                    </div>
+                    <button type="button" @click="reportOpen = false" class="text-gray-400 hover:text-gray-600" aria-label="Cerrar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="block">
+                        <span class="text-xs font-medium text-gray-600">Desde</span>
+                        <input type="date" x-model="from" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </label>
+                    <label class="block">
+                        <span class="text-xs font-medium text-gray-600">Hasta</span>
+                        <input type="date" x-model="to" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    </label>
+                    <label class="block">
+                        <span class="text-xs font-medium text-gray-600">Estado del pedido</span>
+                        <select x-model="status" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <option value="">Todos</option>
+                            @foreach($statusLabels as $val => $label)
+                                <option value="{{ $val }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="text-xs font-medium text-gray-600">Estado de pago</span>
+                        <select x-model="payment_status" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <option value="">Todos</option>
+                            @foreach($payLabels as $val => $label)
+                                <option value="{{ $val }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label class="block sm:col-span-2">
+                        <span class="text-xs font-medium text-gray-600">Método de pago</span>
+                        <select x-model="payment_method" class="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            <option value="">Todos</option>
+                            <option value="card">Tarjeta</option>
+                            <option value="transfer">Transferencia</option>
+                            <option value="cash_on_delivery">Contra entrega</option>
+                            <option value="epayco">ePayco</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="mt-6 flex items-center justify-end gap-2">
+                    <button type="button" @click="reportOpen = false"
+                            class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancelar</button>
+                    <button type="button"
+                            @click="
+                                let p = new URLSearchParams();
+                                if (from) p.set('from', from);
+                                if (to) p.set('to', to);
+                                if (status) p.set('status', status);
+                                if (payment_status) p.set('payment_status', payment_status);
+                                if (payment_method) p.set('payment_method', payment_method);
+                                let qs = p.toString();
+                                window.location = '{{ route('admin.reports.orders') }}' + (qs ? ('?' + qs) : '');
+                                reportOpen = false;
+                            "
+                            class="inline-flex items-center px-5 py-2 rounded-lg text-sm font-semibold text-white transition-colors"
+                            style="background:#D9B56D;"
+                            onmouseover="this.style.background='#BE9A53'"
+                            onmouseout="this.style.background='#D9B56D'">
+                        Descargar CSV
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -12,6 +12,14 @@
             <p style="margin:10px 0 0;color:#6B6157;font-size:15px;">Únete a Belleza Áurea y sigue tus pedidos.</p>
         </div>
 
+        @isset($referrer)
+            @if($referrer)
+                <div style="background:linear-gradient(135deg,#FFF8E8,#F6E6C0 55%,#EBCF90);border:1px solid #E0BE77;border-radius:14px;padding:14px 16px;margin-bottom:18px;color:#7A5E1C;font-size:14px;text-align:center;">
+                    💛 Vienes referida por <strong>{{ $referrer->name ?: 'una amiga' }}</strong> — al hacer tu primera compra recibirás <strong>500 puntos de bienvenida</strong>.
+                </div>
+            @endif
+        @endisset
+
         <div style="background:#FFFFFF;border:1px solid #E5DCC9;border-radius:20px;padding:clamp(24px,4vw,34px);box-shadow:0 28px 60px -40px rgba(120,92,44,.5);">
 
             @if(session('success'))
