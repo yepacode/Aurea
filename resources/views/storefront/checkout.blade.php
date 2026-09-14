@@ -137,7 +137,7 @@
                             {{-- Name --}}
                             <div class="sm:col-span-2">
                                 <label for="name" class="block text-sm font-medium text-text-muted mb-1.5">Nombre completo *</label>
-                                <input type="text" id="name" x-model="form.name"
+                                <input type="text" id="name" name="name" autocomplete="name" x-model="form.name"
                                        class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
                                        placeholder="Tu nombre completo">
                                 <p x-show="errors.name" x-text="errors.name" class="text-danger text-xs mt-1"></p>
@@ -146,7 +146,7 @@
                             {{-- Email --}}
                             <div>
                                 <label for="email" class="block text-sm font-medium text-text-muted mb-1.5">Email *</label>
-                                <input type="email" id="email" x-model="form.email"
+                                <input type="email" id="email" name="email" autocomplete="email" x-model="form.email"
                                        class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
                                        placeholder="tu@email.com">
                                 <p x-show="errors.email" x-text="errors.email" class="text-danger text-xs mt-1"></p>
@@ -155,7 +155,7 @@
                             {{-- Phone --}}
                             <div>
                                 <label for="phone" class="block text-sm font-medium text-text-muted mb-1.5">Teléfono</label>
-                                <input type="tel" id="phone" x-model="form.phone"
+                                <input type="tel" id="phone" name="phone" autocomplete="tel" x-model="form.phone"
                                        class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
                                        placeholder="10 dígitos">
                             </div>
@@ -163,7 +163,7 @@
                             {{-- Address --}}
                             <div class="sm:col-span-2">
                                 <label for="address" class="block text-sm font-medium text-text-muted mb-1.5">Dirección *</label>
-                                <input type="text" id="address" x-model="form.address"
+                                <input type="text" id="address" name="address" autocomplete="street-address" x-model="form.address"
                                        class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
                                        placeholder="Calle, número, barrio">
                                 <p x-show="errors.address" x-text="errors.address" class="text-danger text-xs mt-1"></p>
@@ -172,7 +172,7 @@
                             {{-- Ciudad / Municipio --}}
                             <div>
                                 <label for="city" class="block text-sm font-medium text-text-muted mb-1.5">Ciudad / Municipio *</label>
-                                <input type="text" id="city" x-model="form.city"
+                                <input type="text" id="city" name="city" autocomplete="address-level2" x-model="form.city"
                                        class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
                                        placeholder="Bucaramanga, Medellín, ...">
                                 <p x-show="errors.city" x-text="errors.city" class="text-danger text-xs mt-1"></p>
@@ -181,7 +181,7 @@
                             {{-- Departamento --}}
                             <div>
                                 <label for="state" class="block text-sm font-medium text-text-muted mb-1.5">Departamento *</label>
-                                <select id="state" x-model="form.state"
+                                <select id="state" name="state" autocomplete="address-level1" x-model="form.state"
                                         class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
                                         :class="!form.state ? 'text-text-muted/40' : ''">
                                     <option value="" disabled>Selecciona un departamento</option>
@@ -225,7 +225,7 @@
                             {{-- Zip code --}}
                             <div>
                                 <label for="zip_code" class="block text-sm font-medium text-text-muted mb-1.5">Código postal *</label>
-                                <input type="text" id="zip_code" x-model="form.zip_code"
+                                <input type="text" id="zip_code" name="zip_code" autocomplete="postal-code" x-model="form.zip_code"
                                        class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
                                        placeholder="00000" maxlength="10">
                                 <p x-show="errors.zip_code" x-text="errors.zip_code" class="text-danger text-xs mt-1"></p>
@@ -282,7 +282,7 @@
                     {{-- Notes --}}
                     <div class="co-card">
                         <label for="notes" class="block text-sm font-medium text-text-muted mb-1.5">Notas adicionales (opcional)</label>
-                        <textarea id="notes" x-model="form.notes" rows="3"
+                        <textarea id="notes" name="notes" autocomplete="off" x-model="form.notes" rows="3"
                                   class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors resize-none"
                                   placeholder="Instrucciones especiales de entrega, referencias..."></textarea>
                     </div>
@@ -451,8 +451,10 @@
                         {{-- Benefits --}}
                         @php
                             $benefits = !empty($productBenefits) ? $productBenefits : [
-                                'Pago seguro',
-                                'Envío gratis +$' . number_format($freeThreshold ?? 999, 0),
+                                ($freeThreshold ?? 0) > 0 ? 'Envío gratis desde $' . number_format($freeThreshold, 0, ',', '.') : 'Envío a toda Colombia',
+                                'Productos originales',
+                                'Pago 100% seguro',
+                                'Soporte por WhatsApp',
                             ];
                         @endphp
                         <div class="mt-5 pt-4 border-t border-border-light grid grid-cols-2 gap-2 text-xs text-text-muted/70">

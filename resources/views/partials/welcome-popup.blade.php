@@ -99,16 +99,19 @@
             _key: 'aurea_welcome_seen',
             init() {
                 try {
-                    if (localStorage.getItem(this._key)) return;
+                    var seen = localStorage.getItem(this._key);
+                    if (seen && (Date.now() - parseInt(seen, 10)) < 30 * 24 * 60 * 60 * 1000) return;
                 } catch (e) { return; }
                 var self = this;
                 setTimeout(function () {
-                    try { if (!localStorage.getItem(self._key)) self.show = true; }
-                    catch (e) { self.show = true; }
+                    try {
+                        var s = localStorage.getItem(self._key);
+                        if (!s || (Date.now() - parseInt(s, 10)) >= 30 * 24 * 60 * 60 * 1000) self.show = true;
+                    } catch (e) { self.show = true; }
                 }, 5000);
             },
             markSeen() {
-                try { localStorage.setItem(this._key, '1'); } catch (e) {}
+                try { localStorage.setItem(this._key, String(Date.now())); } catch (e) {}
             },
             close() {
                 this.show = false;

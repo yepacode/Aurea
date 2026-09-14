@@ -197,10 +197,10 @@
                         {{-- Beneficios (misma fuente que /checkout: editable en /admin/pages/lentes) --}}
                         @php
                             $cartBenefits = !empty($productBenefits) ? $productBenefits : [
-                                'Pago seguro',
-                                'Envío gratis +$' . number_format($freeThreshold ?? 999, 0),
-                                'Garantía 6 meses',
-                                '30 días devolución',
+                                ($freeThreshold ?? 0) > 0 ? 'Envío gratis desde $' . number_format($freeThreshold, 0, ',', '.') : 'Envío a toda Colombia',
+                                'Productos originales',
+                                'Pago 100% seguro',
+                                'Soporte por WhatsApp',
                             ];
                         @endphp
                         <div class="mt-1 pt-3 border-t grid grid-cols-2 gap-2 text-xs" style="border-color:#e5e7eb;color:#9ca3af;">

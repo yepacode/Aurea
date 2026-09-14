@@ -30,10 +30,11 @@
         .ba-actions{position:absolute;right:clamp(16px,4vw,40px);top:50%;transform:translateY(-50%);
             display:flex;align-items:center;gap:18px;z-index:75;}
         .ba-cart{color:#2E2A26;background:none;border:none;cursor:pointer;transition:color .3s ease;
-            padding:0;display:inline-flex;align-items:center;}
+            padding:10px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;}
         .ba-cart:hover{color:#BE9A53;}
         .ba-burger{position:absolute;left:clamp(14px,4vw,30px);top:50%;transform:translateY(-50%);
-            color:#2E2A26;background:none;border:none;cursor:pointer;padding:0;z-index:80;}
+            color:#2E2A26;background:none;border:none;cursor:pointer;padding:10px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;z-index:80;}
+        .ba-burger svg{width:24px;height:24px;}
         @media(max-width:920px){
             .ba-bar{grid-template-columns:1fr;height:88px;padding:0 12px;}
             .ba-links{display:none;}

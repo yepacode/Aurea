@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        $this->applyStripeSettingsFromDatabase();
+        $this->applyPaymentSettingsFromDatabase();
 
         // Avisos "vuelve a estar disponible" al reponer stock.
         Product::observe(\App\Observers\ProductObserver::class);
@@ -114,11 +114,11 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Sobrescribe las llaves de Stripe (config('services.stripe.*')) con los
+     * Sobrescribe las llaves de Stripe/ePayco (config('services.*')) con los
      * valores guardados en el panel de admin (tabla payment_settings). Si un
      * valor no está configurado, se conserva el del .env como respaldo.
      */
-    private function applyStripeSettingsFromDatabase(): void
+    private function applyPaymentSettingsFromDatabase(): void
     {
         try {
             if (! Schema::hasTable('payment_settings')) {
@@ -133,13 +133,26 @@ class AppServiceProvider extends ServiceProvider
             'stripe_key' => 'services.stripe.key',
             'stripe_secret' => 'services.stripe.secret',
             'stripe_webhook_secret' => 'services.stripe.webhook_secret',
+            'epayco_public_key' => 'services.epayco.public_key',
+            'epayco_private_key' => 'services.epayco.private_key',
+            'epayco_p_cust_id' => 'services.epayco.p_cust_id',
+            'epayco_p_key' => 'services.epayco.p_key',
+            'epayco_test' => 'services.epayco.test',
         ];
 
         foreach ($map as $dbKey => $configKey) {
             $value = PaymentSetting::get($dbKey);
-            if (! empty($value)) {
-                config([$configKey => $value]);
+            if ($value === null || $value === '') {
+                continue;
             }
+
+            // epayco_test se guarda como '1'/'0' — cast a bool para que el resto de la app lo lea correctamente.
+            if ($dbKey === 'epayco_test') {
+                config([$configKey => filter_var($value, FILTER_VALIDATE_BOOL)]);
+                continue;
+            }
+
+            config([$configKey => $value]);
         }
     }
 }

@@ -56,7 +56,7 @@ Route::patch('products/{product}/toggle', [ProductAdminController::class, 'toggl
 
 // Orders management
 Route::get('orders/export/csv', [OrderAdminController::class, 'exportCsv'])->name('orders.export');
-Route::resource('orders', OrderAdminController::class)->only(['index', 'show', 'update', 'destroy']);
+Route::resource('orders', OrderAdminController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
 Route::patch('orders/{order}/status', [OrderAdminController::class, 'updateStatus'])->name('orders.status');
 Route::patch('orders/{order}/tracking', [OrderAdminController::class, 'updateTracking'])->name('orders.tracking');
 Route::patch('orders/{order}/verify-payment', [OrderAdminController::class, 'verifyPayment'])->name('orders.verify-payment');

@@ -40,6 +40,80 @@ class OrderAdminController extends Controller
         return view('admin.orders.index', compact('orders'));
     }
 
+    public function create(): View
+    {
+        return view('admin.orders.create', [
+            'products' => \App\Models\Product::active()->orderBy('name')->get(['id', 'name', 'price']),
+        ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'customer_name' => 'required|string|max:255',
+            'customer_email' => 'required|email|max:255',
+            'customer_phone' => 'nullable|string|max:20',
+            'shipping_address' => 'required|string|max:500',
+            'city' => 'nullable|string|max:100',
+            'state' => 'required|string|max:100',
+            'zip_code' => 'nullable|string|max:10',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.qty' => 'required|integer|min:1|max:10000',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'shipping' => 'nullable|numeric|min:0',
+            'payment_method' => 'required|in:transfer,cash_on_delivery,epayco,manual',
+            'payment_status' => 'required|in:pending,paid,processing',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $customer = \App\Models\Customer::firstOrCreate(
+            ['email' => $data['customer_email']],
+            ['name' => $data['customer_name'], 'phone' => $data['customer_phone'] ?? null]
+        );
+
+        $subtotal = 0;
+        foreach ($data['items'] as $i) {
+            $subtotal += $i['unit_price'] * $i['qty'];
+        }
+        $shipping = (float) ($data['shipping'] ?? 0);
+        $total = $subtotal + $shipping;
+
+        $addressLine = implode(', ', array_filter([
+            $data['shipping_address'],
+            $data['city'] ?? null,
+            $data['state'],
+            $data['zip_code'] ?? null,
+        ]));
+
+        $order = Order::create([
+            'customer_id' => $customer->id,
+            'status' => $data['payment_status'] === 'paid' ? 'confirmed' : 'pending',
+            'subtotal' => $subtotal,
+            'shipping' => $shipping,
+            'discount_amount' => 0,
+            'discount_2x1' => 0,
+            'discount_coupon' => 0,
+            'total' => $total,
+            'payment_method' => $data['payment_method'],
+            'payment_status' => $data['payment_status'],
+            'shipping_address' => $addressLine,
+            'notes' => 'MANUAL: ' . ($data['notes'] ?? 'creado por admin'),
+        ]);
+
+        foreach ($data['items'] as $i) {
+            $order->items()->create([
+                'product_id' => $i['product_id'],
+                'qty' => $i['qty'],
+                'unit_price' => $i['unit_price'],
+                'total' => $i['unit_price'] * $i['qty'],
+            ]);
+        }
+
+        return redirect()->route('admin.orders.show', $order)
+            ->with('success', 'Pedido manual #' . $order->id . ' creado.');
+    }
+
     public function show(Order $order): View
     {
         $order->load(['customer', 'items.product', 'items.variant']);

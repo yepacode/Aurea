@@ -300,13 +300,13 @@
                         <span x-show="sidebarOpen">SEO</span>
                     </a>
 
-                    {{-- Pasarela de pago --}}
+                    {{-- Pasarela ePayco --}}
                     <a href="{{ route('admin.payments.index') }}"
                        class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.payments.*') ? 'bg-white/10' : '' }}">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
                         </svg>
-                        <span x-show="sidebarOpen">Pasarela de pago</span>
+                        <span x-show="sidebarOpen">Pasarela ePayco</span>
                     </a>
                 </div>
             </nav>
