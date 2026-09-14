@@ -108,21 +108,21 @@
                             </div>
 
                             {{-- Progreso para envio gratis (basado en TOTAL post-descuentos) --}}
-                            <template x-if="freeThreshold > 0 && shipping > 0 && (subtotal - coupon_discount) > 0 && (subtotal - coupon_discount) < freeThreshold">
+                            <template x-if="freeThreshold > 0 && shipping > 0 && (subtotal - coupon_discount - bundle_discount_total) > 0 && (subtotal - coupon_discount - bundle_discount_total) < freeThreshold">
                                 <div style="padding:10px 14px;background:#f9fafb;border-radius:8px;border:1px solid #f3f4f6;">
                                     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
                                         <span style="color:#9ca3af;">Envío gratis</span>
-                                        <span style="color:#D9B56D;font-weight:500;" x-text="'$' + fmt(freeThreshold - (subtotal - coupon_discount)) + ' más'"></span>
+                                        <span style="color:#D9B56D;font-weight:500;" x-text="'$' + fmt(freeThreshold - (subtotal - coupon_discount - bundle_discount_total)) + ' más'"></span>
                                     </div>
                                     <div style="background:#e5e7eb;border-radius:2px;height:4px;overflow:hidden;">
                                         <div style="background:#D9B56D;height:100%;border-radius:2px;transition:width .3s ease;"
-                                             :style="'width:' + Math.min(((subtotal - coupon_discount) / freeThreshold) * 100, 100) + '%'"></div>
+                                             :style="'width:' + Math.min(((subtotal - coupon_discount - bundle_discount_total) / freeThreshold) * 100, 100) + '%'"></div>
                                     </div>
                                 </div>
                             </template>
 
                             {{-- Envio gratis conseguido (solo cuando shipping real es 0) --}}
-                            <template x-if="shipping === 0 && (subtotal - coupon_discount) > 0">
+                            <template x-if="shipping === 0 && (subtotal - coupon_discount - bundle_discount_total) > 0">
                                 <div style="text-align:center;font-size:13px;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 14px;">
                                     ✓ ¡Envío sin costo!
                                 </div>
@@ -143,6 +143,31 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
                                             </svg>
                                         </button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            {{-- Bundle discounts (uno por kit agregado) --}}
+                            <template x-for="bd in bundle_discounts" :key="bd.bundle_id">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center gap-1.5" style="min-width:0;">
+                                        <span style="font-size:15px;line-height:1;">🎁</span>
+                                        <span style="color:#BE9A53;font-weight:500;font-size:13px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;"
+                                              x-text="'Kit: ' + bd.name"></span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span style="color:#16a34a;" x-text="'-$' + fmt(bd.amount)"></span>
+                                        <form :action="'/kits/descuento/' + bd.bundle_id" method="POST" style="display:inline;">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                    style="color:#d1d5db;cursor:pointer;background:none;border:none;padding:0;line-height:1;"
+                                                    onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'"
+                                                    aria-label="Quitar descuento del kit">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </template>
@@ -265,6 +290,8 @@ function cartPage() {
         coupon_code: @json($coupon_code ?? null),
         coupon_description: @json($coupon_description ?? null),
         coupon_discount: {{ $coupon_discount ?? 0 }},
+        bundle_discounts: @json($bundle_discounts ?? []),
+        bundle_discount_total: {{ $bundle_discount_total ?? 0 }},
         shipping: {{ $shipping }},
         freeThreshold: {{ $free_threshold ?? 999 }},
         total: {{ $total }},
@@ -295,6 +322,8 @@ function cartPage() {
             if (data.coupon_code !== undefined) this.coupon_code = data.coupon_code;
             if (data.coupon_description !== undefined) this.coupon_description = data.coupon_description;
             if (data.coupon_discount !== undefined) this.coupon_discount = data.coupon_discount;
+            if (data.bundle_discounts !== undefined) this.bundle_discounts = data.bundle_discounts;
+            if (data.bundle_discount_total !== undefined) this.bundle_discount_total = data.bundle_discount_total;
             if (data.shipping !== undefined) this.shipping = data.shipping;
             if (data.free_threshold !== undefined) this.freeThreshold = data.free_threshold;
             if (data.total !== undefined) this.total = data.total;

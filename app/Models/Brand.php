@@ -19,6 +19,12 @@ class Brand extends Model
         'og_type', 'og_title', 'og_description', 'og_image_path',
         'twitter_card', 'twitter_title', 'twitter_description', 'twitter_image_path',
         'custom_schema_markup',
+        // Landing enriquecida
+        'hero_image', 'hero_title', 'hero_tagline',
+        'story_title', 'story_content', 'story_image',
+        'pillars_json', 'featured_products_json',
+        'quote_text', 'quote_author',
+        'brand_color', 'landing_enabled',
     ];
 
     protected function casts(): array
@@ -29,6 +35,9 @@ class Brand extends Model
             'sort_order'  => 'integer',
             'noindex'     => 'boolean',
             'nofollow'    => 'boolean',
+            'landing_enabled'        => 'boolean',
+            'pillars_json'           => 'array',
+            'featured_products_json' => 'array',
         ];
     }
 
@@ -80,5 +89,15 @@ class Brand extends Model
     public function getBannerUrlAttribute(): ?string
     {
         return $this->banner_path ? asset('storage/'.$this->banner_path) : null;
+    }
+
+    public function getHeroImageUrlAttribute(): ?string
+    {
+        return $this->hero_image ? asset('storage/'.$this->hero_image) : null;
+    }
+
+    public function getStoryImageUrlAttribute(): ?string
+    {
+        return $this->story_image ? asset('storage/'.$this->story_image) : null;
     }
 }

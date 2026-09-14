@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingSetting;
 use App\Services\CartService;
+use App\Services\UpsellService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -115,6 +116,14 @@ class AppServiceProvider extends ServiceProvider
             $view->with('cartShipping', $shipping);
             $view->with('cartFreeThreshold', $threshold);
             $view->with('cartTotal', max(0, $subtotalConDescuento - $couponDiscount + $shipping));
+
+            // Sugerencias up-sell iniciales (solo si el carrito no está vacío).
+            // Los endpoints /carrito/* y /checkout/{apply,remove}-coupon devuelven
+            // las mismas sugerencias en el JSON para que el drawer las refresque.
+            $upsellSuggestions = $items->isNotEmpty()
+                ? app(UpsellService::class)->suggestForCartJson(3)
+                : [];
+            $view->with('upsellSuggestions', $upsellSuggestions);
             // Nota: se retiró la consulta de "toallitas" (dead code de la etapa
             // óptica: no aplica a belleza y cargaba productos en cada request).
         });

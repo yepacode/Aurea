@@ -240,6 +240,9 @@
                 </div>
             </template>
 
+            {{-- Up-sell dinámico — sugerencias reactivas basadas en el carrito --}}
+            @include('partials.cart-upsell')
+
         </div>
 
         {{-- Footer: Totals + CTA --}}
@@ -367,6 +370,7 @@ function cartDrawer() {
         shipping: {{ $cartShipping }},
         freeThreshold: {{ $cartFreeThreshold }},
         total: {{ $cartTotal }},
+        upsell: @json($upsellSuggestions ?? []),
         couponOpen: true,
         couponInput: '',
         couponLoading: false,
@@ -402,6 +406,7 @@ function cartDrawer() {
             if (data.shipping !== undefined) this.shipping = data.shipping;
             if (data.free_threshold !== undefined) this.freeThreshold = data.free_threshold;
             if (data.total !== undefined) this.total = data.total;
+            if (data.upsell !== undefined) this.upsell = data.upsell;
             this.updateBadge(data.cart_count ?? this.items.reduce((s, i) => s + i.qty, 0));
         },
 
@@ -483,8 +488,80 @@ function cartDrawer() {
                     this.coupon_description = null;
                     this.coupon_discount = 0;
                     this.total = data.new_total;
+                    if (data.upsell !== undefined) this.upsell = data.upsell;
                 }
             } catch (e) { console.error('Error removing coupon:', e); }
+        },
+
+        /**
+         * Añade al carrito una sugerencia del up-sell.
+         * Se hace en un fetch al mismo endpoint que /carrito/agregar y se
+         * dispara una animación de "vuelo" del thumb al icono del carrito.
+         */
+        async addFromUpsell(p, evt) {
+            if (p._loading) return;
+            // Marca reactiva del ítem específico (usar splice/replace para Alpine).
+            const idx = this.upsell.findIndex(u => u.id === p.id);
+            if (idx > -1) this.upsell[idx] = { ...this.upsell[idx], _loading: true };
+
+            // Animación "vuelo": clonamos la imagen y la desplazamos hacia el icono del carrito.
+            try { this.flyToCart(evt); } catch (_) { /* animación opcional */ }
+
+            try {
+                const res = await fetch('/carrito/agregar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                    body: JSON.stringify({ product_id: p.id, qty: 1 }),
+                });
+                const data = await res.json();
+                if (res.ok) this.syncFromResponse(data);
+            } catch (e) {
+                console.error('Error añadiendo upsell:', e);
+            } finally {
+                const j = this.upsell.findIndex(u => u.id === p.id);
+                if (j > -1) this.upsell[j] = { ...this.upsell[j], _loading: false };
+            }
+        },
+
+        /**
+         * Anima el thumbnail del producto hacia el icono del carrito.
+         * Puramente cosmética — si algo falla no rompe el flujo.
+         */
+        flyToCart(evt) {
+            const card = evt?.target?.closest('div[style*="border-radius:14px"]');
+            const thumbEl = card?.querySelector('img');
+            const target = document.getElementById('cart-badge');
+            if (!thumbEl || !target) return;
+
+            const from = thumbEl.getBoundingClientRect();
+            const to = target.getBoundingClientRect();
+
+            const ghost = thumbEl.cloneNode(true);
+            Object.assign(ghost.style, {
+                position: 'fixed',
+                left: from.left + 'px',
+                top: from.top + 'px',
+                width: from.width + 'px',
+                height: from.height + 'px',
+                borderRadius: '12px',
+                objectFit: 'contain',
+                pointerEvents: 'none',
+                zIndex: '9999',
+                transition: 'transform .7s cubic-bezier(.4,0,.2,1), opacity .7s ease',
+                background: '#fff',
+                boxShadow: '0 10px 24px -8px rgba(190,154,83,.5)',
+            });
+            document.body.appendChild(ghost);
+
+            const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
+            const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+
+            requestAnimationFrame(() => {
+                ghost.style.transform = `translate(${dx}px, ${dy}px) scale(0.2)`;
+                ghost.style.opacity = '0.2';
+            });
+            setTimeout(() => ghost.remove(), 720);
         },
     };
 }

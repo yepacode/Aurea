@@ -145,11 +145,19 @@ class StorefrontController extends Controller
         $testimonials = Testimonial::where('is_active', true)->orderBy('sort_order')->get();
         $featuredBrands = \App\Models\Brand::active()->featured()->ordered()->get();
 
+        // Kits destacados — primeros 3 activos por sort_order.
+        $featuredBundles = \App\Models\Bundle::active()
+            ->with(['items' => fn ($q) => $q->select('products.id', 'name', 'slug', 'images', 'price')])
+            ->orderBy('sort_order')
+            ->orderByDesc('created_at')
+            ->take(3)
+            ->get();
+
         return view('storefront.home', compact(
             'hero', 'heroProduct', 'heroMode', 'homePage', 'seoSettings',
             'lentes', 'toallitas', 'coloresDisponibles',
             'recentPosts', 'infographics', 'organizationSchema', 'faqSchema',
-            'categories', 'testimonials', 'featuredBrands',
+            'categories', 'testimonials', 'featuredBrands', 'featuredBundles',
         ));
     }
 

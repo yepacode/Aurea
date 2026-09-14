@@ -1770,6 +1770,118 @@
 @endif
 
 {{-- ============================================================
+     2.5. KITS ÁUREA — 3 bundles destacados (combos con descuento)
+     Se muestran antes de las categorías para captar la atención.
+     ============================================================ --}}
+@if(($featuredBundles ?? collect())->isNotEmpty())
+<section class="ba-section ba-section--cream-soft" aria-labelledby="kits-title">
+    <div class="ba-container">
+        <header class="ba-section-head" data-anim="fade-up">
+            <span class="ba-section-head__label">— Kits Áurea 🌸</span>
+            <h2 id="kits-title" class="ba-section-head__title">Rituales completos, precio especial</h2>
+            <p class="ba-section-head__sub">Combos curados por nuestro equipo. Productos que se potencian entre sí, a un precio pensado para que empieces a cuidarte hoy.</p>
+            <div class="ba-divider"></div>
+        </header>
+
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;">
+            @foreach($featuredBundles as $bundle)
+                @php $items = $bundle->items->take(4); $count = $items->count(); @endphp
+                <a href="{{ route('bundles.show', $bundle->slug) }}"
+                   class="home-kit-card" data-anim="fade-up" style="--stagger:{{ $loop->index }};">
+                    @if($bundle->savings > 0)
+                        <span class="home-kit-card__ribbon">Ahorra ${{ number_format($bundle->savings, 0, ',', '.') }}</span>
+                    @endif
+                    <div class="home-kit-card__cover">
+                        @if($bundle->image_url)
+                            <img src="{{ $bundle->image_url }}" alt="{{ $bundle->name }}" loading="lazy">
+                        @elseif($count > 0)
+                            <div class="home-kit-card__collage" data-count="{{ $count }}">
+                                @foreach($items as $p)
+                                    @php $img = ($p->images[0] ?? null) ? asset('storage/'.$p->images[0]) : null; @endphp
+                                    @if($img)
+                                        <img src="{{ $img }}" alt="{{ $p->name }}" loading="lazy">
+                                    @else
+                                        <div class="home-kit-card__ph"><span>{{ mb_substr($p->name, 0, 1) }}</span></div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                    <div class="home-kit-card__body">
+                        <h3 class="home-kit-card__title">{{ $bundle->name }}</h3>
+                        <ul class="home-kit-card__items">
+                            @foreach($bundle->items->take(3) as $p)
+                                <li>{{ $p->name }}</li>
+                            @endforeach
+                            @if($bundle->items->count() > 3)
+                                <li style="color:#B8A999;font-style:italic;">+ {{ $bundle->items->count() - 3 }} más</li>
+                            @endif
+                        </ul>
+                        <div class="home-kit-card__price-row">
+                            <span class="home-kit-card__price">${{ number_format($bundle->price, 0, ',', '.') }}</span>
+                            @if($bundle->compare_price > $bundle->price)
+                                <span class="home-kit-card__compare">${{ number_format($bundle->compare_price, 0, ',', '.') }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+
+        <div style="text-align:center;margin-top:44px;" data-anim="fade-up">
+            <a href="{{ route('bundles.index') }}" class="ba-btn-ghost">Ver todos los kits</a>
+        </div>
+    </div>
+</section>
+
+<style>
+    .home-kit-card{
+        position:relative;
+        background:linear-gradient(160deg,#FEFCF8 0%,#F8F2E8 100%);
+        border:1px solid rgba(217,181,109,.20);
+        border-radius:20px;overflow:hidden;text-decoration:none;color:inherit;
+        display:flex;flex-direction:column;
+        transition:transform .4s cubic-bezier(.2,.7,.3,1),
+                   box-shadow .4s cubic-bezier(.2,.7,.3,1),
+                   border-color .4s ease;
+        isolation:isolate;
+    }
+    .home-kit-card:hover{
+        transform:translateY(-4px);
+        box-shadow:0 26px 56px -20px rgba(190,154,83,.35),0 6px 16px -8px rgba(46,42,38,.05);
+        border-color:rgba(217,181,109,.5);
+    }
+    .home-kit-card__ribbon{
+        position:absolute;top:16px;left:-6px;z-index:3;
+        background:linear-gradient(135deg,#D9B56D 0%,#BE9A53 100%);color:#3B310F;
+        padding:7px 15px 7px 17px;
+        font:700 10px/1 'Montserrat',sans-serif;letter-spacing:.14em;text-transform:uppercase;
+        border-radius:0 4px 4px 0;box-shadow:0 6px 16px -6px rgba(190,154,83,.55);
+    }
+    .home-kit-card__cover{position:relative;aspect-ratio:4/3;background:radial-gradient(circle at 30% 30%,#FBF4E6,#E8D1C5);overflow:hidden;}
+    .home-kit-card__cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1s cubic-bezier(.2,.7,.3,1);}
+    .home-kit-card:hover .home-kit-card__cover img{transform:scale(1.06);}
+    .home-kit-card__collage{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;padding:14px;}
+    .home-kit-card__collage[data-count="1"] img{grid-column:span 2;grid-row:span 2;}
+    .home-kit-card__collage img{width:100%;height:100%;object-fit:cover;border-radius:10px;background:#fff;box-shadow:0 4px 12px -6px rgba(46,42,38,.18);}
+    .home-kit-card__ph{display:flex;align-items:center;justify-content:center;background:#FBF4E6;border-radius:10px;}
+    .home-kit-card__ph span{font-family:'Playfair Display',serif;color:#BE9A53;font-size:22px;}
+    .home-kit-card__body{padding:22px 22px 26px;flex:1;display:flex;flex-direction:column;}
+    .home-kit-card__title{font-family:'Playfair Display',serif;font-weight:500;font-size:22px;line-height:1.2;color:#2E2A26;margin:0 0 12px;letter-spacing:-.005em;transition:color .3s;}
+    .home-kit-card:hover .home-kit-card__title{color:#BE9A53;}
+    .home-kit-card__items{list-style:none;padding:0;margin:0 0 18px;display:flex;flex-direction:column;gap:5px;}
+    .home-kit-card__items li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:#6B6157;}
+    .home-kit-card__items li::before{content:"";flex-shrink:0;width:12px;height:12px;margin-top:3px;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23BE9A53' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 17 4 12'/></svg>") center/contain no-repeat;}
+    .home-kit-card__price-row{margin-top:auto;padding-top:14px;border-top:1px solid rgba(184,169,153,.18);display:flex;align-items:baseline;gap:10px;}
+    .home-kit-card__price{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;color:#2E2A26;}
+    .home-kit-card__compare{font-size:14px;color:#B8A999;text-decoration:line-through;}
+
+    @media(max-width:900px){ .ba-container > div[style*="repeat(3"]{grid-template-columns:repeat(2,1fr) !important;} }
+    @media(max-width:600px){ .ba-container > div[style*="repeat(3"]{grid-template-columns:1fr !important;} }
+</style>
+@endif
+
+{{-- ============================================================
      3. CATEGORÍAS — Magazine grid asimétrico
      Las 8 categorías top por sort_order (editable en /admin/categories).
      Primera card ocupa 2x2 (hero); las otras 6 ocupan 1x1.

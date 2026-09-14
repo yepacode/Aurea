@@ -44,6 +44,10 @@ Route::resource('categories', CategoryAdminController::class)->except(['show']);
 // Brands CRUD
 Route::resource('brands', \App\Http\Controllers\Admin\BrandAdminController::class)->except(['show']);
 
+// Bundles / Kits CRUD
+Route::patch('bundles/{bundle}/toggle', [\App\Http\Controllers\Admin\BundleAdminController::class, 'toggle'])->name('bundles.toggle');
+Route::resource('bundles', \App\Http\Controllers\Admin\BundleAdminController::class)->except(['show']);
+
 // Products CRUD
 Route::get('products/import',          [ProductImportController::class, 'show'])->name('products.import');
 Route::post('products/import',         [ProductImportController::class, 'store'])->name('products.import.store');

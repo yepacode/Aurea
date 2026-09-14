@@ -6,6 +6,7 @@ use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Services\CartService;
 use App\Services\CheckoutService;
+use App\Services\UpsellService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class CheckoutController extends Controller
     public function __construct(
         private CartService $cart,
         private CheckoutService $checkout,
+        private UpsellService $upsell,
     ) {}
 
     public function index(): View|RedirectResponse
@@ -34,7 +36,9 @@ class CheckoutController extends Controller
         $freeItems = $promo['free_items'];
         $subtotalAfter2x1 = $subtotal - $discount2x1;
         $couponDiscount = $this->getSessionDiscount($subtotalAfter2x1);
-        $shipping = $this->cart->getShipping(null, $couponDiscount['amount']);
+        $bundleDiscounts = $this->cart->getBundleDiscounts();
+        $bundleDiscountTotal = $this->cart->getBundleDiscountsTotal();
+        $shipping = $this->cart->getShipping(null, $couponDiscount['amount'] + $bundleDiscountTotal);
 
         // Count eligible lens units to detect odd count (suggest picking another)
         $eligibleLensCount = $items->filter(fn ($item) =>
@@ -71,7 +75,9 @@ class CheckoutController extends Controller
             'shipping' => $shipping,
             'freeThreshold' => $freeThreshold,
             'discount' => $couponDiscount,
-            'total' => max(0, $subtotalAfter2x1 - $couponDiscount['amount'] + $shipping),
+            'bundleDiscounts' => $bundleDiscounts,
+            'bundleDiscountTotal' => $bundleDiscountTotal,
+            'total' => max(0, $subtotalAfter2x1 - $couponDiscount['amount'] - $bundleDiscountTotal + $shipping),
             'appliedCoupon' => $couponDiscount['code'],
             'productBenefits' => $lentesPage->product_benefits ?? [],
         ]);
@@ -88,8 +94,9 @@ class CheckoutController extends Controller
         $discount2x1 = $this->cart->calculate2x1()['discount'];
         $subtotalAfter2x1 = $subtotal - $discount2x1;
         $couponDiscount = $this->getSessionDiscount($subtotalAfter2x1);
-        $shipping = $this->cart->getShipping($state, $couponDiscount['amount']);
-        $total = max(0, $subtotalAfter2x1 - $couponDiscount['amount'] + $shipping);
+        $bundleDiscountTotal = $this->cart->getBundleDiscountsTotal();
+        $shipping = $this->cart->getShipping($state, $couponDiscount['amount'] + $bundleDiscountTotal);
+        $total = max(0, $subtotalAfter2x1 - $couponDiscount['amount'] - $bundleDiscountTotal + $shipping);
 
         return response()->json([
             'shipping' => $shipping,
@@ -145,6 +152,7 @@ class CheckoutController extends Controller
             'discount_amount' => $discountAmount,
             'shipping' => $shipping,
             'new_total' => $newTotal,
+            'upsell' => $this->upsell->suggestForCartJson(3),
         ]);
     }
 
@@ -160,6 +168,7 @@ class CheckoutController extends Controller
             'success' => true,
             'shipping' => $shipping,
             'new_total' => max(0, $subtotal - $discount2x1 + $shipping),
+            'upsell' => $this->upsell->suggestForCartJson(3),
         ]);
     }
 
@@ -180,8 +189,9 @@ class CheckoutController extends Controller
         $discount2x1 = $this->cart->calculate2x1()['discount'];
         $subtotalAfter2x1 = $subtotal - $discount2x1;
         $discount = $this->getSessionDiscount($subtotalAfter2x1);
-        $shipping = $this->cart->getShipping($request->input('state'), $discount['amount']);
-        $total = max(0, $subtotalAfter2x1 - $discount['amount'] + $shipping);
+        $bundleDiscountTotal = $this->cart->getBundleDiscountsTotal();
+        $shipping = $this->cart->getShipping($request->input('state'), $discount['amount'] + $bundleDiscountTotal);
+        $total = max(0, $subtotalAfter2x1 - $discount['amount'] - $bundleDiscountTotal + $shipping);
 
         Stripe::setApiKey(config('services.stripe.secret'));
 
@@ -232,9 +242,13 @@ class CheckoutController extends Controller
         $discount2x1 = $this->cart->calculate2x1()['discount'];
         $subtotalAfter2x1 = $subtotal - $discount2x1;
         $couponDiscount = $this->getSessionDiscount($subtotalAfter2x1);
+        $bundleDiscountTotal = $this->cart->getBundleDiscountsTotal();
 
         $validated['discount_code'] = $couponDiscount['code'];
-        $validated['discount_amount'] = $discount2x1 + $couponDiscount['amount'];
+        // Reunimos todos los descuentos aplicables (2x1 + cupón + kits) en un
+        // solo importe de descuento para la orden. `discount_2x1` sigue
+        // desglosado para la línea de auditoría.
+        $validated['discount_amount'] = $discount2x1 + $couponDiscount['amount'] + $bundleDiscountTotal;
         $validated['discount_2x1'] = $discount2x1;
 
         // If card payment, verify with Stripe that payment succeeded

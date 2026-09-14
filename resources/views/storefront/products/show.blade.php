@@ -320,6 +320,33 @@
                 </p>
                 @endif
 
+                {{-- ✨ Bundles activos que incluyen este producto --}}
+                @php $productBundles = $product->activeBundles(); @endphp
+                @if($productBundles->isNotEmpty())
+                    @foreach($productBundles as $activeBundle)
+                    <a href="{{ route('bundles.show', $activeBundle->slug) }}"
+                       style="display:flex;align-items:center;gap:12px;padding:14px 16px;margin-bottom:14px;
+                              background:linear-gradient(160deg,#FEFCF8 0%,#F8F2E8 100%);
+                              border:1px solid rgba(217,181,109,.35);border-radius:14px;
+                              text-decoration:none;color:inherit;transition:all .3s;"
+                       onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 26px -10px rgba(190,154,83,.45)'"
+                       onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                        <span style="font-size:24px;">💫</span>
+                        <div style="flex:1;min-width:0;">
+                            <p style="margin:0;font-size:13px;color:#6B6157;line-height:1.4;">
+                                Este producto está en <strong style="color:#2E2A26;font-family:'Playfair Display',serif;">{{ $activeBundle->name }}</strong>
+                                @if($activeBundle->savings > 0)
+                                    — ahorra <strong style="color:#C97B6B;">${{ number_format($activeBundle->savings, 0, ',', '.') }}</strong>
+                                @endif
+                            </p>
+                        </div>
+                        <span style="font:600 11px/1 'Montserrat',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#BE9A53;white-space:nowrap;">
+                            Ver kit →
+                        </span>
+                    </a>
+                    @endforeach
+                @endif
+
                 {{-- Trust badges contextuales (cruelty-free, vegan, origen) --}}
                 @if($product->is_cruelty_free || $product->is_vegan || $product->country_origin)
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;">
@@ -548,6 +575,123 @@
     @endif
 
     {{-- ============================================================
+         PRODUCTOS RELACIONADOS — "También te podría gustar 💛"
+         Se coloca ANTES de las reseñas para retener al cliente cuando
+         termina de leer contenido enriquecido y baja hacia el footer.
+         ============================================================ --}}
+    @if(($relatedProducts ?? collect())->count() > 0)
+    <style>
+        .relx-wrap{max-width:1200px;margin:0 auto;padding:clamp(48px,7vw,80px) 24px 32px;}
+        .relx-title{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 44px;text-align:center;}
+        .relx-title__flower{color:#D9B56D;font-size:20px;line-height:1;opacity:.85;flex-shrink:0;
+            display:inline-flex;align-items:center;}
+        .relx-title__flower svg{width:26px;height:26px;}
+        .relx-title h2{font-family:'Playfair Display',serif;font-size:clamp(24px,3.2vw,34px);font-weight:600;
+            color:#2E2A26;margin:0;line-height:1.2;}
+        .relx-title h2 .heart{color:#D9B56D;font-size:.85em;margin-left:6px;}
+        .relx-title__kicker{display:block;font-size:11px;font-weight:600;letter-spacing:.28em;
+            text-transform:uppercase;color:#BE9A53;margin:0 0 8px;text-align:center;}
+        .relx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(16px,2vw,26px);}
+        @media(max-width:900px){
+            .relx-grid{display:flex;grid-template-columns:none;gap:14px;overflow-x:auto;
+                scroll-snap-type:x mandatory;padding:4px 4px 20px;
+                margin:0 -16px;padding-left:16px;padding-right:16px;
+                scrollbar-width:thin;scrollbar-color:#D9B56D transparent;}
+            .relx-grid::-webkit-scrollbar{height:6px;}
+            .relx-grid::-webkit-scrollbar-thumb{background:#D9B56D;border-radius:4px;}
+            .relx-grid > *{scroll-snap-align:start;flex:0 0 62%;min-width:220px;max-width:260px;}
+        }
+        .relx-card{display:block;text-decoration:none;color:inherit;transition:transform .4s cubic-bezier(.2,.7,.3,1);}
+        .relx-card__img{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;margin-bottom:14px;
+            display:flex;align-items:center;justify-content:center;padding:14px;
+            background:linear-gradient(155deg,#FBF8F2,#F3ECDF);
+            border:1px solid rgba(217,181,109,.22);
+            transition:box-shadow .5s cubic-bezier(.2,.7,.3,1),border-color .4s,transform .5s cubic-bezier(.2,.7,.3,1);}
+        .relx-card:hover .relx-card__img{border-color:rgba(217,181,109,.55);
+            box-shadow:0 26px 50px -22px rgba(190,154,83,.45);transform:translateY(-6px);}
+        .relx-card__img img{position:relative;max-width:100%;max-height:100%;width:auto;height:auto;
+            object-fit:contain;transition:transform 1.3s cubic-bezier(.2,.7,.3,1), filter .5s ease;}
+        .relx-card:hover .relx-card__img img{transform:scale(1.07);}
+        @media(hover:hover){
+            .relx-card__img img{filter:saturate(.85) brightness(1.02) contrast(.97);}
+            .relx-card:hover .relx-card__img img{filter:none;}
+        }
+        .relx-card__badge{position:absolute;top:10px;left:10px;background:rgba(255,255,255,.92);
+            color:#BE9A53;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+            border-radius:9999px;padding:4px 10px;backdrop-filter:blur(6px);
+            border:1px solid rgba(217,181,109,.4);}
+        .relx-card__brand{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+            color:#BE9A53;margin:0 0 4px;}
+        .relx-card__name{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:#2E2A26;
+            margin:0 0 8px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;
+            -webkit-box-orient:vertical;min-height:2.6em;}
+        .relx-card__price{font-family:'Playfair Display',serif;font-size:15.5px;font-weight:600;color:#BE9A53;}
+        .relx-card__compare{font-size:12px;color:#B8A999;text-decoration:line-through;margin-left:6px;}
+        .relx-card__cta{display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+            font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;letter-spacing:.18em;
+            text-transform:uppercase;color:#2E2A26;padding:8px 14px;border:1px solid #E5DCC9;
+            border-radius:9999px;background:transparent;transition:all .3s ease;}
+        .relx-card:hover .relx-card__cta{background:#2E2A26;color:#F7F3ED;border-color:#2E2A26;}
+        .relx-card__cta svg{width:12px;height:12px;transition:transform .3s ease;}
+        .relx-card:hover .relx-card__cta svg{transform:translateX(3px);}
+    </style>
+    <section style="background:transparent;">
+        <div class="relx-wrap">
+            <span class="relx-title__kicker">También te podría gustar</span>
+            <div class="relx-title">
+                <span class="relx-title__flower" aria-hidden="true">
+                    {{-- Adorno floral izquierdo --}}
+                    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2c1.3 1.6 1.3 3.9 0 5.5C10.7 5.9 10.7 3.6 12 2Zm-6.1 3.8c1.9.4 3.3 2.2 3.1 4.1C7 9.5 5.6 7.7 5.9 5.8Zm12.2 0c-.3 1.9-1.7 3.7-3.6 4.1-.1-1.9 1.3-3.7 3.6-4.1Zm-9.6 9.4C6.6 14 5 15.3 4.7 17.2c1.9.3 3.7-1 4.2-2.9.6.4 1.4.5 2.1.2-.3-2-1.9-3.5-3.9-3.8-.2 1.7 1 3.2 2.5 3.7-.4.4-1 .6-1.6.6-.6 0-1.2-.2-1.7-.5.4-.6.7-1.2 1-1.9-.2 0-.5.1-.8.2Zm7.3-.2c1.5-.5 2.7-2 2.5-3.7-2 .3-3.6 1.8-3.9 3.8.7.3 1.5.2 2.1-.2.5 1.9 2.3 3.2 4.2 2.9-.3-1.9-1.9-3.2-3.6-3.4-.3-.1-.6-.2-.8-.2.3.6.6 1.3 1 1.9-.5.3-1.1.5-1.7.5-.6 0-1.1-.2-1.6-.6-.1.2 0 .5.1.9-.8-.3-1.5-.9-1.9-1.6-.4.7-1.1 1.3-1.9 1.6.1-.4.2-.7.1-.9-.5.4-1 .6-1.6.6-.6 0-1.2-.2-1.7-.5-.4.2-.7.5-1 .8.4.6.9 1 1.5 1.3-1.1.9-2.2 1.8-3.1 2.9.6.4 1.2.8 1.9 1 .3-1.6 1.4-3 2.9-3.6-.1 1.8 1 3.5 2.7 4.2 1.7-.7 2.8-2.4 2.7-4.2 1.5.6 2.6 2 2.9 3.6.7-.2 1.3-.6 1.9-1-.9-1.1-2-2-3.1-2.9.6-.3 1.1-.7 1.5-1.3-.3-.3-.6-.6-1-.8Z" opacity=".85"/>
+                        <circle cx="12" cy="12" r="1.4"/>
+                    </svg>
+                </span>
+                <h2>También te podría gustar<span class="heart">💛</span></h2>
+                <span class="relx-title__flower" aria-hidden="true">
+                    {{-- Adorno floral derecho --}}
+                    <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2c1.3 1.6 1.3 3.9 0 5.5C10.7 5.9 10.7 3.6 12 2Zm-6.1 3.8c1.9.4 3.3 2.2 3.1 4.1C7 9.5 5.6 7.7 5.9 5.8Zm12.2 0c-.3 1.9-1.7 3.7-3.6 4.1-.1-1.9 1.3-3.7 3.6-4.1Zm-9.6 9.4C6.6 14 5 15.3 4.7 17.2c1.9.3 3.7-1 4.2-2.9.6.4 1.4.5 2.1.2-.3-2-1.9-3.5-3.9-3.8-.2 1.7 1 3.2 2.5 3.7-.4.4-1 .6-1.6.6-.6 0-1.2-.2-1.7-.5.4-.6.7-1.2 1-1.9-.2 0-.5.1-.8.2Zm7.3-.2c1.5-.5 2.7-2 2.5-3.7-2 .3-3.6 1.8-3.9 3.8.7.3 1.5.2 2.1-.2.5 1.9 2.3 3.2 4.2 2.9-.3-1.9-1.9-3.2-3.6-3.4-.3-.1-.6-.2-.8-.2.3.6.6 1.3 1 1.9-.5.3-1.1.5-1.7.5-.6 0-1.1-.2-1.6-.6-.1.2 0 .5.1.9-.8-.3-1.5-.9-1.9-1.6-.4.7-1.1 1.3-1.9 1.6.1-.4.2-.7.1-.9-.5.4-1 .6-1.6.6-.6 0-1.2-.2-1.7-.5-.4.2-.7.5-1 .8.4.6.9 1 1.5 1.3-1.1.9-2.2 1.8-3.1 2.9.6.4 1.2.8 1.9 1 .3-1.6 1.4-3 2.9-3.6-.1 1.8 1 3.5 2.7 4.2 1.7-.7 2.8-2.4 2.7-4.2 1.5.6 2.6 2 2.9 3.6.7-.2 1.3-.6 1.9-1-.9-1.1-2-2-3.1-2.9.6-.3 1.1-.7 1.5-1.3-.3-.3-.6-.6-1-.8Z" opacity=".85"/>
+                        <circle cx="12" cy="12" r="1.4"/>
+                    </svg>
+                </span>
+            </div>
+
+            <div class="relx-grid">
+                @foreach($relatedProducts as $rel)
+                @php $rImg = $rel->images[0] ?? null; @endphp
+                <a href="{{ route('products.show', $rel->slug) }}" class="relx-card">
+                    <div class="relx-card__img">
+                        @if($rel->compare_price && $rel->compare_price > $rel->price)
+                            <span class="relx-card__badge">Oferta</span>
+                        @endif
+                        @if($rImg)
+                            <img src="{{ asset('storage/'.$rImg) }}" alt="{{ $rel->name }}" loading="lazy">
+                        @endif
+                    </div>
+                    @if($rel->brand)
+                        <p class="relx-card__brand">{{ $rel->brand->name }}</p>
+                    @endif
+                    <h4 class="relx-card__name">{{ $rel->name }}</h4>
+                    <div>
+                        <span class="relx-card__price">${{ number_format($rel->price, 0, ',', '.') }}</span>
+                        @if($rel->compare_price && $rel->compare_price > $rel->price)
+                            <span class="relx-card__compare">${{ number_format($rel->compare_price, 0, ',', '.') }}</span>
+                        @endif
+                    </div>
+                    <span class="relx-card__cta">
+                        Ver
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12h15m0 0-6-6m6 6-6 6"/>
+                        </svg>
+                    </span>
+                </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+    @endif
+
+    {{-- ============================================================
          RESEÑAS ⭐
          ============================================================ --}}
     <style>
@@ -633,63 +777,6 @@
             <button type="submit" class="rev-submit">Enviar reseña</button>
         </form>
     </section>
-
-    {{-- ============================================================
-         PRODUCTOS RELACIONADOS (misma categoría)
-         ============================================================ --}}
-    @if(($relatedProducts ?? collect())->count() > 0)
-    <style>
-    .relx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(16px,2vw,26px);max-width:1160px;margin:0 auto;}
-    @media(max-width:900px){.relx-grid{grid-template-columns:repeat(2,1fr);}}
-    .relx-card{display:block;text-decoration:none;color:inherit;}
-    .relx-card__img{position:relative;aspect-ratio:4/5;border-radius:16px;overflow:hidden;margin-bottom:12px;
-        display:flex;align-items:center;justify-content:center;padding:12px;
-        background:linear-gradient(155deg,#FBF8F2,#F3ECDF);
-        border:1px solid rgba(217,181,109,.2);background:linear-gradient(155deg,#FBF8F2,#F3ECDF);
-        transition:box-shadow .5s cubic-bezier(.2,.7,.3,1),border-color .5s,transform .5s cubic-bezier(.2,.7,.3,1);}
-    .relx-card:hover .relx-card__img{border-color:rgba(217,181,109,.5);box-shadow:0 26px 50px -22px rgba(190,154,83,.45);transform:translateY(-5px);}
-    .relx-card__img img{position:relative;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;transition:transform 1.3s cubic-bezier(.2,.7,.3,1), filter .5s ease;}
-    .relx-card:hover .relx-card__img img{transform:scale(1.07);}
-    @media(hover:hover){.relx-card__img img{filter:saturate(.8) brightness(1.02) contrast(.96);}.relx-card:hover .relx-card__img img{filter:none;}}
-    .relx-card__brand{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#BE9A53;margin:0 0 4px;}
-    .relx-card__name{font-family:'Playfair Display',serif;font-size:14.5px;font-weight:600;color:#2E2A26;margin:0 0 8px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
-    .relx-card__price{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:#BE9A53;}
-    .relx-card__compare{font-size:12px;color:#B8A999;text-decoration:line-through;margin-left:6px;}
-    </style>
-    <section style="background:transparent;padding:clamp(48px,7vw,84px) 24px;">
-        <div style="max-width:1160px;margin:0 auto;">
-            <div style="text-align:center;margin-bottom:40px;">
-                <p style="font-size:11px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#BE9A53;margin:0 0 10px;">También te puede gustar</p>
-                <h2 style="font-family:'Playfair Display',serif;font-size:clamp(24px,3vw,34px);font-weight:600;color:#2E2A26;margin:0;">
-                    Más en {{ $product->category?->name ?? 'esta categoría' }}
-                </h2>
-            </div>
-
-            <div class="relx-grid">
-                @foreach($relatedProducts as $rel)
-                @php $rImg = $rel->images[0] ?? null; @endphp
-                <a href="{{ route('products.show', $rel->slug) }}" class="relx-card">
-                    <div class="relx-card__img">
-                        @if($rImg)
-                            <img src="{{ asset('storage/'.$rImg) }}" alt="{{ $rel->name }}" loading="lazy">
-                        @endif
-                    </div>
-                    @if($rel->brand)
-                        <p class="relx-card__brand">{{ $rel->brand->name }}</p>
-                    @endif
-                    <h4 class="relx-card__name">{{ $rel->name }}</h4>
-                    <div>
-                        <span class="relx-card__price">${{ number_format($rel->price, 0, ',', '.') }}</span>
-                        @if($rel->compare_price && $rel->compare_price > $rel->price)
-                            <span class="relx-card__compare">${{ number_format($rel->compare_price, 0, ',', '.') }}</span>
-                        @endif
-                    </div>
-                </a>
-                @endforeach
-            </div>
-        </div>
-    </section>
-    @endif
 
     {{-- ============================================================
          LIGHTBOX — componente propio + evento global (abre el zoom desde cualquier scope)

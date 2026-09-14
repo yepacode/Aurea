@@ -198,11 +198,17 @@ class ProductController extends Controller
             ->filter(fn ($v) => $v->option_type !== 'color' && empty($v->graduation_type))
             ->groupBy(fn ($v) => $v->name ?: \App\Models\ProductVariant::DEFAULT_LABELS[$v->option_type] ?? 'Opción');
 
-        // Productos relacionados: misma categoría, otros productos con stock e imagen.
+        // Productos relacionados: prioridad en cascada
+        //   1) MISMA categoría, más vendidos primero (según pedidos pagados);
+        //      empatan por updated_at desc para tener siempre 4 candidatos.
+        //   2) Si aún no llega a 4: MISMA marca.
+        //   3) Si aún no llega: cualquier producto activo (random).
+        // Todo excluyendo el producto actual y exigiendo stock + imagen.
+        $target = 4;
         $relatedProducts = collect();
-        if ($product->category_id) {
-            $relatedProducts = Product::active()
-                ->where('category_id', $product->category_id)
+
+        $baseQuery = function () use ($product) {
+            return Product::active()
                 ->where('id', '!=', $product->id)
                 ->where(function ($q) {
                     $q->where('stock', '>', 0)
@@ -210,11 +216,57 @@ class ProductController extends Controller
                 })
                 ->whereNotNull('images')
                 ->whereRaw('JSON_LENGTH(images) > 0')
-                ->with(['brand'])
-                ->inRandomOrder()
-                ->take(4)
+                ->with(['brand']);
+        };
+
+        // 1) Misma categoría, ordenado por ventas (LEFT JOIN a un subquery agregado).
+        if ($product->category_id) {
+            $relatedProducts = $baseQuery()
+                ->where('category_id', $product->category_id)
+                ->leftJoinSub(
+                    \App\Models\OrderItem::query()
+                        ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                        ->where('orders.payment_status', 'paid')
+                        ->selectRaw('product_id, SUM(qty) as sold')
+                        ->groupBy('product_id'),
+                    'sales',
+                    'sales.product_id',
+                    '=',
+                    'products.id',
+                )
+                ->orderByRaw('COALESCE(sales.sold, 0) DESC')
+                ->orderByDesc('products.updated_at')
+                ->select('products.*')
+                ->take($target)
                 ->get();
         }
+
+        // 2) Rellenar con MISMA marca si aún faltan.
+        if ($relatedProducts->count() < $target && $product->brand_id) {
+            $need = $target - $relatedProducts->count();
+            $excludeIds = $relatedProducts->pluck('id')->push($product->id)->all();
+            $brandFill = $baseQuery()
+                ->where('brand_id', $product->brand_id)
+                ->whereNotIn('products.id', $excludeIds)
+                ->orderByDesc('products.updated_at')
+                ->take($need)
+                ->get();
+            $relatedProducts = $relatedProducts->concat($brandFill);
+        }
+
+        // 3) Rellenar con productos activos aleatorios si aún faltan.
+        if ($relatedProducts->count() < $target) {
+            $need = $target - $relatedProducts->count();
+            $excludeIds = $relatedProducts->pluck('id')->push($product->id)->all();
+            $randomFill = $baseQuery()
+                ->whereNotIn('products.id', $excludeIds)
+                ->inRandomOrder()
+                ->take($need)
+                ->get();
+            $relatedProducts = $relatedProducts->concat($randomFill);
+        }
+
+        $relatedProducts = $relatedProducts->take($target)->values();
 
         $isBestSeller = Product::bestSellerIds(8)->contains($product->id);
         $inWishlist = \Illuminate\Support\Facades\Auth::guard('customer')->check()

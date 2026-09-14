@@ -126,6 +126,33 @@ class Product extends Model
         return $this->hasMany(Review::class);
     }
 
+    /**
+     * Bundles that include this product.
+     */
+    public function bundles(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Bundle::class, 'bundle_items')
+            ->withPivot(['quantity', 'sort_order'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Bundles currently ACTIVE that include this product.
+     */
+    public function activeBundles(): \Illuminate\Support\Collection
+    {
+        return $this->bundles()
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+            })
+            ->orderBy('sort_order')
+            ->get();
+    }
+
     public function approvedReviews(): HasMany
     {
         return $this->hasMany(Review::class)->where('is_approved', true)->latest();

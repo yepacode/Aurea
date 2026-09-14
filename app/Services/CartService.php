@@ -114,7 +114,28 @@ class CartService
     public function clear(): void
     {
         session()->forget(self::SESSION_KEY);
+        session()->forget('bundle_discounts');
         $this->clearPersisted();
+    }
+
+    /**
+     * List of bundle discounts applied to the current cart (session-based).
+     * Each entry: ['bundle_id' => int, 'slug' => string, 'name' => string, 'amount' => int].
+     */
+    public function getBundleDiscounts(): array
+    {
+        return array_values((array) session('bundle_discounts', []));
+    }
+
+    /**
+     * Sum of the "amount" field of every bundle discount currently in session.
+     */
+    public function getBundleDiscountsTotal(): int
+    {
+        return (int) array_sum(array_map(
+            fn ($d) => (int) ($d['amount'] ?? 0),
+            $this->getBundleDiscounts(),
+        ));
     }
 
     /**

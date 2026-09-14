@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\StorefrontController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\BundleController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\EpaycoController;
@@ -53,6 +54,13 @@ Route::post('/productos/{slug}/resena', [\App\Http\Controllers\ReviewController:
 // Marcas (distribuidora)
 Route::get('/marcas',         [\App\Http\Controllers\BrandController::class, 'index'])->name('brands.index');
 Route::get('/marcas/{slug}',  [\App\Http\Controllers\BrandController::class, 'show'])->name('brands.show');
+
+// Kits & Bundles (combos de productos con descuento)
+Route::get('/kits',                    [BundleController::class, 'index'])->name('bundles.index');
+Route::get('/kits/{slug}',             [BundleController::class, 'show'])->name('bundles.show');
+Route::post('/kits/{slug}/agregar',    [BundleController::class, 'add'])->name('bundles.add');
+Route::delete('/kits/descuento/{bundleId}', [BundleController::class, 'removeDiscount'])->name('bundles.remove-discount')
+    ->whereNumber('bundleId');
 
 // Redirects 301 desde URLs legacy del esqueleto anterior
 Route::permanentRedirect('/lentes', '/productos');

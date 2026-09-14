@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ShippingSetting;
 use App\Services\CartService;
+use App\Services\UpsellService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class CartController extends Controller
 {
     public function __construct(
         private CartService $cart,
+        private UpsellService $upsell,
     ) {}
 
     public function index(): View
@@ -172,11 +174,15 @@ class CartController extends Controller
             }
         }
 
-        // Free-shipping threshold evaluated AFTER 2x1 AND coupon discount.
-        $threshold = (float) ShippingSetting::get('free_shipping_threshold', 999);
-        $shipping = $this->cart->getShipping(null, $couponDiscount);
+        // Bundle discounts (session-based; una línea por bundle agregado)
+        $bundleDiscounts = $this->cart->getBundleDiscounts();
+        $bundleDiscountTotal = $this->cart->getBundleDiscountsTotal();
 
-        $total = $subtotalConDescuento - $couponDiscount + $shipping;
+        // Free-shipping threshold evaluated AFTER 2x1, coupon AND bundle discount.
+        $threshold = (float) ShippingSetting::get('free_shipping_threshold', 999);
+        $shipping = $this->cart->getShipping(null, $couponDiscount + $bundleDiscountTotal);
+
+        $total = $subtotalConDescuento - $couponDiscount - $bundleDiscountTotal + $shipping;
 
         return [
             'cart_count' => $this->cart->count(),
@@ -199,9 +205,12 @@ class CartController extends Controller
             'coupon_code' => $couponCode,
             'coupon_description' => $couponDescription,
             'coupon_discount' => $couponDiscount,
+            'bundle_discounts' => $bundleDiscounts,
+            'bundle_discount_total' => $bundleDiscountTotal,
             'shipping' => $shipping,
             'free_threshold' => $threshold,
             'total' => max(0, $total),
+            'upsell' => $this->upsell->suggestForCartJson(3),
         ];
     }
 }

@@ -45,6 +45,21 @@ class BrandController extends Controller
             ->orderBy('sort_order')
             ->paginate(24);
 
+        // Productos destacados (para landing enriquecida)
+        $featuredProducts = collect();
+        $featuredIds = is_array($brand->featured_products_json) ? $brand->featured_products_json : [];
+        if ($brand->landing_enabled && ! empty($featuredIds)) {
+            $featuredProducts = Product::active()
+                ->where('brand_id', $brand->id)
+                ->whereIn('id', $featuredIds)
+                ->with('category')
+                ->get()
+                ->sortBy(function ($p) use ($featuredIds) {
+                    return array_search($p->id, $featuredIds);
+                })
+                ->values();
+        }
+
         $image = $brand->logo_url ?: asset('img/brand/logo-principal.png');
         $meta = $seoService->meta(
             $brand->meta_title ?: ($brand->name.' | Belleza Áurea'),
@@ -71,6 +86,10 @@ class BrandController extends Controller
             'sameAs' => array_values(array_filter([$brand->website_url])),
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        return view('storefront.brands.show', compact('brand', 'products', 'seo', 'brandSchema'));
+        $view = $brand->landing_enabled
+            ? 'storefront.brands.show-landing'
+            : 'storefront.brands.show';
+
+        return view($view, compact('brand', 'products', 'featuredProducts', 'seo', 'brandSchema'));
     }
 }
