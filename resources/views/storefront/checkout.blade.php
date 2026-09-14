@@ -619,6 +619,30 @@ function checkoutForm() {
                 return;
             }
 
+            // ── Analytics: add_payment_info / AddPaymentInfo ──
+            try {
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'add_payment_info', {
+                        currency: 'COP',
+                        value: this.currentTotal,
+                        payment_type: this.form.payment_method,
+                        items: {!! json_encode(collect($items)->map(fn($it) => [
+                            'item_id'       => (string) $it['product']->id,
+                            'item_name'     => (string) $it['product']->name,
+                            'item_category' => optional($it['product']->category)->name,
+                            'price'         => (float) $it['unit_price'],
+                            'quantity'      => (int) $it['qty'],
+                        ])->values()) !!}
+                    });
+                }
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'AddPaymentInfo', {
+                        value: this.currentTotal,
+                        currency: 'COP'
+                    });
+                }
+            } catch (_) { /* silencio */ }
+
             await this.submitOrder();
         },
 
@@ -681,5 +705,40 @@ function checkoutForm() {
         },
     };
 }
+</script>
+
+{{-- ── Analytics: begin_checkout / InitiateCheckout (al aterrizar en /checkout) ── --}}
+@php
+    $__coItems = collect($items)->map(fn($it) => [
+        'item_id'       => (string) $it['product']->id,
+        'item_name'     => (string) $it['product']->name,
+        'item_category' => optional($it['product']->category)->name,
+        'price'         => (float) $it['unit_price'],
+        'quantity'      => (int) $it['qty'],
+    ])->values();
+    $__coIds = collect($items)->map(fn($it) => (string) $it['product']->id)->values();
+    $__coCount = collect($items)->sum('qty');
+@endphp
+<script>
+    (function () {
+        try {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'begin_checkout', {
+                    currency: 'COP',
+                    value: {{ (float) $total }},
+                    items: @json($__coItems)
+                });
+            }
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'InitiateCheckout', {
+                    content_ids: @json($__coIds),
+                    content_type: 'product',
+                    num_items: {{ (int) $__coCount }},
+                    value: {{ (float) $total }},
+                    currency: 'COP'
+                });
+            }
+        } catch (_) { /* silencio */ }
+    })();
 </script>
 @endpush

@@ -275,4 +275,52 @@
         setTimeout(function () { if (box && box.parentNode) box.parentNode.removeChild(box); }, 13000);
     })();
 </script>
+
+{{-- ── Analytics: purchase / Purchase (solo si el pago quedó aprobado) ──
+     Se envuelve en un session flag para que un F5 no dispare el evento dos veces
+     y "duplique" la conversión en GA/Meta. --}}
+@if(($order->payment_status ?? null) === 'paid')
+@php
+    $__ordItems = $order->items->map(fn($it) => [
+        'item_id'       => (string) ($it->product_id ?? $it->id),
+        'item_name'     => (string) (optional($it->product)->name ?? 'Producto'),
+        'item_category' => optional(optional($it->product)->category)->name,
+        'price'         => (float) $it->unit_price,
+        'quantity'      => (int) $it->qty,
+    ])->values();
+    $__ordIds = $order->items->map(fn($it) => (string) ($it->product_id ?? $it->id))->values();
+    $__ordShipping = (float) ($order->shipping ?? 0);
+    $__ordDiscount = (float) (($order->discount_amount ?? 0) + ($order->discount_2x1 ?? 0) + ($order->discount_coupon ?? 0));
+@endphp
+<script>
+    (function () {
+        var KEY = 'ba_purchase_sent_{{ $order->id }}';
+        try { if (sessionStorage.getItem(KEY)) return; } catch (_) {}
+
+        try {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'purchase', {
+                    transaction_id: @js((string) $order->id),
+                    value: {{ (float) $order->total }},
+                    currency: 'COP',
+                    shipping: {{ $__ordShipping }},
+                    @if($__ordDiscount > 0) coupon_discount: {{ $__ordDiscount }}, @endif
+                    items: @json($__ordItems)
+                });
+            }
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'Purchase', {
+                    content_ids: @json($__ordIds),
+                    content_type: 'product',
+                    num_items: {{ (int) $order->items->sum('qty') }},
+                    value: {{ (float) $order->total }},
+                    currency: 'COP'
+                });
+            }
+        } catch (_) { /* silencio */ }
+
+        try { sessionStorage.setItem(KEY, '1'); } catch (_) {}
+    })();
+</script>
+@endif
 @endpush

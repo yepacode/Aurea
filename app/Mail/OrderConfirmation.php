@@ -4,13 +4,18 @@ namespace App\Mail;
 
 use App\Models\BankTransferSetting;
 use App\Models\Order;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
 
-class OrderConfirmation extends Mailable
+class OrderConfirmation extends Mailable implements ShouldQueue
 {
+    use Queueable, SerializesModels;
+
     public array $bankDetails = [];
 
     public function __construct(

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\AnalyticsSetting;
 use App\Models\DiscountCode;
 use App\Models\PaymentSetting;
 use App\Models\Product;
@@ -37,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         $this->applyPaymentSettingsFromDatabase();
+        $this->applyAnalyticsSettingsFromDatabase();
 
         // Avisos "vuelve a estar disponible" al reponer stock.
         Product::observe(\App\Observers\ProductObserver::class);
@@ -153,6 +155,37 @@ class AppServiceProvider extends ServiceProvider
             }
 
             config([$configKey => $value]);
+        }
+    }
+
+    /**
+     * Sobrescribe las IDs de GA4 y Meta Pixel (config('services.analytics.*'))
+     * con lo que el admin haya guardado en el panel (tabla analytics_settings).
+     * Si un valor no está configurado, se conserva el del .env como respaldo.
+     * Esto permite al cliente pegar sus IDs una sola vez desde /admin sin tocar .env.
+     */
+    private function applyAnalyticsSettingsFromDatabase(): void
+    {
+        try {
+            if (! Schema::hasTable('analytics_settings')) {
+                return;
+            }
+        } catch (\Throwable $e) {
+            // BD no disponible (p.ej. durante instalación); usar .env.
+            return;
+        }
+
+        $map = [
+            'ga4_measurement_id' => 'services.analytics.ga4',
+            'meta_pixel_id'      => 'services.analytics.meta_pixel',
+        ];
+
+        foreach ($map as $dbKey => $configKey) {
+            $value = AnalyticsSetting::get($dbKey);
+            if ($value === null || $value === '') {
+                continue;
+            }
+            config([$configKey => trim($value)]);
         }
     }
 }

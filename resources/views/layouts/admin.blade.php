@@ -319,6 +319,15 @@
                         </svg>
                         <span x-show="sidebarOpen">Pasarela ePayco</span>
                     </a>
+
+                    {{-- Analítica (GA4 + Meta Pixel) --}}
+                    <a href="{{ route('admin.analytics.index') }}"
+                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.analytics.*') ? 'bg-white/10' : '' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M7 15l4-4 4 4 5-6"/>
+                        </svg>
+                        <span x-show="sidebarOpen">Analítica</span>
+                    </a>
                 </div>
             </nav>
 

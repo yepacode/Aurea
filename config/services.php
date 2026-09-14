@@ -50,4 +50,11 @@ return [
         'currency'    => env('EPAYCO_CURRENCY', 'cop'),
     ],
 
+    // Analytics: se pisan desde la BD (AnalyticsSetting) si el admin los captura
+    // desde el panel; si están vacíos, no se imprime nada en el HTML.
+    'analytics' => [
+        'ga4'        => env('GA4_MEASUREMENT_ID'),   // Formato G-XXXXXXXXXX
+        'meta_pixel' => env('META_PIXEL_ID'),        // 15–16 dígitos
+    ],
+
 ];

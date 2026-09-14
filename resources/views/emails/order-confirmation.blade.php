@@ -284,7 +284,7 @@
             <td align="center" style="border-top:1px solid #E5E7EB;padding:20px 0 0;">
                 <p style="margin:0 0 4px;font-size:13px;color:#9CA3AF;">¿Tienes dudas sobre tu pedido?</p>
                 <p style="margin:0;font-size:13px;">
-                    <a href="mailto:contacto@bellezaaurea.com" style="color:#D9B56D;text-decoration:none;font-weight:600;">contacto@bellezaaurea.com</a>
+                    <a href="mailto:{{ config('mail.contacto') }}" style="color:#D9B56D;text-decoration:none;font-weight:600;">{{ config('mail.contacto') }}</a>
                 </p>
             </td>
         </tr>

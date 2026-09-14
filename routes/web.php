@@ -10,6 +10,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\Auth\CustomerPasswordController;
@@ -170,6 +171,9 @@ Route::post('/landing/resultado', [LandingController::class, 'quizResult'])->nam
 // SEO
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
+// Google Merchant Center — feed de productos (RSS 2.0 + namespace g:)
+Route::get('/feed/google-merchant.xml', [FeedController::class, 'googleMerchant'])->name('feed.google_merchant');
+
 // robots.txt dinámico (la URL del sitemap se adapta al dominio real)
 Route::get('/robots.txt', function () {
     $lines = [
@@ -181,6 +185,9 @@ Route::get('/robots.txt', function () {
         'Allow: /',
         '',
         'Sitemap: ' . url('/sitemap.xml'),
+        '',
+        '# Google Merchant Center product feed',
+        'Allow: /feed/google-merchant.xml',
         '',
     ];
 

@@ -94,6 +94,10 @@ Route::put('bank-transfer/settings', [BankTransferAdminController::class, 'updat
 Route::get('pasarela-pago', [\App\Http\Controllers\Admin\PaymentSettingsAdminController::class, 'index'])->name('payments.index');
 Route::put('pasarela-pago', [\App\Http\Controllers\Admin\PaymentSettingsAdminController::class, 'update'])->name('payments.update');
 
+// Analytics (GA4 + Meta Pixel) settings
+Route::get('analytics', [\App\Http\Controllers\Admin\AnalyticsSettingsAdminController::class, 'index'])->name('analytics.index');
+Route::put('analytics', [\App\Http\Controllers\Admin\AnalyticsSettingsAdminController::class, 'update'])->name('analytics.update');
+
 // Infographics CRUD
 Route::resource('infographics', InfographicAdminController::class)->except(['show']);
 

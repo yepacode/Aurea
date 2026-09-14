@@ -222,6 +222,39 @@
 @endsection
 
 @push('scripts')
+{{-- ── Analytics: view_cart / (Meta: no oficial → usamos ViewContent con múltiples ids) ── --}}
+@php
+    $__gaItems = collect($items)->map(fn($it) => [
+        'item_id'       => (string) $it['product']->id,
+        'item_name'     => (string) $it['product']->name,
+        'item_category' => optional($it['product']->category)->name,
+        'price'         => (float) $it['unit_price'],
+        'quantity'      => (int) $it['qty'],
+    ])->values();
+    $__fbIds = collect($items)->map(fn($it) => (string) $it['product']->id)->values();
+    $__cartVal = (float) $subtotal;
+@endphp
+<script>
+    (function () {
+        try {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'view_cart', {
+                    currency: 'COP',
+                    value: {{ $__cartVal }},
+                    items: @json($__gaItems)
+                });
+            }
+            if (typeof fbq !== 'undefined' && {{ $__fbIds->count() }} > 0) {
+                fbq('track', 'ViewContent', {
+                    content_ids: @json($__fbIds),
+                    content_type: 'product',
+                    value: {{ $__cartVal }},
+                    currency: 'COP'
+                });
+            }
+        } catch (_) { /* silencio */ }
+    })();
+</script>
 <script>
 function cartPage() {
     return {

@@ -144,6 +144,9 @@
             });
         }
     </script>
+
+    {{-- Analytics (GA4 + Meta Pixel) — solo se imprime si el admin capturó IDs y no estamos en local --}}
+    @include('partials.analytics-head')
 </head>
 
 <body class="font-body min-h-screen flex flex-col antialiased @yield('body_class', 'bg-cream text-ink')">

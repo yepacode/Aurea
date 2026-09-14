@@ -685,6 +685,35 @@ function catalogQuick() {
                     this.quick.adding = false;
                     return;
                 }
+                // ── Analytics: add_to_cart / AddToCart ──
+                try {
+                    var prod = this.quick.product || {};
+                    var unit = Number(this.quick.currentPrice || prod.price || 0);
+                    var totalVal = unit * qty;
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'add_to_cart', {
+                            currency: 'COP',
+                            value: totalVal,
+                            items: [{
+                                item_id: String(productId),
+                                item_name: prod.name || '',
+                                item_category: (prod.category && prod.category.name) || null,
+                                price: unit,
+                                quantity: qty
+                            }]
+                        });
+                    }
+                    if (typeof fbq !== 'undefined') {
+                        fbq('track', 'AddToCart', {
+                            content_ids: [String(productId)],
+                            content_name: prod.name || '',
+                            content_type: 'product',
+                            value: totalVal,
+                            currency: 'COP'
+                        });
+                    }
+                } catch (_) { /* silencio: métricas nunca bloquean */ }
+
                 window.dispatchEvent(new CustomEvent('open-cart-drawer', { detail: data }));
                 this.closeQuick();
                 this.showToast('Agregado al carrito ✓');
@@ -703,4 +732,20 @@ function catalogQuick() {
     };
 }
 </script>
+
+{{-- ── Analytics: search (si el catálogo se abrió con ?q=) ── --}}
+@if(!empty($qFiltro))
+<script>
+    (function () {
+        try {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'search', { search_term: @js($qFiltro) });
+            }
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'Search', { search_string: @js($qFiltro) });
+            }
+        } catch (_) { /* silencio */ }
+    })();
+</script>
+@endif
 @endpush

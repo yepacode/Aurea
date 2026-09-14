@@ -1120,6 +1120,33 @@ function productDetail() {
                 if (res.ok) {
                     this.added = true;
                     this.stockError = '';
+
+                    // ── Analytics: add_to_cart / AddToCart ──
+                    try {
+                        if (typeof gtag !== 'undefined') {
+                            gtag('event', 'add_to_cart', {
+                                currency: 'COP',
+                                value: {{ (float) $product->price }} * this.qty,
+                                items: [{
+                                    item_id: '{{ $product->id }}',
+                                    item_name: @js($product->name),
+                                    item_category: @js(optional($product->category)->name),
+                                    price: {{ (float) $product->price }},
+                                    quantity: this.qty
+                                }]
+                            });
+                        }
+                        if (typeof fbq !== 'undefined') {
+                            fbq('track', 'AddToCart', {
+                                content_ids: ['{{ $product->id }}'],
+                                content_name: @js($product->name),
+                                content_type: 'product',
+                                value: {{ (float) $product->price }} * this.qty,
+                                currency: 'COP'
+                            });
+                        }
+                    } catch (_) { /* nunca bloquear la UX por métricas */ }
+
                     var badge = document.getElementById('cart-badge');
                     var count = document.getElementById('cart-count');
                     if (badge && count) {
@@ -1177,4 +1204,34 @@ function productDetail() {
     .pdp-howto-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
 }
 </style>
+
+{{-- ── Analytics: view_item / ViewContent (al abrir la ficha) ── --}}
+<script>
+    (function () {
+        try {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'view_item', {
+                    currency: 'COP',
+                    value: {{ (float) $product->price }},
+                    items: [{
+                        item_id: '{{ $product->id }}',
+                        item_name: @js($product->name),
+                        item_category: @js(optional($product->category)->name),
+                        price: {{ (float) $product->price }},
+                        quantity: 1
+                    }]
+                });
+            }
+            if (typeof fbq !== 'undefined') {
+                fbq('track', 'ViewContent', {
+                    content_ids: ['{{ $product->id }}'],
+                    content_name: @js($product->name),
+                    content_type: 'product',
+                    value: {{ (float) $product->price }},
+                    currency: 'COP'
+                });
+            }
+        } catch (_) { /* silencio */ }
+    })();
+</script>
 @endpush
