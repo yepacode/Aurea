@@ -21,7 +21,7 @@
             animation:spin .8s linear infinite;margin:0 auto 22px;}
         @keyframes spin{to{transform:rotate(360deg);}}
         .btn{display:inline-flex;align-items:center;gap:9px;border:none;cursor:pointer;text-decoration:none;
-            border-radius:999px;padding:15px 32px;color:#fff;font:600 12.5px/1 'Segoe UI',sans-serif;
+            border-radius:999px;padding:15px 32px;color:#3B310F;font:600 12.5px/1 'Segoe UI',sans-serif;
             letter-spacing:.1em;text-transform:uppercase;
             background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);box-shadow:0 16px 32px -12px rgba(190,154,83,.7);}
         .btn:hover{transform:translateY(-2px);}

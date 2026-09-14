@@ -22,7 +22,7 @@
     .ba-503__actions{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
     .ba-503__cta{display:inline-flex;align-items:center;gap:10px;text-decoration:none;border-radius:999px;
         padding:15px 30px;font:600 12px/1 'Montserrat',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;}
-    .ba-503__cta--gold{color:#fff;background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);
+    .ba-503__cta--gold{color:#3B310F;background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);
         box-shadow:0 16px 32px -12px rgba(190,154,83,.7);transition:transform .35s ease,box-shadow .35s ease;}
     .ba-503__cta--gold:hover{transform:translateY(-3px);box-shadow:0 22px 44px -12px rgba(190,154,83,.9);}
 </style>

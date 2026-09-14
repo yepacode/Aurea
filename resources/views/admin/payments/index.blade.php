@@ -11,6 +11,28 @@
         test: @js($epayco_test),
      }">
 
+    @php
+        // Los datos bancarios los edita el admin en otra pantalla, pero el impacto se ve aquí:
+        // si el número de cuenta está vacío, el checkout oculta la opción "Transferencia" y
+        // los correos/tracking no pueden mostrar los datos. Avisamos con banner rojo prominente.
+        $__bankAccountLoaded = ! empty(trim((string) \App\Models\BankTransferSetting::get('account_number', '')));
+    @endphp
+    @unless($__bankAccountLoaded)
+    <div class="bg-red-50 border-2 border-red-300 text-red-800 px-4 py-3 rounded-lg text-sm mb-5 flex items-start gap-2">
+        <svg class="w-5 h-5 mt-0.5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+        </svg>
+        <div>
+            <p class="font-bold">⚠️ Datos bancarios incompletos — no aparece el método a los clientes</p>
+            <p class="mt-1 text-red-700">
+                El número de cuenta bancaria está vacío, por lo que la opción <strong>Transferencia</strong> está oculta en el checkout.
+                Completa los datos en
+                <a href="{{ route('admin.bank-transfer.index') }}" class="underline font-semibold text-red-800 hover:text-red-900">Configuración → Transferencia bancaria</a>.
+            </p>
+        </div>
+    </div>
+    @endunless
+
     <p class="text-sm text-gray-500 mb-6">
         Configura las llaves de ePayco que usa el checkout para cobrar. Obtén tus credenciales en
         <a href="https://dashboard.epayco.com/" target="_blank" rel="noopener" class="text-blue-600 hover:underline">dashboard.epayco.com</a>

@@ -21,7 +21,9 @@
                 <div style="background:#F8E9E6;border:1px solid #E5C3BB;color:#C97B6B;padding:12px 14px;border-radius:12px;font-size:14px;margin-bottom:18px;">{{ session('error') }}</div>
             @endif
 
-            <form method="POST" action="{{ route('customer.login.submit') }}" style="display:flex;flex-direction:column;gap:16px;">
+            {{-- Formulario apunta al login unificado. Esta vista queda como
+                 respaldo — el GET /cuenta/ingresar redirige a /ingresar. --}}
+            <form method="POST" action="{{ route('login.submit') }}" style="display:flex;flex-direction:column;gap:16px;">
                 @csrf
 
                 <div>

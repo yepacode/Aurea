@@ -58,7 +58,7 @@
 
     .sidebar-newsletter { background:rgba(217,181,109,0.06); border:0.5px solid rgba(217,181,109,0.2); border-radius:12px; padding:20px; }
     .sidebar-newsletter input[type="email"] { width:100%; border:0.5px solid var(--color-border-secondary); border-radius:8px; padding:8px 12px; font-size:13px; margin-bottom:8px; background:var(--color-background-primary); color:var(--color-text-primary); }
-    .sidebar-newsletter button { width:100%; background:#D9B56D; color:#fff; border:none; border-radius:8px; padding:9px; font-size:13px; cursor:pointer; transition:background .15s; }
+    .sidebar-newsletter button { width:100%; background:#D9B56D; color:#3B310F; border:none; border-radius:8px; padding:9px; font-size:13px; cursor:pointer; transition:background .15s; }
     .sidebar-newsletter button:hover { background:#BE9A53; }
 
     /* ── Share bar ── */
@@ -253,8 +253,8 @@
         <div class="sidebar-newsletter">
             <p style="font-size:14px; font-weight:500; color:var(--color-text-primary); margin:0 0 4px;">Recibe más consejos</p>
             <p style="font-size:12px; color:var(--color-text-secondary); margin:0 0 12px;">Tips semanales para cuidar tu belleza</p>
-            <input type="email" placeholder="Tu correo electrónico">
-            <button type="button">Suscribirme</button>
+            <input type="email" placeholder="Tu correo electrónico" aria-label="Correo electrónico para suscribirte">
+            <button type="button" aria-label="Suscribirme al newsletter">Suscribirme</button>
         </div>
     </aside>
 </div>
@@ -359,7 +359,7 @@
                         @endif
                         <span style="color:#D9B56D; font-weight:600;">{{ $prod['price'] }}</span>
                     </div>
-                    <a href="{{ route('products.show', $prod['slug']) }}" style="display:block; text-align:center; background:#D9B56D; color:#fff; border-radius:8px; padding:10px; font-size:14px; text-decoration:none; transition:background .15s;" onmouseover="this.style.background='#BE9A53'" onmouseout="this.style.background='#D9B56D'">Ver detalle</a>
+                    <a href="{{ route('products.show', $prod['slug']) }}" style="display:block; text-align:center; background:#D9B56D; color:#3B310F; border-radius:8px; padding:10px; font-size:14px; text-decoration:none; transition:background .15s;" onmouseover="this.style.background='#BE9A53'" onmouseout="this.style.background='#D9B56D'">Ver detalle</a>
                 </div>
             </div>
         @empty

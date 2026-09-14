@@ -103,7 +103,7 @@
             @guest('customer')
             <div style="max-width:900px;margin:16px auto 0;padding:14px 20px;background:linear-gradient(180deg,#FCFAF5,#F6EFE1);border:1px solid rgba(217,181,109,.35);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
                 <span style="font-size:14px;color:#6B6157;">¿Ya tienes cuenta con nosotras? Inicia sesión para autollenar tus datos.</span>
-                <a href="{{ route('customer.login') }}?redirect={{ urlencode(url('/checkout')) }}"
+                <a href="{{ route('login') }}?redirect={{ urlencode(url('/checkout')) }}"
                    style="display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:#2E2A26;color:#fff;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;border-radius:999px;">
                    Iniciar sesión →
                 </a>
@@ -234,6 +234,11 @@
                     </div>
 
                     {{-- Payment Method --}}
+                    @php
+                        // Transferencia solo se ofrece si el administrador cargó los datos bancarios.
+                        // Sin cuenta destino, el radio no debe estar disponible porque el cliente no puede completar el pago.
+                        $transferEnabled = ! empty(trim((string) \App\Models\BankTransferSetting::get('account_number', '')));
+                    @endphp
                     <div class="co-card">
                         <h2 class="co-head">
                             <span class="co-head__ic">
@@ -254,7 +259,8 @@
                                 <svg class="w-5 h-5" style="color:#BE9A53;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
                             </label>
 
-                            {{-- Transfer --}}
+                            {{-- Transfer (oculto si no hay datos bancarios cargados) --}}
+                            @if($transferEnabled)
                             <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
                                    :class="form.payment_method === 'transfer' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
                                 <input type="radio" name="payment_method" x-model="form.payment_method" value="transfer" class="text-primary focus:ring-primary">
@@ -264,6 +270,7 @@
                                 </div>
                                 <svg class="w-5 h-5" style="color:#BE9A53;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21"/></svg>
                             </label>
+                            @endif
 
                             {{-- Contra entrega --}}
                             <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
@@ -615,10 +622,17 @@ function checkoutForm() {
         },
 
         validate() {
-            const required = { name: 'Nombre', email: 'Email', address: 'Dirección', city: 'Ciudad', state: 'Departamento', zip_code: 'Código postal' };
-            for (const [field, label] of Object.entries(required)) {
+            const required = {
+                name:     { label: 'Nombre',         msg: 'El nombre es requerido.' },
+                email:    { label: 'Email',          msg: 'El correo es requerido.' },
+                address:  { label: 'Dirección',      msg: 'La dirección es requerida.' },
+                city:     { label: 'Ciudad',         msg: 'La ciudad es requerida.' },
+                state:    { label: 'Departamento',   msg: 'El departamento es requerido.' },
+                zip_code: { label: 'Código postal',  msg: 'El código postal es requerido.' },
+            };
+            for (const [field, { msg }] of Object.entries(required)) {
                 if (!this.form[field]?.trim()) {
-                    this.errors[field] = `${label} es requerido.`;
+                    this.errors[field] = msg;
                 }
             }
             if (this.form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {

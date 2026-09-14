@@ -1869,7 +1869,7 @@
 }
 .ba-tabs{background:rgba(255,255,255,.7);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
     border-color:rgba(217,181,109,.3);}
-.ba-tab.is-active{background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#fff;
+.ba-tab.is-active{background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#3B310F;
     box-shadow:0 8px 20px -8px rgba(190,154,83,.7);}
 /* Botón ghost coherente con el resto */
 .ba-btn-ghost{border-radius:999px;border:1.5px solid rgba(42,38,32,.22);color:#2E2A26;
@@ -2058,10 +2058,10 @@
     filter:drop-shadow(0 6px 10px rgba(120,92,44,.18));}
 
 /* Botón primario unificado a dorado (antes negro) — coherencia en todo el sitio */
-.ba-btn-primary{background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#fff;
+.ba-btn-primary{background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#3B310F;
     box-shadow:0 16px 32px -12px rgba(190,154,83,.72);}
 .ba-btn-primary::before{opacity:0 !important;}
-.ba-btn-primary:hover{transform:translateY(-3px);color:#fff;
+.ba-btn-primary:hover{transform:translateY(-3px);color:#3B310F;
     box-shadow:0 22px 44px -12px rgba(190,154,83,.9);}
 .ba-section--ink .ba-btn-primary{box-shadow:0 16px 32px -12px rgba(0,0,0,.4);}
 </style>

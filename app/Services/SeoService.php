@@ -154,7 +154,7 @@ class SeoService
         $title = $post->meta_title ?: "{$post->title} | Belleza Áurea";
         $description = $post->meta_description ?: mb_substr(strip_tags($post->excerpt ?? $post->content), 0, 160);
         $image = $post->image ? asset("storage/{$post->image}") : null;
-        $canonical = $post->canonical_url ?: route('blog.show', $post->slug);
+        $canonical = $post->canonical_url ?: route('ritual.show', $post->slug);
 
         $meta = $this->meta($title, $description, $image, $canonical, 'article');
 
@@ -399,7 +399,7 @@ class SeoService
             '@type' => $post->schema_type ?? 'BlogPosting',
             'headline' => $post->title,
             'description' => $post->meta_description ?? $post->excerpt ?? mb_substr(strip_tags($post->content), 0, 160),
-            'url' => route('blog.show', $post->slug),
+            'url' => route('ritual.show', $post->slug),
             'datePublished' => $post->published_at?->toIso8601String(),
             'dateModified' => $post->updated_at->toIso8601String(),
             'author' => [
@@ -417,7 +417,7 @@ class SeoService
             ],
             'mainEntityOfPage' => [
                 '@type' => 'WebPage',
-                '@id' => route('blog.show', $post->slug),
+                '@id' => route('ritual.show', $post->slug),
             ],
         ];
 

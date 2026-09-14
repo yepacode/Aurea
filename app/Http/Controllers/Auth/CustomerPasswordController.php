@@ -63,7 +63,7 @@ class CustomerPasswordController extends Controller
         );
 
         if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('customer.login')
+            return redirect()->route('login')
                 ->with('success', 'Contraseña actualizada. Ya puedes iniciar sesión.');
         }
 

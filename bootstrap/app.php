@@ -22,10 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\IsAdmin::class,
         ]);
 
-        // Invitados a /cuenta → login de cliente; a /admin → login de admin.
-        $middleware->redirectGuestsTo(fn ($request) => $request->is('cuenta*')
-            ? route('customer.login')
-            : route('admin.login'));
+        // Cualquier invitado (a /cuenta o a /admin) va al login unificado.
+        $middleware->redirectGuestsTo(fn () => route('login'));
 
         $middleware->validateCsrfTokens(except: [
             'stripe/webhook',

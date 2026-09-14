@@ -130,7 +130,7 @@
 .qv-opt.on{border-color:#D9B56D;background:#FBF4E6;box-shadow:0 0 0 3px rgba(217,181,109,.18);}
 .qv-opt:disabled{opacity:.4;cursor:not-allowed;text-decoration:line-through;}
 .qv-swatch{width:15px;height:15px;border-radius:50%;border:1px solid rgba(0,0,0,.1);}
-.qv-add{width:100%;margin-top:18px;border:none;border-radius:999px;padding:14px;color:#fff;cursor:pointer;
+.qv-add{width:100%;margin-top:18px;border:none;border-radius:999px;padding:14px;color:#3B310F;cursor:pointer;
     font:600 12.5px/1 'Montserrat',sans-serif;letter-spacing:.1em;text-transform:uppercase;
     background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);box-shadow:0 16px 32px -12px rgba(190,154,83,.7);}
 .qv-add:disabled{opacity:.55;cursor:not-allowed;}

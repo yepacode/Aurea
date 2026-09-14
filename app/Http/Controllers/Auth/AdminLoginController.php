@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
 
 class AdminLoginController extends Controller
 {
-    public function showLoginForm(): View
+    /**
+     * Retro-compat: /admin/login sigue existiendo pero redirige al login
+     * unificado (una sola pantalla /ingresar detecta admin vs cliente).
+     */
+    public function showLoginForm(): RedirectResponse
     {
-        return view('admin.login');
+        return redirect()->route('login');
     }
 
     public function login(Request $request): RedirectResponse
@@ -47,6 +50,6 @@ class AdminLoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('admin.login');
+        return redirect()->route('login');
     }
 }

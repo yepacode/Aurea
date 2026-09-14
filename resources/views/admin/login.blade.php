@@ -35,7 +35,9 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('admin.login.submit') }}" class="mt-6 space-y-4">
+            {{-- Formulario apunta al login unificado. Esta vista queda como
+                 respaldo — el GET /admin/login redirige a /ingresar. --}}
+            <form method="POST" action="{{ route('login.submit') }}" class="mt-6 space-y-4">
                 @csrf
 
                 <div>

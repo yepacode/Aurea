@@ -3,7 +3,7 @@
      ============================================================ --}}
 <script>
     window.__customerLoggedIn = {{ auth('customer')->check() ? 'true' : 'false' }};
-    window.__loginUrl = "{{ route('customer.login') }}";
+    window.__loginUrl = "{{ route('login') }}";
     window.__wishlistToggleUrl = "{{ route('wishlist.toggle') }}";
 
     (function () {

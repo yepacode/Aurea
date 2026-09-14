@@ -78,7 +78,7 @@
         </div>
 
         <p style="text-align:center;margin-top:20px;color:#6B6157;font-size:14px;">
-            ¿Ya tienes cuenta? <a href="{{ route('customer.login') }}" style="color:#BE9A53;font-weight:600;text-decoration:none;">Inicia sesión</a>
+            ¿Ya tienes cuenta? <a href="{{ route('login') }}" style="color:#BE9A53;font-weight:600;text-decoration:none;">Inicia sesión</a>
         </p>
     </div>
 </section>

@@ -40,6 +40,17 @@
         @media (max-width: 380px){
             .admin-main{padding:10px !important;}
         }
+
+        /* ─── A11y: focus visible dorado (WCAG 2.4.7) ─── */
+        input:focus,select:focus,textarea:focus,button:focus,a:focus,[role="button"]:focus{
+            outline:2px solid #BE9A53 !important;
+            outline-offset:2px !important;
+            box-shadow:0 0 0 4px rgba(217,181,109,.25) !important;
+        }
+        input:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus:not(:focus-visible),button:focus:not(:focus-visible),a:focus:not(:focus-visible),[role="button"]:focus:not(:focus-visible){
+            outline:none !important;
+            box-shadow:none !important;
+        }
     </style>
     @stack('head')
 </head>

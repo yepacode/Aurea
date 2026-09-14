@@ -451,9 +451,11 @@
                               .then(r=>r.json().then(d=>({ok:r.ok,d}))).then(({ok,d})=>{ if(ok){sent=true}else{err=(d.errors&&d.errors.email?d.errors.email[0]:d.message)||'Revisa el correo.'} }).catch(()=>{err='Error, intenta de nuevo.'}).finally(()=>{sending=false})"
                               style="display:flex;gap:8px;flex-wrap:wrap;">
                             <input type="email" x-model="email" required placeholder="tu@correo.com"
+                                   aria-label="Correo electrónico para notificar cuando el producto vuelva"
                                    style="flex:1;min-width:170px;border:1px solid #E5DCC9;border-radius:10px;padding:10px 12px;font-size:14px;color:#2E2A26;background:#fff;">
                             <button type="submit" :disabled="sending"
-                                    style="border:none;border-radius:10px;padding:10px 20px;background:linear-gradient(120deg,#E0BE77,#BE9A53);color:#fff;font-weight:600;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;"
+                                    aria-label="Avísame cuando el producto vuelva"
+                                    style="border:none;border-radius:10px;padding:10px 20px;background:linear-gradient(120deg,#E0BE77,#BE9A53);color:#3B310F;font-weight:600;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;"
                                     x-text="sending ? 'Enviando...' : 'Avísame'"></button>
                         </form>
                         <p x-show="sent" x-cloak style="font-size:13px;color:#3F8F5B;font-weight:500;margin:0;">✓ ¡Listo! Te avisaremos por correo cuando vuelva. 💛</p>

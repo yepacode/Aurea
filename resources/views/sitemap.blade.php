@@ -31,6 +31,28 @@
         <changefreq>monthly</changefreq>
         <priority>0.5</priority>
     </url>
+    <url>
+        <loc>{{ route('about') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    {{-- Marcas: índice + detalle por cada marca activa --}}
+    <url>
+        <loc>{{ route('brands.index') }}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    @isset($brands)
+    @foreach($brands as $brand)
+    <url>
+        <loc>{{ route('brands.show', $brand->slug) }}</loc>
+        @if($brand->updated_at)<lastmod>{{ $brand->updated_at->toW3cString() }}</lastmod>@endif
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    @endforeach
+    @endisset
 
     {{-- Páginas legales --}}
     <url>

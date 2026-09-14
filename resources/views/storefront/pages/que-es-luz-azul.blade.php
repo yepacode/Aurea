@@ -58,7 +58,7 @@
 .rit-cta:hover{color:#BE9A53;gap:13px;}
 .rit-close{text-align:center;padding:clamp(36px,5vw,72px) 24px clamp(56px,7vw,96px);}
 .rit-close__btn{display:inline-flex;align-items:center;gap:11px;text-decoration:none;border-radius:999px;
-    padding:17px 36px;color:#fff;font:600 12.5px/1 'Montserrat',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;
+    padding:17px 36px;color:#3B310F;font:600 12.5px/1 'Montserrat',system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;
     background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);box-shadow:0 16px 32px -12px rgba(190,154,83,.72);
     transition:transform .35s cubic-bezier(.2,.7,.3,1),box-shadow .35s ease;}
 .rit-close__btn:hover{transform:translateY(-3px);box-shadow:0 22px 44px -12px rgba(190,154,83,.9);}

@@ -205,7 +205,12 @@ class CheckoutController extends Controller
     public function process(Request $request): RedirectResponse|JsonResponse
     {
         // Métodos válidos: solo 'card' si Stripe está configurado; siempre los otros.
-        $allowedMethods = ['transfer', 'cash_on_delivery', 'epayco'];
+        // 'transfer' solo se admite si el admin ya cargó datos bancarios — sin cuenta destino
+        // el cliente no puede completar el pago, así que el checkout no lo ofrece.
+        $allowedMethods = ['cash_on_delivery', 'epayco'];
+        if (! empty(trim((string) \App\Models\BankTransferSetting::get('account_number', '')))) {
+            $allowedMethods[] = 'transfer';
+        }
         if (! empty(config('services.stripe.secret'))) {
             $allowedMethods[] = 'card';
         }

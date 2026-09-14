@@ -1,6 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Pedido confirmado | Belleza Áurea')
+@php
+    // Bug fix A11y/SEO · el <title> del navegador debe reflejar el estado REAL
+    //   del pago; antes decía siempre "Pedido confirmado" incluso si estaba
+    //   rechazado o pendiente.
+    $__titulo = match ($order->payment_status ?? null) {
+        'paid'           => 'Pedido confirmado',
+        'failed'         => 'Pago rechazado',
+        'pending'        => 'Pago pendiente',
+        'processing',
+        'pending_review' => 'Pago en proceso',
+        default          => 'Estado del pedido',
+    };
+@endphp
+
+@section('title', $__titulo . ' | Belleza Áurea')
 @section('robots', 'noindex, nofollow')
 
 @section('content')
@@ -61,16 +75,21 @@
     @php
         // Fix demo · antes esta vista mostraba SIEMPRE "¡Pedido confirmado!" aunque el
         //   cliente cerrara el widget ePayco sin pagar. Ahora resolvemos el estado real
-        //   del pago (pagado / pendiente / rechazado / transferencia) y adaptamos título,
-        //   badge, mensaje y acciones — con botón "Reintentar el pago" cuando aplica.
-        $pagoOk       = $order->payment_status === 'paid';
-        $pagoProceso  = in_array($order->payment_status, ['processing', 'pending_review'], true);
-        $pagoFallo    = $order->payment_status === 'failed';
-        $esTransfer   = $order->payment_method === 'transfer';
-        $esEpayco     = $order->payment_method === 'epayco';
+        //   del pago (pagado / pendiente / rechazado / transferencia / contra-entrega) y
+        //   adaptamos título, badge, mensaje y acciones.
+        $pagoOk        = $order->payment_status === 'paid';
+        $pagoProceso   = in_array($order->payment_status, ['processing', 'pending_review'], true);
+        $pagoFallo     = $order->payment_status === 'failed';
+        $esTransfer    = $order->payment_method === 'transfer';
+        $esEpayco      = $order->payment_method === 'epayco';
+        $esContraEntrega = $order->payment_method === 'cash_on_delivery';
         // Pedido creado sin pago aún → ePayco pending sin ninguna referencia recibida.
         $pagoEsperando = ! $pagoOk && $esEpayco && $order->payment_status === 'pending';
-        $celebrar      = $pagoOk || $esTransfer; // Solo animación en pagado o transferencia.
+        $celebrar      = $pagoOk || $esTransfer || $esContraEntrega; // Animación al registrarse el pedido.
+
+        // Datos bancarios cargados. Si están vacíos, el cliente no puede transferir;
+        // hay que decirle qué hacer en lugar de "consulta los datos abajo" (que no existen).
+        $bankAccountLoaded = ! empty(trim((string) \App\Models\BankTransferSetting::get('account_number', '')));
 
         if ($pagoOk) {
             $titulo = '¡Pedido confirmado!';
@@ -85,9 +104,12 @@
                 $titulo .= ' — '.$order->payment_response_reason;
             }
             $variante = 'error';
-        } elseif ($esTransfer) {
+        } elseif ($esContraEntrega) {
             $titulo = '¡Pedido registrado!';
             $variante = 'ok';
+        } elseif ($esTransfer) {
+            $titulo = '¡Pedido registrado!';
+            $variante = $bankAccountLoaded ? 'ok' : 'aviso';
         } else {
             $titulo = 'Tu pedido está creado';
             $variante = 'aviso';
@@ -124,8 +146,14 @@
             @if($pagoOk)
                 Gracias por tu compra{{ $firstName ? ', ' . $firstName : '' }}. 💛
                 Recibirás un correo de confirmación con todos los detalles de tu pedido.
-            @elseif($esTransfer)
+            @elseif($esContraEntrega)
+                Pagarás en efectivo al recibir tu pedido{{ $firstName ? ', ' . $firstName : '' }}. Nuestro equipo te contactará para coordinar la entrega.
+            @elseif($esTransfer && $bankAccountLoaded)
                 Gracias{{ $firstName ? ', ' . $firstName : '' }}. Para completar tu pedido realiza la transferencia con los datos que encontrarás en el seguimiento y sube tu comprobante.
+            @elseif($esTransfer && ! $bankAccountLoaded)
+                Nuestro método de transferencia está temporalmente deshabilitado{{ $firstName ? ', ' . $firstName : '' }}.
+                <a href="{{ \App\Models\ContactPageSetting::whatsappUrl() }}" target="_blank" rel="noopener" style="color:#BE9A53;font-weight:600;text-decoration:underline;">Contáctanos por WhatsApp</a>
+                para completar tu pago.
             @elseif($pagoEsperando)
                 Guardamos tu pedido{{ $firstName ? ', ' . $firstName : '' }}, pero <strong>aún no hemos recibido el pago</strong>. Puedes retomar el pago desde el botón de abajo — es seguro, se procesa por ePayco.
             @elseif($pagoProceso)
@@ -149,7 +177,13 @@
             @if($order->tracking_token)
                 <a href="{{ route('order.track', $order->tracking_token) }}" class="cf-btn {{ ($esEpayco && ! $pagoOk && ! $pagoProceso) ? 'cf-btn--ghost' : 'cf-btn--gold' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/></svg>
-                    {{ $esTransfer ? 'Completar mi transferencia' : 'Ver mi pedido' }}
+                    @if($esTransfer && $bankAccountLoaded)
+                        Completar mi transferencia
+                    @elseif($esContraEntrega)
+                        Ver seguimiento
+                    @else
+                        Ver mi pedido
+                    @endif
                 </a>
             @endif
             <a href="{{ route('home') }}" class="cf-btn cf-btn--ghost">Volver al inicio</a>
@@ -165,7 +199,7 @@
                 <input type="text" readonly value="{{ route('order.track', $order->tracking_token) }}" id="tracking-link-input"
                        style="flex:1;min-width:220px;padding:9px 12px;border:1px solid #E5DCC9;border-radius:8px;font-size:13px;color:#2E2A26;background:#fff;font-family:ui-monospace,monospace;">
                 <button type="button" onclick="const el=document.getElementById('tracking-link-input');el.select();navigator.clipboard.writeText(el.value);this.textContent='✓ Copiado';setTimeout(()=>this.textContent='Copiar',1800);"
-                        style="padding:9px 16px;background:#D9B56D;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+                        style="padding:9px 16px;background:#D9B56D;color:#3B310F;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
                     Copiar
                 </button>
             </div>

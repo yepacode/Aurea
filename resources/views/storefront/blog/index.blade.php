@@ -194,7 +194,7 @@
                     <p class="mt-2" style="font-size:14px;color:#B8A999;">Estamos preparando tips y rituales de belleza para ti</p>
                     <a href="{{ route('products.index') }}"
                        class="inline-block mt-8 px-8 py-3.5 text-sm font-semibold transition-colors"
-                       style="background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#fff;border-radius:999px;letter-spacing:.12em;text-transform:uppercase;">
+                       style="background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);color:#3B310F;border-radius:999px;letter-spacing:.12em;text-transform:uppercase;">
                         Ver productos
                     </a>
                 </div>
@@ -300,7 +300,7 @@
             <p class="mt-3" style="color:rgba(255,255,255,0.55);">Productos e insumos de belleza para uñas, piel, maquillaje y cabello.</p>
             <a href="{{ route('products.index') }}"
                class="inline-block mt-6 px-8 py-3 rounded-lg font-semibold transition-colors"
-               style="background:#D9B56D;color:#fff;">
+               style="background:#D9B56D;color:#3B310F;">
                 Ver productos
             </a>
         </div>

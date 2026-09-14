@@ -187,8 +187,8 @@
                         </div>
 
                         <a href="{{ route('checkout.index') }}"
-                           class="block w-full text-white text-center py-4 font-semibold transition-all"
-                           style="background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);border-radius:999px;letter-spacing:.12em;text-transform:uppercase;font-size:13px;box-shadow:0 16px 32px -12px rgba(190,154,83,.65);"
+                           class="block w-full text-center py-4 font-semibold transition-all"
+                           style="color:#3B310F;background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);border-radius:999px;letter-spacing:.12em;text-transform:uppercase;font-size:13px;box-shadow:0 16px 32px -12px rgba(190,154,83,.65);"
                            onmouseover="this.style.boxShadow='0 22px 44px -12px rgba(190,154,83,.85)';this.style.transform='translateY(-2px)'"
                            onmouseout="this.style.boxShadow='0 16px 32px -12px rgba(190,154,83,.65)';this.style.transform='translateY(0)'">
                             Finalizar compra

@@ -89,13 +89,29 @@ class CustomerAuthController extends Controller
         Auth::guard('customer')->login($customer);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('account.dashboard'))
+        // Fix UX · si el intended apunta a /cuenta/direcciones (típico cuando
+        //   el middleware auth guardó esa URL) no queremos que un registro nuevo
+        //   caiga en "Mis direcciones"; mejor al dashboard con el saludo.
+        $intended = $request->session()->pull('url.intended');
+        if ($intended) {
+            $path = parse_url($intended, PHP_URL_PATH) ?: '';
+            if (rtrim($path, '/') !== '/cuenta/direcciones') {
+                return redirect($intended)
+                    ->with('success', '¡Bienvenida a Belleza Áurea! Tu cuenta está lista.');
+            }
+        }
+
+        return redirect()->route('account.dashboard')
             ->with('success', '¡Bienvenida a Belleza Áurea! Tu cuenta está lista.');
     }
 
-    public function showLogin(): View
+    /**
+     * Retro-compat: /cuenta/ingresar sigue existiendo pero redirige al login
+     * unificado (una sola pantalla /ingresar detecta admin vs cliente).
+     */
+    public function showLogin(): RedirectResponse
     {
-        return view('account.login');
+        return redirect()->route('login');
     }
 
     public function login(Request $request): RedirectResponse
@@ -108,7 +124,16 @@ class CustomerAuthController extends Controller
         if (Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('account.dashboard'));
+            $intended = $request->session()->pull('url.intended');
+            if ($intended) {
+                $path = parse_url($intended, PHP_URL_PATH) ?: '';
+                if (rtrim($path, '/') === '/cuenta/direcciones') {
+                    return redirect()->route('account.dashboard');
+                }
+                return redirect($intended);
+            }
+
+            return redirect()->route('account.dashboard');
         }
 
         throw ValidationException::withMessages([

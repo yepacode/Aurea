@@ -415,7 +415,7 @@
         <div>
             <label class="ba-label">Badge promocional <span class="text-xs" style="color:#9CA3AF;">(opcional)</span></label>
             <input type="text" name="badge_text" value="{{ old('badge_text', $hero->badge_text) }}"
-                   class="ba-input" placeholder="ej. Envío gratis en compras desde $899" maxlength="100">
+                   class="ba-input" placeholder="ej. Envío gratis desde $150.000" maxlength="100">
             <p class="ba-help">Si lo dejas vacío, no aparece. Aparece en una pillbox cream con borde dorado.</p>
         </div>
     </div>
@@ -515,7 +515,7 @@
             <div class="ba-trust-row">
                 <input type="text" x-model="item.icon" maxlength="4" placeholder="✓"
                        class="ba-input text-center">
-                <input type="text" x-model="item.text" placeholder="ej. Envío gratis desde $899"
+                <input type="text" x-model="item.text" placeholder="ej. Envío gratis desde $150.000"
                        class="ba-input">
                 <button type="button" @click="items.splice(idx, 1)" class="ba-btn ba-btn--danger-text">Quitar</button>
             </div>
@@ -546,7 +546,7 @@
         return {
             items: [],
             defaults: [
-                { icon: '✓', text: 'Envío gratis desde $899' },
+                { icon: '✓', text: 'Envío gratis desde $150.000' },
                 { icon: '↩', text: '30 días de devolución' },
                 { icon: '🌿', text: 'Ingredientes botánicos' },
             ],

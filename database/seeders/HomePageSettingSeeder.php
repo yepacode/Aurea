@@ -86,7 +86,7 @@ class HomePageSettingSeeder extends Seeder
             'faqs' => [
                 ['q' => '¿Para qué tipo de piel son los productos?', 'a' => 'Toda nuestra línea está formulada para ser tolerada por piel sensible, normal, mixta y seca. Cada producto indica si es especialmente recomendado para alguna preocupación específica (luminosidad, hidratación, antiedad).'],
                 ['q' => '¿Hacen pruebas en animales?', 'a' => 'No. Todos los productos de Belleza Áurea son cruelty-free. Nuestros activos se prueban mediante ensayos in vitro y paneles voluntarios humanos.'],
-                ['q' => '¿Cuánto tarda el envío?', 'a' => 'El envío estándar tarda de 2 a 4 días hábiles. Envío gratis en compras desde $899. Empacamos cada pedido en cajas reutilizables con papel de seda.'],
+                ['q' => '¿Cuánto tarda el envío?', 'a' => 'El envío estándar tarda de 2 a 4 días hábiles. Envío gratis desde $150.000. Empacamos cada pedido en cajas reutilizables con papel de seda.'],
                 ['q' => '¿Puedo devolver un producto?', 'a' => 'Sí. Tienes 30 días para devolución sin costo si el producto no cumple tus expectativas. Solo te pedimos que lo envíes en su empaque original.'],
                 ['q' => '¿Cómo sé qué productos elegir?', 'a' => 'Tenemos un Quiz de Piel guiado que en 90 segundos te recomienda los productos ideales según tu tipo de piel y tus objetivos.'],
             ],
@@ -96,7 +96,7 @@ class HomePageSettingSeeder extends Seeder
                 [
                     'icon_svg' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25"/>',
                     'title' => 'Envío gratis',
-                    'description' => 'En compras desde $899',
+                    'description' => 'Desde $150.000',
                 ],
                 [
                     'icon_svg' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75 11.25 15 15 9.75"/>',
@@ -121,7 +121,7 @@ class HomePageSettingSeeder extends Seeder
             'cta_btn_primary_text' => 'Comenzar quiz',
             'cta_btn_secondary_text' => 'Ver productos',
             'cta_trust_items' => [
-                'Envío gratis +$899',
+                'Envío gratis desde $150.000',
                 'Cruelty-free',
                 '30 días de devolución',
             ],

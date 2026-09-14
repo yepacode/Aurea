@@ -6,8 +6,20 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     {{-- SEO Meta (overridable per page) --}}
-    <title>@yield('title', 'Belleza Áurea | Cosmética natural, elegante y atemporal')</title>
-    <meta name="description" content="@yield('meta_description', 'Belleza natural, elegante y atemporal. Skincare, fragancias y rituales de belleza premium en Belleza Áurea.')">
+    @php
+        $__defaultTitle = 'Belleza Áurea | Cosmética natural, elegante y atemporal';
+        $__defaultDesc  = 'Belleza natural, elegante y atemporal. Skincare, fragancias y rituales de belleza premium en Belleza Áurea.';
+        $__pageTitle    = trim($__env->yieldContent('title', $__defaultTitle));
+        $__pageDesc     = trim($__env->yieldContent('meta_description', $__defaultDesc));
+        // Si la página define og_title/og_description los usamos; si no, caen al title/description reales de la página
+        // (esto evita que TODAS las páginas compartan el mismo OG genérico de marca).
+        $__ogTitle       = trim($__env->yieldContent('og_title')) ?: $__pageTitle;
+        $__ogDesc        = trim($__env->yieldContent('og_description')) ?: $__pageDesc;
+        $__twitterTitle  = trim($__env->yieldContent('twitter_title')) ?: $__ogTitle;
+        $__twitterDesc   = trim($__env->yieldContent('twitter_description')) ?: $__ogDesc;
+    @endphp
+    <title>{{ $__pageTitle }}</title>
+    <meta name="description" content="{{ $__pageDesc }}">
     <meta name="robots" content="@yield('robots', 'index, follow')">
     @hasSection('keywords')<meta name="keywords" content="@yield('keywords')">@endif
 
@@ -16,8 +28,8 @@
 
     {{-- Open Graph --}}
     <meta property="og:type" content="@yield('og_type', 'website')">
-    <meta property="og:title" content="@yield('og_title', 'Belleza Áurea')">
-    <meta property="og:description" content="@yield('og_description', 'Belleza natural, elegante y atemporal')">
+    <meta property="og:title" content="{{ $__ogTitle }}">
+    <meta property="og:description" content="{{ $__ogDesc }}">
     <meta property="og:url" content="@yield('canonical', url()->current())">
     <meta property="og:image" content="@yield('og_image', asset('img/brand/logo-principal.png'))">
     <meta property="og:image:secure_url" content="@yield('og_image', asset('img/brand/logo-principal.png'))">
@@ -29,8 +41,8 @@
 
     {{-- Twitter Card --}}
     <meta name="twitter:card" content="@yield('twitter_card', 'summary_large_image')">
-    <meta name="twitter:title" content="@yield('twitter_title', 'Belleza Áurea')">
-    <meta name="twitter:description" content="@yield('twitter_description', 'Belleza natural, elegante y atemporal')">
+    <meta name="twitter:title" content="{{ $__twitterTitle }}">
+    <meta name="twitter:description" content="{{ $__twitterDesc }}">
     <meta name="twitter:image" content="@yield('twitter_image', asset('img/brand/logo-principal.png'))">
     <meta name="twitter:image:alt" content="@yield('og_image_alt', 'Belleza Áurea — cosmética e insumos de belleza')">
 
@@ -102,6 +114,17 @@
             background:linear-gradient(to right,rgba(255,255,255,0),rgba(255,255,255,.95),rgba(255,255,255,0));border-radius:2px;}
         @keyframes ba-dew{0%,100%{opacity:.45;transform:scale(.6);}50%{opacity:1;transform:scale(1.1);}}
         @media(prefers-reduced-motion:reduce){ .ba-dew{animation:none;opacity:.85;} }
+
+        /* ─── A11y: focus visible dorado (WCAG 2.4.7) ─── */
+        input:focus,select:focus,textarea:focus,button:focus,a:focus,[role="button"]:focus{
+            outline:2px solid #BE9A53 !important;
+            outline-offset:2px !important;
+            box-shadow:0 0 0 4px rgba(217,181,109,.25) !important;
+        }
+        input:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus:not(:focus-visible),button:focus:not(:focus-visible),a:focus:not(:focus-visible),[role="button"]:focus:not(:focus-visible){
+            outline:none !important;
+            box-shadow:none !important;
+        }
     </style>
 
     {{-- Schema.org JSON-LD --}}

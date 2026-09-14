@@ -1,6 +1,18 @@
 @extends('layouts.app')
 
-@section('title', "Pedido #{$order->id} | Belleza Áurea")
+@php
+    // Bug fix A11y/SEO · el <title> refleja el estado real del pago.
+    $__ttl = match ($order->payment_status ?? null) {
+        'paid'           => 'Pedido confirmado',
+        'failed'         => 'Pago rechazado',
+        'pending'        => 'Pago pendiente',
+        'processing',
+        'pending_review' => 'Pago en proceso',
+        default          => 'Estado del pedido',
+    };
+@endphp
+
+@section('title', "{$__ttl} · Pedido #{$order->id} | Belleza Áurea")
 @section('robots', 'noindex, nofollow')
 
 @section('content')
@@ -138,9 +150,18 @@
                         Pagar con ePayco (PSE, Tarjeta, Nequi)
                     </a>
                     @if($order->payment_method === 'transfer')
-                        <p class="text-xs text-text-muted text-center mt-3">
-                            ¿Prefieres transferencia bancaria? Consulta los datos abajo <span aria-hidden="true">↓</span>
-                        </p>
+                        @if(($bankDetails['account_number'] ?? '') !== '')
+                            <p class="text-xs text-text-muted text-center mt-3">
+                                ¿Prefieres transferencia bancaria? Consulta los datos abajo <span aria-hidden="true">↓</span>
+                            </p>
+                        @else
+                            {{-- Datos bancarios sin cargar: el cliente no puede transferir aunque eligió la opción. --}}
+                            <p class="text-xs text-text-muted text-center mt-3">
+                                Nuestro método de transferencia está temporalmente deshabilitado.
+                                <a href="{{ \App\Models\ContactPageSetting::whatsappUrl() }}" target="_blank" rel="noopener" class="text-primary font-semibold underline">Contáctanos por WhatsApp</a>
+                                para completar tu pago.
+                            </p>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -211,6 +232,16 @@
                     </div>
                     <div class="p-5 space-y-4">
                         {{-- Bank details --}}
+                        @if(($bankDetails['account_number'] ?? '') === '')
+                        {{-- Sin datos bancarios cargados: no se puede transferir, ofrecer WhatsApp. --}}
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+                            <p class="font-semibold mb-1">Método de transferencia temporalmente deshabilitado</p>
+                            <p>Estamos actualizando nuestros datos bancarios.
+                                <a href="{{ \App\Models\ContactPageSetting::whatsappUrl() }}" target="_blank" rel="noopener" class="underline font-semibold">Contáctanos por WhatsApp</a>
+                                y te ayudamos a completar tu pago.
+                            </p>
+                        </div>
+                        @endif
                         @if(($bankDetails['account_number'] ?? '') !== '')
                         <div class="bg-blue-50/50 rounded-lg p-4 space-y-2 text-sm">
                             @if(!empty($bankDetails['bank_name']))

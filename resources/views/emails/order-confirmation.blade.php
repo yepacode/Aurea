@@ -14,12 +14,33 @@
         </tr>
     </table>
 
-    {{-- Heading --}}
+    {{-- Heading — depende del método de pago para no mostrar copy de transferencia a todos --}}
+    @php
+        $__method = $order->payment_method;
+        if ($__method === 'transfer') {
+            $__heading = '¡Te compartimos los datos para realizar la transferencia!';
+            $__intro   = 'Hola <strong>' . e($order->customer->name) . '</strong>, tu pedido <strong style="color:#2E2A26;">#' . $order->id . '</strong> ha sido recibido. Realiza la transferencia con los datos que encontrarás debajo y sube tu comprobante desde el link de seguimiento.';
+        } elseif ($__method === 'cash_on_delivery') {
+            $__heading = '¡Pedido registrado!';
+            $__intro   = 'Hola <strong>' . e($order->customer->name) . '</strong>, recibimos tu pedido <strong style="color:#2E2A26;">#' . $order->id . '</strong>. Pagarás en efectivo al recibirlo — nuestro equipo te contactará para coordinar la entrega.';
+        } elseif (in_array($__method, ['epayco', 'card'], true)) {
+            if ($order->payment_status === 'paid') {
+                $__heading = '¡Gracias por tu compra!';
+                $__intro   = 'Hola <strong>' . e($order->customer->name) . '</strong>, tu pago del pedido <strong style="color:#2E2A26;">#' . $order->id . '</strong> fue procesado con éxito. Comenzamos a preparar tu envío enseguida.';
+            } else {
+                $__heading = 'Tu pedido está registrado';
+                $__intro   = 'Hola <strong>' . e($order->customer->name) . '</strong>, tu pedido <strong style="color:#2E2A26;">#' . $order->id . '</strong> fue creado. Cuando se confirme el pago te enviamos el detalle final por correo.';
+            }
+        } else {
+            $__heading = '¡Pedido recibido!';
+            $__intro   = 'Hola <strong>' . e($order->customer->name) . '</strong>, recibimos tu pedido <strong style="color:#2E2A26;">#' . $order->id . '</strong>.';
+        }
+    @endphp
     <h1 style="margin:0 0 8px;font-size:26px;font-weight:700;color:#1A1A2E;text-align:center;">
-        ¡Te compartimos los datos para realizar la transferencia !
+        {{ $__heading }}
     </h1>
     <p style="margin:0 0 8px;font-size:15px;color:#4B5563;line-height:1.6;text-align:center;">
-        Hola <strong>{{ $order->customer->name }}</strong>, tu pedido <strong style="color:#2E2A26;">#{{ $order->id }}</strong> ha sido recibido.
+        {!! $__intro !!}
     </p>
     <p style="margin:0 0 32px;font-size:14px;color:#9CA3AF;text-align:center;">
         {{ $order->created_at->format('d/m/Y') }} &middot; {{ $order->created_at->format('H:i') }} hrs
@@ -122,6 +143,7 @@
                 <strong style="color:#2E2A26;">Método de pago:</strong>
                 @switch($order->payment_method)
                     @case('card') Tarjeta de crédito/débito @break
+                    @case('epayco') ePayco (PSE, tarjeta, Nequi, efectivo) @break
                     @case('transfer') Transferencia bancaria @break
                     @case('cash_on_delivery') Pago contra entrega @break
                     @default {{ $order->payment_method }}
@@ -204,7 +226,13 @@
             <td align="center">
                 <a href="{{ route('order.track', $order->tracking_token) }}"
                    style="display:inline-block;background-color:#2E2A26;color:#FFFFFF;font-size:16px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:8px;letter-spacing:0.3px;">
-                    {{ $order->payment_method === 'transfer' ? 'Ya hice mi transferencia' : 'Seguir mi pedido' }}
+                    @if($order->payment_method === 'transfer')
+                        Ya hice mi transferencia
+                    @elseif($order->payment_method === 'cash_on_delivery')
+                        Ver seguimiento del pedido
+                    @else
+                        Seguir mi pedido
+                    @endif
                 </a>
             </td>
         </tr>

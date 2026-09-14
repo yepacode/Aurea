@@ -56,7 +56,7 @@
         </div>
 
         <p style="text-align:center;margin-top:20px;color:#6B6157;font-size:14px;">
-            <a href="{{ route('customer.login') }}" style="color:#BE9A53;font-weight:600;text-decoration:none;">Volver a iniciar sesión</a>
+            <a href="{{ route('login') }}" style="color:#BE9A53;font-weight:600;text-decoration:none;">Volver a iniciar sesión</a>
         </p>
     </div>
 </section>

@@ -15,7 +15,7 @@ class IsAdmin
                 abort(403, 'Unauthorized.');
             }
 
-            return redirect()->route('admin.login');
+            return redirect()->route('login');
         }
 
         return $next($request);

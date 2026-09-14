@@ -13,6 +13,7 @@ use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Auth\AdminLoginController;
 use App\Http\Controllers\Auth\CustomerAuthController;
 use App\Http\Controllers\Auth\CustomerPasswordController;
+use App\Http\Controllers\Auth\UnifiedLoginController;
 use App\Http\Controllers\Account\AccountController;
 use App\Http\Controllers\Account\AddressController;
 use Illuminate\Support\Facades\Route;
@@ -88,6 +89,18 @@ Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name
 Route::get('/epayco/pagar/{order}', [EpaycoController::class, 'pay'])->name('epayco.pay');
 Route::match(['get', 'post'], '/epayco/respuesta', [EpaycoController::class, 'response'])->name('epayco.response');
 Route::post('/epayco/confirmacion', [EpaycoController::class, 'confirmation'])->name('epayco.confirmation');
+
+// ── Login unificado (admin y cliente en una sola pantalla) ──────
+// /ingresar detecta el rol automáticamente y redirige al área correcta.
+// Las rutas legacy /admin/login y /cuenta/ingresar siguen existiendo por
+// retro-compatibilidad (enlaces en correos, navbars, etc.) pero delegan aquí.
+Route::middleware('guest:web,customer')->group(function () {
+    Route::get('/ingresar', [UnifiedLoginController::class, 'showLogin'])->name('login');
+    Route::post('/ingresar', [UnifiedLoginController::class, 'login'])
+        ->name('login.submit')
+        ->middleware('throttle:auth-attempts');
+});
+Route::post('/salir', [UnifiedLoginController::class, 'logout'])->name('logout');
 
 // ── Cuenta de cliente ──────────────────────────────────────────
 Route::middleware('guest:customer')->group(function () {

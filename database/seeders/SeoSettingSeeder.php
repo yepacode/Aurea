@@ -11,7 +11,7 @@ class SeoSettingSeeder extends Seeder
     {
         SeoSetting::updateOrCreate(['page_key' => 'home'], [
             'meta_title' => 'Belleza Áurea | Cosmética natural, elegante y atemporal',
-            'meta_description' => 'Skincare, fragancias y rituales premium con ingredientes botánicos. Belleza natural, elegante y atemporal. Envío gratis desde $899.',
+            'meta_description' => 'Skincare, fragancias y rituales premium con ingredientes botánicos. Belleza natural, elegante y atemporal. Envío gratis desde $150.000.',
             'meta_keywords' => 'skincare natural, cosmética botánica, perfume artesanal, ritual de belleza, belleza áurea, vitamina C, rosa mosqueta',
             'robots' => 'index, follow',
             'og_type' => 'website',

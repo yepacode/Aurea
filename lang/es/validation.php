@@ -128,8 +128,33 @@ return [
         'title' => 'título',
     ],
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        'address' => [
+            'required' => 'La dirección es requerida.',
+        ],
+        'address_line1' => [
+            'required' => 'La dirección es requerida.',
+        ],
+        'city' => [
+            'required' => 'La ciudad es requerida.',
+        ],
+        'state' => [
+            'required' => 'El departamento es requerido.',
+        ],
+        'department' => [
+            'required' => 'El departamento es requerido.',
+        ],
+        'zip_code' => [
+            'required' => 'El código postal es requerido.',
+        ],
+        'zip' => [
+            'required' => 'El código postal es requerido.',
+        ],
+        'password' => [
+            'required' => 'La contraseña es requerida.',
+        ],
+        'habeas_data' => [
+            'required' => 'La política de tratamiento de datos es requerida.',
+            'accepted' => 'Debes aceptar la política de tratamiento de datos.',
         ],
     ],
 ];

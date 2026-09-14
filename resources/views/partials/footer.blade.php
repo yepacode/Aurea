@@ -56,6 +56,7 @@
                     @csrf
                     <input type="hidden" name="source" value="footer">
                     <input type="email" name="email" placeholder="tu@correo.com" required
+                           aria-label="Correo electrónico para suscribirte"
                            class="flex-1 rounded-l-lg px-4 py-2.5 text-sm focus:outline-none"
                            style="background:rgba(247,243,237,0.08);border:1px solid rgba(232,204,146,0.25);color:#F7F3ED;">
                     <button type="submit"

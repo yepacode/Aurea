@@ -65,11 +65,13 @@
 
                 <input type="text" name="name" placeholder="Tu nombre (opcional)"
                        autocomplete="name" maxlength="255"
+                       aria-label="Tu nombre para el cupón"
                        style="width:100%;background:#FFFDF9;border:1px solid #E5DCC9;border-radius:12px;padding:12px 15px;font-size:15px;color:#2E2A26;font-family:'Montserrat',sans-serif;outline:none;"
                        onfocus="this.style.borderColor='#D9B56D'" onblur="this.style.borderColor='#E5DCC9'">
 
                 <input type="email" name="email" placeholder="Tu correo electrónico *" required
                        autocomplete="email" maxlength="255"
+                       aria-label="Correo electrónico para recibir el cupón"
                        style="width:100%;background:#FFFDF9;border:1px solid #E5DCC9;border-radius:12px;padding:12px 15px;font-size:15px;color:#2E2A26;font-family:'Montserrat',sans-serif;outline:none;"
                        onfocus="this.style.borderColor='#D9B56D'" onblur="this.style.borderColor='#E5DCC9'">
 
