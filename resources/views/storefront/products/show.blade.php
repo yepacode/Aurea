@@ -1126,7 +1126,16 @@ function productDetail() {
                         badge.classList.remove('hidden');
                         count.textContent = data.cart_count;
                     }
+                    // Abre el mini-cart drawer del navbar. Enviamos el evento y, como cinturón
+                    // de seguridad por si Alpine no engancha el listener a tiempo, también
+                    // abrimos la instancia directamente vía _x_dataStack.
                     window.dispatchEvent(new CustomEvent('open-cart-drawer', { detail: data }));
+                    try {
+                        var drawerEl = document.querySelector('[x-data^="cartDrawer"]');
+                        if (drawerEl && drawerEl._x_dataStack && drawerEl._x_dataStack[0]) {
+                            drawerEl._x_dataStack[0].open(data);
+                        }
+                    } catch (_) { /* silencio: el evento ya voló */ }
                     var self = this;
                     setTimeout(function() { self.added = false; }, 2000);
                 } else {

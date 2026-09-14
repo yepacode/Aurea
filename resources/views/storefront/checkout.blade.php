@@ -119,7 +119,8 @@
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
              x-data="checkoutForm()" x-cloak>
 
-            <form @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <form method="POST" action="{{ route('checkout.process') }}" @submit.prevent="handleSubmit" class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+                @csrf
 
                 {{-- LEFT COLUMN: Customer data + Payment --}}
                 <div class="lg:col-span-2 space-y-6">
