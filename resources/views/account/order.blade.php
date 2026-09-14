@@ -124,6 +124,32 @@
                     @endif
                 </div>
             </div>
+
+            @if($order->payment_method === 'transfer' && $order->payment_status !== 'paid')
+            <div style="margin-top:20px;padding:20px 22px;background:#FBF4E6;border:1px solid #E8CC92;border-radius:14px;">
+                <h3 style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:#2E2A26;margin:0 0 8px;">💳 Comprobante de transferencia</h3>
+
+                @if($order->payment_receipt)
+                    <p style="font-size:13.5px;color:#3A352E;margin:0 0 12px;">Ya subiste un comprobante:</p>
+                    <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fff;border:1px solid #E5DCC9;border-radius:10px;margin-bottom:12px;">
+                        <span style="font-size:20px;">📎</span>
+                        <a href="{{ asset('storage/'.$order->payment_receipt) }}" target="_blank" rel="noopener" style="flex:1;color:#BE9A53;text-decoration:none;font-weight:500;">Ver comprobante</a>
+                    </div>
+                    <p style="font-size:13px;color:#6B6157;margin:0 0 12px;">¿Necesitas actualizarlo? Sube uno nuevo:</p>
+                @else
+                    <p style="font-size:14px;color:#6B6157;margin:0 0 12px;">Sube aquí tu comprobante de pago para que verifiquemos tu transferencia y despachemos tu pedido.</p>
+                @endif
+
+                <form method="POST" action="{{ route('order.uploadReceipt', $order->tracking_token) }}" enctype="multipart/form-data" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                    @csrf
+                    <input type="file" name="receipt" accept="image/*,.pdf" required style="flex:1;min-width:200px;font-size:13px;color:#3A352E;padding:8px;background:#fff;border:1px solid #E5DCC9;border-radius:10px;">
+                    <button type="submit" style="border:none;border-radius:999px;padding:11px 22px;color:#fff;background:linear-gradient(120deg,#E0BE77,#BE9A53);font-family:'Montserrat',sans-serif;font-size:12.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;">
+                        {{ $order->payment_receipt ? 'Actualizar' : 'Subir comprobante' }}
+                    </button>
+                </form>
+                <p style="font-size:12px;color:#9CA3AF;margin:8px 0 0;">Formatos aceptados: JPG, PNG, WebP, PDF · Máx 5MB</p>
+            </div>
+            @endif
         </div>
     </div>
 </section>

@@ -325,6 +325,30 @@ class CheckoutController extends Controller
         ]);
     }
 
+    /**
+     * "Link de pago enviable": el dueño le manda al cliente el link público
+     * /pedido/{tracking_token}/pagar por WhatsApp o correo. Al abrirlo, sembramos
+     * `current_order_id` en la sesión y redirigimos al widget de ePayco. El guard
+     * de EpaycoController@pay valida contra ese ID de sesión, así que el flujo
+     * de pago funciona igual que si el cliente viniera del checkout normal.
+     *
+     * No exponemos aquí ningún endpoint de pago propio: sólo damos "pase" al
+     * flujo existente. Transferencia y demás siguen usando el detalle público.
+     */
+    public function payFromToken(string $tracking_token): RedirectResponse
+    {
+        $order = Order::where('tracking_token', $tracking_token)->firstOrFail();
+
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('order.track', $tracking_token)
+                ->with('success', 'Este pedido ya fue pagado.');
+        }
+
+        session(['current_order_id' => $order->id]);
+
+        return redirect()->route('epayco.pay', $order->id);
+    }
+
     public function uploadReceipt(Request $request, string $tracking_token): RedirectResponse
     {
         $order = Order::where('tracking_token', $tracking_token)->firstOrFail();
@@ -345,6 +369,13 @@ class CheckoutController extends Controller
 
         $path = $request->file('receipt')->store('receipts', 'public');
         $order->update(['payment_receipt' => $path]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to(config('mail.admin'))
+                ->send(new \App\Mail\ReceiptUploaded($order));
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         return redirect()->route('order.track', $tracking_token)
             ->with('success', 'Comprobante subido exitosamente. Verificaremos tu pago pronto.');

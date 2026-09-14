@@ -112,6 +112,40 @@
             </div>
         @endif
 
+        {{-- ─────────────────────────────────────────────────────────────
+             Link de pago enviable: si el pedido sigue sin pagar, ofrecemos
+             el CTA grande a ePayco. Esta página YA es pública (con token no
+             adivinable), así que sirve también como link para WhatsApp/correo.
+             Si ya está pagado, no mostramos nada aquí y el usuario ve el
+             estado más abajo.
+        ───────────────────────────────────────────────────────────── --}}
+        @if($order->payment_status !== 'paid' && $order->status !== 'cancelled')
+            <div class="bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 rounded-xl p-6 md:p-8 mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="font-brand text-xl md:text-2xl font-bold text-text-dark">Completa tu pago</h2>
+                        <p class="text-sm text-text-muted mt-1">Elige tu método favorito y finaliza el pedido.</p>
+                    </div>
+                    <div class="text-left sm:text-right">
+                        <p class="text-xs uppercase tracking-wide text-text-muted font-semibold">Total a pagar</p>
+                        <p class="text-2xl md:text-3xl font-bold text-primary">${{ number_format($order->total, 0, ',', '.') }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <a href="{{ route('order.pay-from-token', $order->tracking_token) }}"
+                       class="block w-full text-center bg-primary hover:bg-primary-light text-white px-6 py-4 rounded-lg font-semibold text-base md:text-lg transition-colors shadow-sm">
+                        Pagar con ePayco (PSE, Tarjeta, Nequi)
+                    </a>
+                    @if($order->payment_method === 'transfer')
+                        <p class="text-xs text-text-muted text-center mt-3">
+                            ¿Prefieres transferencia bancaria? Consulta los datos abajo <span aria-hidden="true">↓</span>
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         {{-- Bank Transfer: Receipt Upload --}}
         @if($order->payment_method === 'transfer')
             @if($order->payment_status === 'paid')
@@ -308,6 +342,7 @@
                                     @case('card') Tarjeta @break
                                     @case('transfer') Transferencia @break
                                     @case('cash_on_delivery') Contra entrega @break
+                                    @case('epayco') ePayco (PSE/Tarjeta/Nequi) @break
                                     @default {{ $order->payment_method }}
                                 @endswitch
                             </span>

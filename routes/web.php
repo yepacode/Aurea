@@ -77,6 +77,9 @@ Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon
 // Order tracking
 Route::get('/pedido/{tracking_token}', [CheckoutController::class, 'track'])->name('order.track');
 Route::post('/pedido/{tracking_token}/comprobante', [CheckoutController::class, 'uploadReceipt'])->name('order.uploadReceipt');
+// Link de pago enviable: el cliente abre /pedido/{token}/pagar y va directo a ePayco
+// (sesión que le crea nosotros mismos, para pasar el guard de EpaycoController@pay).
+Route::get('/pedido/{tracking_token}/pagar', [CheckoutController::class, 'payFromToken'])->name('order.pay-from-token');
 
 // Stripe webhook
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle'])->name('stripe.webhook');
