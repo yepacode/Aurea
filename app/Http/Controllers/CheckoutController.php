@@ -95,13 +95,62 @@ class CheckoutController extends Controller
         $subtotalAfter2x1 = $subtotal - $discount2x1;
         $couponDiscount = $this->getSessionDiscount($subtotalAfter2x1);
         $bundleDiscountTotal = $this->cart->getBundleDiscountsTotal();
-        $shipping = $this->cart->getShipping($state, $couponDiscount['amount'] + $bundleDiscountTotal);
+        $quote = $this->cart->quoteShipping($state, $couponDiscount['amount'] + $bundleDiscountTotal);
+        $shipping = (float) $quote['cost'];
         $total = max(0, $subtotalAfter2x1 - $couponDiscount['amount'] - $bundleDiscountTotal + $shipping);
 
+        // Se conservan las claves antiguas (`shipping`, `total`) para el JS
+        // existente y se añaden las del multi-envío para pintar transportadora
+        // y tiempo estimado sin cambiar la firma pública.
         return response()->json([
-            'shipping' => $shipping,
-            'total' => $total,
+            'shipping'          => $shipping,
+            'total'             => $total,
+            'carrier'           => $quote['carrier'],
+            'carrier_label'     => $quote['carrier_label'],
+            'zone_name'         => $quote['zone_name'],
+            'delivery_days_min' => $quote['delivery_days_min'],
+            'delivery_days_max' => $quote['delivery_days_max'],
+            'is_free'           => $quote['is_free'],
         ]);
+    }
+
+    /**
+     * Cotización del envío (JSON) para el checkout: recibe departamento (y
+     * opcionalmente subtotal) y devuelve costo, transportadora y tiempo
+     * estimado. Alias explícito de calculateShipping con nombre expresivo,
+     * para que el frontend pueda pedir la cotización sin cambiar el flujo.
+     */
+    public function shippingQuote(Request $request): JsonResponse
+    {
+        $request->validate([
+            'department' => 'nullable|string|max:100',
+            'state'      => 'nullable|string|max:100',
+            'subtotal'   => 'nullable|numeric|min:0',
+        ]);
+
+        $department = $request->input('department') ?? $request->input('state');
+        $subtotal   = $request->input('subtotal');
+
+        // Si el cliente ya tiene carrito, la cotización se hace sobre él
+        // (subtotal real - 2×1 - cupón - kits). Si no, sobre el subtotal
+        // recibido (útil para landings/preview).
+        if ($this->cart->isEmpty()) {
+            $quote = app(\App\Services\ShippingService::class)->quote(
+                department: $department,
+                weightKg:   null,
+                subtotal:   $subtotal !== null ? (float) $subtotal : null,
+            );
+        } else {
+            $couponAmount = $this->getSessionDiscount(
+                $this->cart->getSubtotal() - $this->cart->calculate2x1()['discount']
+            )['amount'];
+            $quote = $this->cart->quoteShipping(
+                $department,
+                $couponAmount + $this->cart->getBundleDiscountsTotal(),
+            );
+        }
+
+        return response()->json($quote);
     }
 
     public function applyCoupon(Request $request): JsonResponse

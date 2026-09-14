@@ -38,6 +38,30 @@
             </h1>
             <p style="margin:8px 0 0;color:#6B6157;font-size:15px;">Tienes {{ $ordersCount }} pedido(s)</p>
 
+            {{-- Estado del programa mayorista --}}
+            @php $wStatus = $customer->wholesaler_status; @endphp
+            @if($wStatus === 'approved')
+                <a href="{{ route('account.wholesale.request') }}"
+                   style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px;border-radius:9999px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#3B310F;background:linear-gradient(135deg,#EBCF90,#D9B56D 55%,#C4A057);text-decoration:none;box-shadow:0 12px 26px -18px rgba(190,154,83,.9);">
+                    ✨ Mayorista aprobada — ver mi cuenta
+                </a>
+            @elseif($wStatus === 'pending')
+                <a href="{{ route('account.wholesale.request') }}"
+                   style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px;border-radius:9999px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#8A6D1F;background:#FBF0D5;text-decoration:none;">
+                    ⏳ Solicitud mayorista en revisión
+                </a>
+            @elseif($wStatus === 'rejected')
+                <a href="{{ route('account.wholesale.request') }}"
+                   style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px;border-radius:9999px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#8A4237;background:#F8E9E6;text-decoration:none;">
+                    Revisar solicitud mayorista →
+                </a>
+            @else
+                <a href="{{ route('account.wholesale.request') }}"
+                   style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:8px 16px;border-radius:9999px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#8A6E2E;background:#FBF0D5;text-decoration:none;">
+                    🏪 Únete al programa mayorista →
+                </a>
+            @endif
+
             {{-- Widget de puntos de fidelidad --}}
             @php $loyaltyBalance = $customer->pointsBalance(); @endphp
             <a href="{{ route('account.loyalty') }}"

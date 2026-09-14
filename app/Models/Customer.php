@@ -19,6 +19,14 @@ class Customer extends Authenticatable
         'city',
         'state',
         'zip_code',
+        'is_wholesaler',
+        'wholesaler_status',
+        'wholesaler_company_name',
+        'wholesaler_nit',
+        'wholesaler_monthly_volume',
+        'wholesaler_requested_at',
+        'wholesaler_approved_at',
+        'wholesaler_notes',
     ];
 
     protected $hidden = [
@@ -29,9 +37,21 @@ class Customer extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'email_verified_at'         => 'datetime',
+            'password'                  => 'hashed',
+            'is_wholesaler'             => 'boolean',
+            'wholesaler_requested_at'   => 'datetime',
+            'wholesaler_approved_at'    => 'datetime',
         ];
+    }
+
+    /**
+     * ¿Es un mayorista APROBADO y activo? (los dos flags a la vez).
+     * Este es el único check que debe usarse en storefront/cart.
+     */
+    public function isApprovedWholesaler(): bool
+    {
+        return $this->is_wholesaler && $this->wholesaler_status === 'approved';
     }
 
     public function orders(): HasMany

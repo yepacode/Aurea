@@ -149,6 +149,7 @@
 .pcard__more{font-size:11px;color:#B8A999;}
 .pcard__price{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:#BE9A53;}
 .pcard__compare{font-size:13px;color:#B8A999;text-decoration:line-through;margin-left:8px;}
+.pcard__wsalebadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9999px;font-family:'Montserrat',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;background:linear-gradient(135deg,#EBCF90,#C4A057);color:#3B310F;vertical-align:middle;}
 .pcard__cta{display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-family:'Montserrat',sans-serif;
     font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#2E2A26;
     border-bottom:1px solid rgba(217,181,109,.5);padding-bottom:3px;transition:color .3s,gap .3s;}
@@ -429,9 +430,17 @@
                         </div>
                         @endif
 
+                        @php
+                            $currentCustomer = auth('customer')->user();
+                            $effectivePrice = $product->priceFor($currentCustomer);
+                            $isWholesalePrice = $currentCustomer && $currentCustomer->isApprovedWholesaler() && $effectivePrice < (int) $product->price;
+                        @endphp
                         <div>
-                            <span class="pcard__price">${{ number_format($product->price, 0, ',', '.') }}</span>
-                            @if($product->compare_price && $product->compare_price > $product->price)
+                            <span class="pcard__price">${{ number_format($effectivePrice, 0, ',', '.') }}</span>
+                            @if($isWholesalePrice)
+                                <span class="pcard__compare">${{ number_format($product->price, 0, ',', '.') }}</span>
+                                <span class="pcard__wsalebadge" title="Precio mayorista aplicado">Mayorista</span>
+                            @elseif($product->compare_price && $product->compare_price > $product->price)
                                 <span class="pcard__compare">${{ number_format($product->compare_price, 0, ',', '.') }}</span>
                             @endif
                         </div>

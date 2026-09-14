@@ -114,7 +114,12 @@ class CheckoutService
         $discountAmount = (float) ($data['discount_amount'] ?? 0);
         $discount2x1 = (float) ($data['discount_2x1'] ?? 0);
         $discountCoupon = max(0, $discountAmount - $discount2x1);
-        $shipping = $this->cart->getShipping($data['state'] ?? null, $discountCoupon);
+        // Cotización completa contra el ShippingService: se persiste como
+        // snapshot en la orden para que la confirmación y los correos muestren
+        // transportadora y tiempo estimado. El costo puro se saca de aquí para
+        // no cotizar dos veces.
+        $quote = $this->cart->quoteShipping($data['state'] ?? null, $discountCoupon);
+        $shipping = (float) $quote['cost'];
         $total = max(0, $subtotal - $discountAmount + $shipping);
 
         return Order::create([
@@ -131,6 +136,13 @@ class CheckoutService
             'payment_status' => $data['payment_status'] ?? (($data['payment_method'] === 'card') ? 'processing' : 'pending'),
             'stripe_payment_intent_id' => $data['stripe_payment_intent_id'] ?? null,
             'shipping_address' => $shippingAddress,
+            // Snapshot de la zona/transportadora cotizada. `shipping_carrier`
+            // guarda el label legible (compatible con las plantillas de correo
+            // que ya lo leen). El admin puede pisarlo después desde la orden.
+            'shipping_carrier'            => $quote['carrier_label'],
+            'shipping_zone_name'          => $quote['zone_name'],
+            'shipping_delivery_days_min'  => $quote['delivery_days_min'],
+            'shipping_delivery_days_max'  => $quote['delivery_days_max'],
             'notes' => $data['notes'] ?? null,
         ]);
     }

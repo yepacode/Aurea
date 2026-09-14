@@ -406,6 +406,15 @@
                                 <span class="text-text-dark"
                                       x-text="currentShipping > 0 ? money(currentShipping) : 'Gratis'"></span>
                             </div>
+                            {{-- Detalle de la cotización de envío: transportadora + tiempo estimado.
+                                 Se pinta apenas el cliente elige departamento y se refresca en
+                                 cada recotización. Se oculta si aún no hay cotización. --}}
+                            <template x-if="shippingQuote && (shippingQuote.zone_name || shippingQuote.carrier_label)">
+                                <div class="flex justify-between text-[11px] text-text-muted/70 -mt-1">
+                                    <span x-text="(shippingQuote.carrier_label || '') + (shippingQuote.zone_name ? ' — ' + shippingQuote.zone_name : '')"></span>
+                                    <span x-text="shippingDaysLabel()"></span>
+                                </div>
+                            </template>
                             <template x-if="coupon.discount_amount > 0">
                                 <div class="flex justify-between text-green-600">
                                     <span>Cupón</span>
@@ -511,9 +520,22 @@ function checkoutForm() {
         },
         currentShipping: {{ $shipping }},
         currentTotal: {{ $total }},
+        // Cotización actual devuelta por el ShippingService. Se llena al
+        // seleccionar departamento y se usa para mostrar transportadora +
+        // tiempo estimado bajo la línea "Envío" del resumen.
+        shippingQuote: null,
 
         money(v) {
             return '$' + Math.round(Number(v) || 0).toLocaleString('es-CO');
+        },
+
+        shippingDaysLabel() {
+            if (!this.shippingQuote) return '';
+            const a = this.shippingQuote.delivery_days_min;
+            const b = this.shippingQuote.delivery_days_max;
+            if (!a && !b) return '';
+            if (a === b) return a + ' día' + (a === 1 ? '' : 's');
+            return a + '–' + b + ' días';
         },
 
         init() {
@@ -521,6 +543,13 @@ function checkoutForm() {
             this.$watch('form.state', (val) => {
                 if (val) this.recalculateShipping();
             });
+
+            // Cotización inicial si venimos con departamento (cliente autenticado
+            // con dirección guardada). Así el resumen no muestra un envío
+            // "genérico" cuando en realidad tenemos una zona conocida.
+            if (this.form.state) {
+                this.recalculateShipping();
+            }
         },
 
         async recalculateShipping() {
@@ -538,6 +567,15 @@ function checkoutForm() {
                 if (res.ok) {
                     this.currentShipping = data.shipping;
                     this.currentTotal = data.total;
+                    // El endpoint devuelve carrier/zone/días — snapshot para la UI.
+                    this.shippingQuote = {
+                        carrier:           data.carrier ?? null,
+                        carrier_label:     data.carrier_label ?? null,
+                        zone_name:         data.zone_name ?? null,
+                        delivery_days_min: data.delivery_days_min ?? null,
+                        delivery_days_max: data.delivery_days_max ?? null,
+                        is_free:           !!data.is_free,
+                    };
                 }
             } catch (e) {
                 console.error('Error recalculating shipping:', e);

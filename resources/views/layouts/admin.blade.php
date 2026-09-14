@@ -152,6 +152,23 @@
                         </svg>
                         <span x-show="sidebarOpen">Clientes</span>
                     </a>
+                    @php
+                        $wholesalePending = \App\Models\Customer::where('wholesaler_status', 'pending')->count();
+                    @endphp
+                    <a href="{{ route('admin.wholesale.index') }}"
+                       class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.wholesale.*') ? 'bg-white/10' : '' }}">
+                        <span class="flex items-center space-x-3">
+                            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 21h19.5m-18-18v18m10.5-18v18M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12M14.25 7.5H21m-3.75 3.75h.008v.008h-.008v-.008Z"/>
+                            </svg>
+                            <span x-show="sidebarOpen">Mayoristas 🏪</span>
+                        </span>
+                        @if($wholesalePending > 0)
+                            <span x-show="sidebarOpen" class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold" style="background:#EBCF90;color:#3B310F;">
+                                {{ $wholesalePending }}
+                            </span>
+                        @endif
+                    </a>
                     <a href="{{ route('admin.stock-notifications.index') }}"
                        class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.stock-notifications.*') ? 'bg-white/10' : '' }}">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,6 +196,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M7 14l3-3 4 4 5-6"/>
                         </svg>
                         <span x-show="sidebarOpen">NPS 📊</span>
+                    </a>
+                    <a href="{{ route('admin.push.index') }}"
+                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.push.*') ? 'bg-white/10' : '' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"/>
+                        </svg>
+                        <span x-show="sidebarOpen">Notificaciones push 🔔</span>
                     </a>
                 </div>
 
@@ -298,13 +322,23 @@
                 <div x-show="!sidebarOpen" class="my-3 mx-3 border-t border-white/10"></div>
 
                 <div class="space-y-0.5">
-                    {{-- Envíos (rates) --}}
+                    {{-- Envíos (rates + umbral gratis) --}}
                     <a href="{{ route('admin.shipping.index') }}"
-                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.shipping.*') ? 'bg-white/10' : '' }}">
+                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.shipping.*') && ! request()->routeIs('admin.shipping-zones.*') ? 'bg-white/10' : '' }}">
                         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
                         </svg>
                         <span x-show="sidebarOpen">Envíos</span>
+                    </a>
+
+                    {{-- Zonas de envío (sistema multi-zona por departamento) --}}
+                    <a href="{{ route('admin.shipping-zones.index') }}"
+                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.shipping-zones.*') ? 'bg-white/10' : '' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/>
+                        </svg>
+                        <span x-show="sidebarOpen">Zonas de envío</span>
                     </a>
 
                     {{-- Transferencia bancaria --}}

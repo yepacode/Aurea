@@ -21,6 +21,8 @@ class Product extends Model
         'price',           // Precio público (lo que paga el cliente en la web)
         'compare_price',   // Precio sugerido / tachado / PVP físico
         'cost_price',      // Costo del distribuidor (lo que el negocio paga)
+        'wholesale_price', // Precio para mayoristas aprobados (nullable — usa % por defecto)
+        'wholesale_min_qty', // Cantidad mínima por unidad para aplicar precio mayorista
         'stock',
         'images',
         'meta_title',
@@ -59,9 +61,11 @@ class Product extends Model
     protected function casts(): array
     {
         return [
-            'price'         => 'decimal:2',
-            'compare_price' => 'decimal:2',
-            'cost_price'    => 'decimal:2',
+            'price'             => 'decimal:2',
+            'compare_price'     => 'decimal:2',
+            'cost_price'        => 'decimal:2',
+            'wholesale_price'   => 'integer',
+            'wholesale_min_qty' => 'integer',
             'images'        => 'array',
             'type'          => 'array',
             'key_features'  => 'array',
@@ -75,6 +79,31 @@ class Product extends Model
             'badge_2x1'     => 'boolean',
             'sort_order'    => 'integer',
         ];
+    }
+
+    /**
+     * Precio efectivo para un cliente concreto.
+     *
+     * - Si el cliente es mayorista APROBADO, se devuelve `wholesale_price`
+     *   cuando esté definido; de lo contrario se calcula un descuento por
+     *   defecto (config('wholesale.default_discount', 0.80)).
+     * - Para cualquier otro cliente (invitado o cliente normal), devuelve el
+     *   precio público.
+     *
+     * El valor se devuelve en la misma unidad que `price` (pesos, sin decimales
+     * relevantes para MXN/COP redondeamos al entero más cercano).
+     */
+    public function priceFor(?\App\Models\Customer $customer = null): int
+    {
+        if ($customer && $customer->isApprovedWholesaler()) {
+            if ($this->wholesale_price !== null) {
+                return (int) $this->wholesale_price;
+            }
+            $discount = (float) config('wholesale.default_discount', 0.80);
+            return (int) round((float) $this->price * $discount);
+        }
+
+        return (int) round((float) $this->price);
     }
 
     /**

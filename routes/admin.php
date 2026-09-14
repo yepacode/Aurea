@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\AdminLentesPageController;
 use App\Http\Controllers\Admin\InfographicAdminController;
 use App\Http\Controllers\Admin\AdminSeoController;
 use App\Http\Controllers\Admin\ShippingAdminController;
+use App\Http\Controllers\Admin\ShippingZoneAdminController;
 use App\Http\Controllers\Admin\TestimonialAdminController;
 use Illuminate\Support\Facades\Route;
 
@@ -83,12 +84,15 @@ Route::put('reviews/{review}/approve', [\App\Http\Controllers\Admin\AdminReviewC
 Route::put('reviews/{review}/unapprove', [\App\Http\Controllers\Admin\AdminReviewController::class, 'unapprove'])->name('reviews.unapprove');
 Route::delete('reviews/{review}', [\App\Http\Controllers\Admin\AdminReviewController::class, 'destroy'])->name('reviews.destroy');
 
-// Shipping management
+// Shipping management (config global: umbral envío gratis, flat rate legacy).
 Route::get('shipping', [ShippingAdminController::class, 'index'])->name('shipping.index');
 Route::put('shipping/settings', [ShippingAdminController::class, 'updateSettings'])->name('shipping.settings');
 Route::post('shipping/rates', [ShippingAdminController::class, 'store'])->name('shipping.store');
 Route::put('shipping/rates/{shippingRate}', [ShippingAdminController::class, 'update'])->name('shipping.update');
 Route::delete('shipping/rates/{shippingRate}', [ShippingAdminController::class, 'destroy'])->name('shipping.destroy');
+
+// Zonas de envío (sistema multi-zona por departamento + transportadora).
+Route::resource('shipping-zones', ShippingZoneAdminController::class)->except(['show']);
 
 // Bank transfer settings
 Route::get('bank-transfer', [BankTransferAdminController::class, 'index'])->name('bank-transfer.index');
@@ -149,12 +153,21 @@ Route::resource('testimonials', TestimonialAdminController::class)->except(['sho
 Route::get('customers', [\App\Http\Controllers\Admin\CustomerAdminController::class, 'index'])->name('customers.index');
 Route::get('customers/{customer}', [\App\Http\Controllers\Admin\CustomerAdminController::class, 'show'])->name('customers.show');
 
+// Mayoristas — solicitudes y aprobación
+Route::get('wholesale/requests', [\App\Http\Controllers\Admin\WholesaleAdminController::class, 'index'])->name('wholesale.index');
+Route::patch('wholesale/requests/{id}/approve', [\App\Http\Controllers\Admin\WholesaleAdminController::class, 'approve'])->name('wholesale.approve');
+Route::patch('wholesale/requests/{id}/reject', [\App\Http\Controllers\Admin\WholesaleAdminController::class, 'reject'])->name('wholesale.reject');
+
 // Stock notifications (avisos de "avísame cuando vuelva")
 Route::get('stock-notifications', [\App\Http\Controllers\Admin\StockNotificationAdminController::class, 'index'])->name('stock-notifications.index');
 Route::delete('stock-notifications/{stockNotification}', [\App\Http\Controllers\Admin\StockNotificationAdminController::class, 'destroy'])->name('stock-notifications.destroy');
 
 // NPS post-compra (dashboard)
 Route::get('nps', [\App\Http\Controllers\Admin\NpsAdminController::class, 'index'])->name('nps.index');
+
+// Notificaciones push (broadcast marketing)
+Route::get('push',  [\App\Http\Controllers\Admin\PushAdminController::class, 'index'])->name('push.index');
+Route::post('push', [\App\Http\Controllers\Admin\PushAdminController::class, 'send'])->name('push.send');
 
 // SEO settings
 Route::get('seo', [AdminSeoController::class, 'index'])->name('seo.index');

@@ -189,16 +189,33 @@
                 @endif
 
                 {{-- 4. Precio --}}
-                <div style="display:flex;align-items:baseline;gap:10px;">
+                @php
+                    $currentCustomer = auth('customer')->user();
+                    $effectivePrice = $product->priceFor($currentCustomer);
+                    $isWholesalePrice = $currentCustomer && $currentCustomer->isApprovedWholesaler() && $effectivePrice < (int) $product->price;
+                @endphp
+                <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;">
                     <span id="product-current-price" style="font-family:'Playfair Display',serif;font-size:30px;font-weight:600;color:#BE9A53;">
-                        ${{ number_format($product->price, 0, ',', '.') }}
+                        ${{ number_format($effectivePrice, 0, ',', '.') }}
                     </span>
-                    @if($product->compare_price && $product->compare_price > $product->price)
+                    @if($isWholesalePrice)
+                        <span style="font-size:16px;color:#bbb;text-decoration:line-through;">
+                            ${{ number_format($product->price, 0, ',', '.') }}
+                        </span>
+                        <span style="display:inline-block;padding:3px 10px;border-radius:9999px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;background:linear-gradient(135deg,#EBCF90,#C4A057);color:#3B310F;">
+                            Precio mayorista ✨
+                        </span>
+                    @elseif($product->compare_price && $product->compare_price > $product->price)
                     <span style="font-size:16px;color:#bbb;text-decoration:line-through;">
                         ${{ number_format($product->compare_price, 0, ',', '.') }}
                     </span>
                     @endif
                 </div>
+                @if($isWholesalePrice && $product->wholesale_min_qty > 1)
+                    <p style="margin:6px 0 0;font-size:12px;color:#8A6E2E;">
+                        Precio mayorista aplica desde <strong>{{ $product->wholesale_min_qty }}</strong> unidades.
+                    </p>
+                @endif
 
                 {{-- Favorito (wishlist) --}}
                 @php $inWishlist = $inWishlist ?? false; @endphp

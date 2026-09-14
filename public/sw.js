@@ -2,7 +2,7 @@
 const CACHE = 'aurea-v1';
 
 // Rutas que NUNCA se cachean (privadas / sensibles / dinámicas).
-const NO_CACHE = ['/admin', '/cuenta', '/checkout', '/carrito', '/pedido', '/epayco'];
+const NO_CACHE = ['/admin', '/cuenta', '/checkout', '/carrito', '/pedido', '/epayco', '/push'];
 
 self.addEventListener('install', () => self.skipWaiting());
 

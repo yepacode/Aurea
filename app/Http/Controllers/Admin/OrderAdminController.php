@@ -236,6 +236,22 @@ class OrderAdminController extends Controller
                 return redirect()->route('admin.orders.show', $order)
                     ->with('success', 'Guía actualizada, pero no se pudo enviar el correo.');
             }
+
+            // Push notification al cliente (todos los navegadores donde esté
+            // suscrito). No es bloqueante: si falla, el pedido queda avisado
+            // por correo igual.
+            try {
+                $trackingUrl = $order->tracking_url
+                    ?: route('order.track', ['tracking_token' => $order->tracking_token]);
+                app(\App\Services\PushService::class)->sendToCustomer($order->customer_id, [
+                    'title' => '📦 Tu pedido va en camino',
+                    'body'  => 'Pedido #' . $order->id . ' — toca para ver el estado del envío.',
+                    'url'   => $trackingUrl,
+                    'tag'   => 'order-shipped-' . $order->id,
+                ]);
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return redirect()->route('admin.orders.show', $order)

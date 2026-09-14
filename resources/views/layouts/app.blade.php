@@ -321,6 +321,9 @@
     {{-- Popup de bienvenida (cupón 10%) --}}
     @include('partials.welcome-popup')
 
+    {{-- Prompt de suscripción a notificaciones push (aparece a los 30s) --}}
+    @include('partials.push-prompt')
+
     @stack('scripts')
 </body>
 </html>

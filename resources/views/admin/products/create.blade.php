@@ -146,6 +146,42 @@
                     <input type="number" id="stock" name="stock" value="{{ old('stock', 0) }}" min="0" required
                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
+
+                {{-- ── Precios mayoristas ── --}}
+                @php
+                    $wholesaleDefaultPct = (int) round((1 - (float) config('wholesale.default_discount', 0.80)) * 100);
+                @endphp
+                <div class="md:col-span-2 rounded-xl p-5 border" style="background:#FDF6E9;border-color:#E0BE77;">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold" style="background:#EBCF90;color:#3B310F;">
+                            🏪 Mayoristas
+                        </span>
+                        <p class="text-xs font-semibold uppercase tracking-wider" style="color:#8A6E2E;letter-spacing:0.15em;">Precios para distribuidoras aprobadas</p>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-4">
+                        Si dejas vacío el precio, se calcula un <strong>{{ $wholesaleDefaultPct }}% de descuento</strong> sobre el precio de venta web.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="wholesale_price" class="block text-xs font-medium text-gray-600 mb-1">
+                                Precio mayorista (COP)
+                            </label>
+                            <input type="number" id="wholesale_price" name="wholesale_price"
+                                   value="{{ old('wholesale_price') }}" step="1" min="0"
+                                   placeholder="Deja vacío para usar {{ $wholesaleDefaultPct }}% de descuento"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white">
+                        </div>
+                        <div>
+                            <label for="wholesale_min_qty" class="block text-xs font-medium text-gray-600 mb-1">
+                                Cantidad mínima por unidad
+                            </label>
+                            <input type="number" id="wholesale_min_qty" name="wholesale_min_qty"
+                                   value="{{ old('wholesale_min_qty', 1) }}" step="1" min="1"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 bg-white">
+                            <p class="mt-1 text-xs text-gray-500">1 = siempre aplica el precio mayorista.</p>
+                        </div>
+                    </div>
+                </div>
                 {{-- Placeholder — la visibilidad ahora vive en un bloque dedicado abajo --}}
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Clasificación *</label>

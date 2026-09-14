@@ -4,8 +4,8 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\ShippingRate;
 use App\Models\ShippingSetting;
+use App\Services\ShippingService;
 use Illuminate\Support\Collection;
 
 class CartService
@@ -31,7 +31,9 @@ class CartService
             ? ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id')
             : collect();
 
-        return collect($cart)->map(function ($item, $key) use ($products, $variants) {
+        $customer = \Illuminate\Support\Facades\Auth::guard('customer')->user();
+
+        return collect($cart)->map(function ($item, $key) use ($products, $variants, $customer) {
             $product = $products->get($item['product_id']);
 
             if (! $product) {
@@ -39,7 +41,20 @@ class CartService
             }
 
             $variant = isset($item['variant_id']) ? $variants->get($item['variant_id']) : null;
-            $unitPrice = $product->price + ($variant ? $variant->price_modifier : 0);
+
+            // Precio base: si el cliente es mayorista aprobado Y la cantidad cumple
+            // el mínimo del producto, se usa `wholesale_price` (o el descuento por defecto).
+            // Los modificadores de variante se aplican encima del precio base.
+            $qty = (int) $item['qty'];
+            $isWholesale = $customer
+                && $customer->isApprovedWholesaler()
+                && $qty >= (int) ($product->wholesale_min_qty ?? 1);
+
+            $basePrice = $isWholesale
+                ? $product->priceFor($customer)
+                : (float) $product->price;
+
+            $unitPrice = $basePrice + ($variant ? (float) $variant->price_modifier : 0);
 
             return [
                 'key' => $key,
@@ -47,9 +62,10 @@ class CartService
                 'variant_id' => $variant?->id,
                 'product' => $product,
                 'variant' => $variant,
-                'qty' => $item['qty'],
+                'qty' => $qty,
                 'unit_price' => $unitPrice,
-                'total' => $unitPrice * $item['qty'],
+                'is_wholesale' => (bool) $isWholesale,
+                'total' => $unitPrice * $qty,
             ];
         })->filter()->values();
     }
@@ -236,35 +252,40 @@ class CartService
     }
 
     /**
-     * Get shipping cost based on configured rates.
-     * El umbral de envío gratis se compara contra el TOTAL final (subtotal
-     * menos 2×1 menos cupón), no contra el subtotal bruto. Asi el cliente
-     * solo recibe envio gratis si lo que efectivamente esta pagando por
-     * los productos supera el umbral configurado.
+     * Devuelve solo el costo del envío. El umbral de envío gratis se compara
+     * contra el TOTAL final (subtotal menos 2×1 menos cupón), no contra el
+     * subtotal bruto — así el cliente sólo recibe envío gratis si lo que
+     * efectivamente está pagando por los productos supera el umbral.
      *
-     * @param string|null $state           The Mexican state for state-based rates
-     * @param float       $couponDiscount  Coupon discount amount to subtract from the subtotal
+     * Se delega al ShippingService (sistema multi-zona). Cuando el
+     * departamento no está en ninguna zona activa, cae a
+     * `config('shipping.fallback_cost')`.
+     *
+     * @param string|null $state           Departamento del cliente (columna `state` legacy).
+     * @param float       $couponDiscount  Descuento del cupón para descontar del subtotal.
      */
     public function getShipping(?string $state = null, float $couponDiscount = 0): float
     {
-        $subtotal = $this->getSubtotal();
+        return (float) $this->quoteShipping($state, $couponDiscount)['cost'];
+    }
+
+    /**
+     * Cotización completa (costo + transportadora + zona + tiempo estimado).
+     * La usa el checkout para pintar en pantalla y persistir en la orden.
+     *
+     * @return array{cost:int,carrier:string,carrier_label:string,zone_name:?string,delivery_days_min:int,delivery_days_max:int,is_free:bool}
+     */
+    public function quoteShipping(?string $state = null, float $couponDiscount = 0): array
+    {
+        $subtotal    = $this->getSubtotal();
         $discount2x1 = $this->calculate2x1()['discount'] ?? 0;
-        $effectiveTotal = max(0, $subtotal - $discount2x1 - $couponDiscount);
+        $effective   = max(0, $subtotal - $discount2x1 - $couponDiscount);
 
-        $threshold = (float) ShippingSetting::get('free_shipping_threshold', 0);
-
-        if ($threshold > 0 && $effectiveTotal >= $threshold) {
-            return 0;
-        }
-
-        if ($state) {
-            $rate = ShippingRate::findForState($state);
-            if ($rate) {
-                return (float) $rate->price;
-            }
-        }
-
-        return (float) ShippingSetting::get('default_price', 99.00);
+        return app(ShippingService::class)->quote(
+            department: $state,
+            weightKg:   null,
+            subtotal:   $effective,
+        );
     }
 
     /**

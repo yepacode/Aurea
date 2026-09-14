@@ -79,6 +79,7 @@ Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout
 Route::get('/checkout/confirmacion/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
 Route::post('/checkout/create-payment-intent', [CheckoutController::class, 'createPaymentIntent'])->name('checkout.createPaymentIntent');
 Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculateShipping');
+Route::post('/checkout/shipping-quote', [CheckoutController::class, 'shippingQuote'])->name('checkout.shippingQuote');
 Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
     ->name('checkout.applyCoupon')
     ->middleware('throttle:public-writes');
@@ -150,6 +151,13 @@ Route::middleware('auth:customer')->group(function () {
     Route::get('/cuenta/puntos', [\App\Http\Controllers\Account\LoyaltyController::class, 'index'])
         ->name('account.loyalty');
 
+    // Programa de mayoristas / distribuidoras
+    Route::get('/cuenta/mayorista/solicitar', [\App\Http\Controllers\Account\WholesaleController::class, 'show'])
+        ->name('account.wholesale.request');
+    Route::post('/cuenta/mayorista/solicitar', [\App\Http\Controllers\Account\WholesaleController::class, 'submit'])
+        ->name('account.wholesale.submit')
+        ->middleware('throttle:public-writes');
+
     // Direcciones guardadas
     Route::get('/cuenta/direcciones', [AddressController::class, 'index'])->name('account.addresses');
     Route::post('/cuenta/direcciones', [AddressController::class, 'store'])->name('account.addresses.store');
@@ -173,6 +181,16 @@ Route::post('/leads', [LeadController::class, 'store'])
 // "Avísame cuando vuelva" (notificación de stock)
 Route::post('/avisame', [\App\Http\Controllers\StockNotificationController::class, 'store'])
     ->name('stock.notify')
+    ->middleware('throttle:public-writes');
+
+// Web Push notifications (suscripción del navegador)
+Route::get('/push/public-key', [\App\Http\Controllers\PushController::class, 'publicKey'])
+    ->name('push.publicKey');
+Route::post('/push/subscribe', [\App\Http\Controllers\PushController::class, 'subscribe'])
+    ->name('push.subscribe')
+    ->middleware('throttle:public-writes');
+Route::post('/push/unsubscribe', [\App\Http\Controllers\PushController::class, 'unsubscribe'])
+    ->name('push.unsubscribe')
     ->middleware('throttle:public-writes');
 
 // NPS post-compra (formulario público sin login; el token del correo autoriza).

@@ -57,6 +57,8 @@ class ProductAdminController extends Controller
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
             'cost_price'    => 'nullable|numeric|min:0',
+            'wholesale_price'   => 'nullable|integer|min:0',
+            'wholesale_min_qty' => 'nullable|integer|min:1',
             'stock' => 'required|integer|min:0',
             'slug' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0',
@@ -99,6 +101,11 @@ class ProductAdminController extends Controller
         $validated['badge_2x1'] = $request->boolean('badge_2x1');
         $validated['is_cruelty_free'] = $request->boolean('is_cruelty_free');
         $validated['is_vegan'] = $request->boolean('is_vegan');
+
+        // Precios mayoristas: si vienen vacíos, se guardan como null (wholesale_price)
+        // y 1 (wholesale_min_qty) — así el método priceFor() cae al descuento por defecto.
+        $validated['wholesale_price']   = $request->filled('wholesale_price') ? (int) $request->input('wholesale_price') : null;
+        $validated['wholesale_min_qty'] = max(1, (int) $request->input('wholesale_min_qty', 1));
 
         // key_features llega como textarea con un bullet por línea
         $rawFeatures = $request->input('key_features_raw', '');
@@ -181,6 +188,8 @@ class ProductAdminController extends Controller
             'price' => 'required|numeric|min:0',
             'compare_price' => 'nullable|numeric|min:0',
             'cost_price'    => 'nullable|numeric|min:0',
+            'wholesale_price'   => 'nullable|integer|min:0',
+            'wholesale_min_qty' => 'nullable|integer|min:1',
             'stock' => 'required|integer|min:0',
             'slug' => 'nullable|string|max:255',
             'sort_order' => 'nullable|integer|min:0',
@@ -224,6 +233,10 @@ class ProductAdminController extends Controller
         $validated['badge_2x1'] = $request->boolean('badge_2x1');
         $validated['is_cruelty_free'] = $request->boolean('is_cruelty_free');
         $validated['is_vegan'] = $request->boolean('is_vegan');
+
+        // Precios mayoristas — misma normalización que en store().
+        $validated['wholesale_price']   = $request->filled('wholesale_price') ? (int) $request->input('wholesale_price') : null;
+        $validated['wholesale_min_qty'] = max(1, (int) $request->input('wholesale_min_qty', 1));
 
         // key_features llega como textarea con un bullet por línea
         $rawFeatures = $request->input('key_features_raw', '');

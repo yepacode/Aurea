@@ -225,6 +225,42 @@
         @endif
         @endguest
 
+        {{-- ===== Bloque: Envío (transportadora + tiempo estimado + zona) =====
+             Se pinta si la orden trae al menos transportadora. Datos venidos del
+             ShippingService al procesar el checkout — el admin puede pisarlos
+             después desde el detalle de la orden. --}}
+        @if(!empty($order->shipping_carrier) || !empty($order->shipping_zone_name))
+        @php
+            $__dMin = (int) ($order->shipping_delivery_days_min ?? 0);
+            $__dMax = (int) ($order->shipping_delivery_days_max ?? 0);
+            $__diasLabel = null;
+            if ($__dMin > 0 || $__dMax > 0) {
+                $__diasLabel = ($__dMin === $__dMax)
+                    ? $__dMin . ' día' . ($__dMin === 1 ? '' : 's')
+                    : $__dMin . '–' . $__dMax . ' días hábiles';
+            }
+        @endphp
+        <div style="max-width:640px;margin:26px auto 0;background:#FEFBF3;border:1px solid #EFE1B8;border-radius:14px;padding:18px 22px;text-align:left;">
+            <p style="font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#BE9A53;margin:0 0 8px;">📦 Envío</p>
+            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div>
+                    @if(!empty($order->shipping_carrier))
+                    <p style="font-size:14.5px;font-weight:600;color:#2E2A26;margin:0 0 2px;">{{ $order->shipping_carrier }}</p>
+                    @endif
+                    @if(!empty($order->shipping_zone_name))
+                    <p style="font-size:12.5px;color:#6B6157;margin:0;">{{ $order->shipping_zone_name }}</p>
+                    @endif
+                </div>
+                @if($__diasLabel)
+                <div style="text-align:right;">
+                    <p style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8A8073;margin:0 0 2px;">Entrega estimada</p>
+                    <p style="font-size:14px;font-weight:600;color:#2E2A26;margin:0;">{{ $__diasLabel }}</p>
+                </div>
+                @endif
+            </div>
+        </div>
+        @endif
+
         {{-- ===== Bloque: Resumen de tu compra (ítems + total) ===== --}}
         <div style="max-width:640px;margin:26px auto 0;background:#fff;border:1px solid #E5DCC9;border-radius:14px;padding:22px;text-align:left;">
             <h3 style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:#2E2A26;margin:0 0 14px;">Resumen de tu compra</h3>

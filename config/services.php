@@ -50,6 +50,17 @@ return [
         'currency'    => env('EPAYCO_CURRENCY', 'cop'),
     ],
 
+    // Web Push (VAPID): se usan para firmar los pushes y para que el
+    // navegador reconozca al servidor. Las llaves se generan una sola vez
+    // con `php artisan push:generate-keys` y se pegan en .env.
+    'webpush' => [
+        'vapid' => [
+            'subject'     => env('VAPID_SUBJECT', 'mailto:hola@bellezaaurea.com'),
+            'public_key'  => env('VAPID_PUBLIC_KEY'),
+            'private_key' => env('VAPID_PRIVATE_KEY'),
+        ],
+    ],
+
     // Analytics: se pisan desde la BD (AnalyticsSetting) si el admin los captura
     // desde el panel; si están vacíos, no se imprime nada en el HTML.
     'analytics' => [
