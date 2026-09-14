@@ -32,7 +32,24 @@ trait HandlesSeoInput
             'twitter_title'        => 'nullable|string|max:255',
             'twitter_description'  => 'nullable|string|max:500',
             'twitter_image'        => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
-            'custom_schema_markup' => 'nullable|string|max:20000',
+            // custom_schema_markup se rendea DENTRO de
+            // <script type="application/ld+json">, así que no se puede
+            // sanitizar en la vista sin romper el JSON. En su lugar, aquí
+            // rechazamos payloads que contengan <script> o event handlers
+            // (on*=), que serían XSS al inyectarse en la página pública.
+            'custom_schema_markup' => [
+                'nullable', 'string', 'max:20000',
+                function (string $attribute, $value, \Closure $fail): void {
+                    if (! is_string($value) || $value === '') {
+                        return;
+                    }
+                    if (preg_match('#<\s*script[^>]*>#i', $value)
+                        || preg_match('#\s+on\w+\s*=#i', $value)
+                    ) {
+                        $fail('El JSON-LD no puede contener <script> ni event handlers.');
+                    }
+                },
+            ],
         ];
     }
 

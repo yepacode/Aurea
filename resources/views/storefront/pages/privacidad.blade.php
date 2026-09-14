@@ -61,7 +61,7 @@
                 if ($loc !== '') { $p1 .= ', con domicilio en '.$loc.', '.e($country); }
                 $p1 .= '.';
             @endphp
-            <p>{!! $p1 !!}</p>
+            <p>{!! \App\Support\SafeHtml::sanitize($p1) !!}</p>
             <ul>
                 <li>Correo de contacto: {!! $ph($email) !!}</li>
                 <li>Teléfono: {!! $ph($phone) !!}</li>
@@ -143,9 +143,9 @@
                     elseif ($city) { $foot3 = e($city).', '.e($country); }
                     else { $foot3 = e($country); }
                 @endphp
-                <p>{!! $foot1 !!}</p>
-                <p>{!! $foot2 !!}</p>
-                <p>{!! $foot3 !!}</p>
+                <p>{!! \App\Support\SafeHtml::sanitize($foot1) !!}</p>
+                <p>{!! \App\Support\SafeHtml::sanitize($foot2) !!}</p>
+                <p>{!! \App\Support\SafeHtml::sanitize($foot3) !!}</p>
             </div>
         </div>
     </div>

@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -21,7 +23,18 @@ class CustomerAuthController extends Controller
     {
         $data = $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255',
+            'email'    => [
+                'required', 'email', 'max:255',
+                // Solo bloquea el registro si el correo ya está tomado por una
+                // cuenta CON contraseña. Si existe como invitado (sin password)
+                // permitimos el "upgrade" y conservamos su historial de pedidos.
+                function ($attribute, $value, $fail) {
+                    $existing = Customer::where('email', $value)->first();
+                    if ($existing && $existing->hasAccount()) {
+                        $fail('Ya existe una cuenta con este correo. Inicia sesión.');
+                    }
+                },
+            ],
             'phone'    => 'nullable|string|max:20',
             'password' => 'required|string|min:8|confirmed',
             'habeas_data' => 'accepted',
@@ -31,31 +44,46 @@ class CustomerAuthController extends Controller
             'password.min'         => 'La contraseña debe tener al menos 8 caracteres.',
         ]);
 
-        $existing = Customer::where('email', $data['email'])->first();
+        // Envolvemos en transacción y capturamos UNIQUE violations para cerrar
+        // la ventana TOCTOU entre la validación y la escritura (el índice
+        // UNIQUE(email) en customers es la garantía final).
+        try {
+            $customer = DB::transaction(function () use ($data) {
+                $existing = Customer::where('email', $data['email'])->lockForUpdate()->first();
 
-        // Si ya existe una cuenta con contraseña → que inicie sesión.
-        if ($existing && $existing->hasAccount()) {
-            throw ValidationException::withMessages([
-                'email' => 'Ya existe una cuenta con este correo. Inicia sesión.',
-            ]);
-        }
+                if ($existing && $existing->hasAccount()) {
+                    throw ValidationException::withMessages([
+                        'email' => 'Ya existe una cuenta con este correo. Inicia sesión.',
+                    ]);
+                }
 
-        if ($existing) {
-            // Cliente que compró como invitado: se "actualiza" a cuenta y
-            // conserva su historial de pedidos.
-            $existing->update([
-                'name'     => $data['name'],
-                'phone'    => $data['phone'] ?? $existing->phone,
-                'password' => $data['password'],
-            ]);
-            $customer = $existing;
-        } else {
-            $customer = Customer::create([
-                'name'     => $data['name'],
-                'email'    => $data['email'],
-                'phone'    => $data['phone'] ?? null,
-                'password' => $data['password'],
-            ]);
+                if ($existing) {
+                    // Cliente que compró como invitado: se "actualiza" a cuenta
+                    // conservando su historial de pedidos.
+                    $existing->update([
+                        'name'     => $data['name'],
+                        'phone'    => $data['phone'] ?? $existing->phone,
+                        'password' => $data['password'],
+                    ]);
+
+                    return $existing;
+                }
+
+                return Customer::create([
+                    'name'     => $data['name'],
+                    'email'    => $data['email'],
+                    'phone'    => $data['phone'] ?? null,
+                    'password' => $data['password'],
+                ]);
+            });
+        } catch (QueryException $e) {
+            // 23000 = Integrity constraint violation (incluye UNIQUE).
+            if ($e->getCode() === '23000') {
+                throw ValidationException::withMessages([
+                    'email' => 'Ya existe una cuenta con este correo. Inicia sesión.',
+                ]);
+            }
+            throw $e;
         }
 
         Auth::guard('customer')->login($customer);

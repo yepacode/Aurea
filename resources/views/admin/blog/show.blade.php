@@ -39,7 +39,7 @@
             @endif
 
             <div class="prose prose-sm max-w-none text-gray-700">
-                {!! $post->content !!}
+                {!! \App\Support\SafeHtml::sanitize($post->content) !!}
             </div>
         </div>
 

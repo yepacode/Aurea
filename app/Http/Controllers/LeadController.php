@@ -32,6 +32,14 @@ class LeadController extends Controller
 
         $redirect = $request->input('redirect', url()->previous());
 
+        // Cierre de open-redirect: solo permitir rutas del mismo host o
+        // relativas (sin host). Cualquier destino externo cae a home.
+        $appHost      = parse_url((string) config('app.url'), PHP_URL_HOST);
+        $redirectHost = parse_url((string) $redirect, PHP_URL_HOST);
+        if ($redirectHost && $redirectHost !== $appHost) {
+            $redirect = route('home');
+        }
+
         return redirect($redirect)->with('success', '¡Gracias! Te mantendremos informado.');
     }
 }

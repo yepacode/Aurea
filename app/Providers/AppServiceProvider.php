@@ -7,7 +7,11 @@ use App\Models\PaymentSetting;
 use App\Models\Product;
 use App\Models\ShippingSetting;
 use App\Services\CartService;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,11 +30,27 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Fuerza HTTPS en URLs generadas cuando estamos detrás del proxy en
+        // producción (Hostinger termina TLS pero pasa el request como http).
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         $this->applyStripeSettingsFromDatabase();
 
         // Avisos "vuelve a estar disponible" al reponer stock.
         Product::observe(\App\Observers\ProductObserver::class);
         \App\Models\ProductVariant::observe(\App\Observers\ProductVariantObserver::class);
+
+        // ── Rate limiters de endpoints públicos sensibles ──
+        // - auth-attempts: bloquea fuerza bruta contra login/registro/reset.
+        // - public-writes: contiene abuso de leads, avísame, reseñas, cupones.
+        RateLimiter::for('auth-attempts', function (Request $r) {
+            return Limit::perMinute(5)->by($r->ip().'|'.(string) $r->input('email', ''));
+        });
+        RateLimiter::for('public-writes', function (Request $r) {
+            return Limit::perMinute(20)->by($r->ip());
+        });
 
         View::composer('partials.navbar', function ($view) {
             $cart = app(CartService::class);

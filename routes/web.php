@@ -44,7 +44,9 @@ Route::get('/politica-de-cookies', [StorefrontController::class, 'cookies'])->na
 // Catálogo de productos
 Route::get('/productos', [ProductController::class, 'index'])->name('products.index');
 Route::get('/productos/{slug}', [ProductController::class, 'show'])->name('products.show');
-Route::post('/productos/{slug}/resena', [\App\Http\Controllers\ReviewController::class, 'store'])->name('reviews.store');
+Route::post('/productos/{slug}/resena', [\App\Http\Controllers\ReviewController::class, 'store'])
+    ->name('reviews.store')
+    ->middleware('throttle:public-writes');
 
 // Marcas (distribuidora)
 Route::get('/marcas',         [\App\Http\Controllers\BrandController::class, 'index'])->name('brands.index');
@@ -67,7 +69,9 @@ Route::post('/checkout', [CheckoutController::class, 'process'])->name('checkout
 Route::get('/checkout/confirmacion/{order}', [CheckoutController::class, 'confirmation'])->name('checkout.confirmation');
 Route::post('/checkout/create-payment-intent', [CheckoutController::class, 'createPaymentIntent'])->name('checkout.createPaymentIntent');
 Route::post('/checkout/calculate-shipping', [CheckoutController::class, 'calculateShipping'])->name('checkout.calculateShipping');
-Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])->name('checkout.applyCoupon');
+Route::post('/checkout/apply-coupon', [CheckoutController::class, 'applyCoupon'])
+    ->name('checkout.applyCoupon')
+    ->middleware('throttle:public-writes');
 Route::post('/checkout/remove-coupon', [CheckoutController::class, 'removeCoupon'])->name('checkout.removeCoupon');
 
 // Order tracking
@@ -85,15 +89,23 @@ Route::post('/epayco/confirmacion', [EpaycoController::class, 'confirmation'])->
 // ── Cuenta de cliente ──────────────────────────────────────────
 Route::middleware('guest:customer')->group(function () {
     Route::get('/cuenta/registro', [CustomerAuthController::class, 'showRegister'])->name('customer.register');
-    Route::post('/cuenta/registro', [CustomerAuthController::class, 'register'])->name('customer.register.submit');
+    Route::post('/cuenta/registro', [CustomerAuthController::class, 'register'])
+        ->name('customer.register.submit')
+        ->middleware('throttle:auth-attempts');
     Route::get('/cuenta/ingresar', [CustomerAuthController::class, 'showLogin'])->name('customer.login');
-    Route::post('/cuenta/ingresar', [CustomerAuthController::class, 'login'])->name('customer.login.submit');
+    Route::post('/cuenta/ingresar', [CustomerAuthController::class, 'login'])
+        ->name('customer.login.submit')
+        ->middleware('throttle:auth-attempts');
 
     // Recuperar contraseña
     Route::get('/cuenta/olvide-contrasena', [CustomerPasswordController::class, 'showForgot'])->name('customer.password.request');
-    Route::post('/cuenta/olvide-contrasena', [CustomerPasswordController::class, 'sendResetLink'])->name('customer.password.email');
+    Route::post('/cuenta/olvide-contrasena', [CustomerPasswordController::class, 'sendResetLink'])
+        ->name('customer.password.email')
+        ->middleware('throttle:auth-attempts');
     Route::get('/cuenta/restablecer/{token}', [CustomerPasswordController::class, 'showReset'])->name('customer.password.reset');
-    Route::post('/cuenta/restablecer', [CustomerPasswordController::class, 'reset'])->name('customer.password.update');
+    Route::post('/cuenta/restablecer', [CustomerPasswordController::class, 'reset'])
+        ->name('customer.password.update')
+        ->middleware('throttle:auth-attempts');
 });
 
 Route::middleware('auth:customer')->group(function () {
@@ -125,10 +137,14 @@ Route::get('/blog/{slug}', fn (string $slug) => redirect()->route('ritual.show',
     ->name('blog.show');
 
 // Lead capture
-Route::post('/leads', [LeadController::class, 'store'])->name('leads.store');
+Route::post('/leads', [LeadController::class, 'store'])
+    ->name('leads.store')
+    ->middleware('throttle:public-writes');
 
 // "Avísame cuando vuelva" (notificación de stock)
-Route::post('/avisame', [\App\Http\Controllers\StockNotificationController::class, 'store'])->name('stock.notify');
+Route::post('/avisame', [\App\Http\Controllers\StockNotificationController::class, 'store'])
+    ->name('stock.notify')
+    ->middleware('throttle:public-writes');
 
 // Landing pages & Quiz
 Route::get('/landing', [LandingController::class, 'quiz'])->name('landing.quiz');
@@ -184,7 +200,7 @@ Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])
 
 Route::post('/admin/login', [AdminLoginController::class, 'login'])
     ->name('admin.login.submit')
-    ->middleware('guest');
+    ->middleware(['guest', 'throttle:auth-attempts']);
 
 Route::post('/admin/logout', [AdminLoginController::class, 'logout'])
     ->name('admin.logout')

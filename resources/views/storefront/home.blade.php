@@ -2659,7 +2659,7 @@
                     $ctaTitle = preg_replace('/(áureo|Áureo)/u', '<em>$1</em>', $ctaTitle);
                 }
             @endphp
-            {!! $ctaTitle !!}
+            {!! \App\Support\SafeHtml::sanitize($ctaTitle) !!}
         </h2>
         @if($homePage->cta_subtitle)
         <p class="ba-cta__sub" data-anim="fade-up" style="--stagger: 2;">{{ $homePage->cta_subtitle }}</p>

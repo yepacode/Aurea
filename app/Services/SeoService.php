@@ -94,22 +94,56 @@ class SeoService
 
     /**
      * Generate meta tags for a product page.
+     *
+     * Garantiza fallbacks para title, description, og_image, canonical, keywords
+     * y robots incluso si el admin no ha rellenado los campos SEO.
      */
     public function forProduct(Product $product): array
     {
+        // Title: meta_title específico → nombre + marca
         $title = $product->meta_title ?: "{$product->name} | Belleza Áurea";
-        $description = $product->meta_description ?: mb_substr(strip_tags($product->description), 0, 160);
-        $image = is_array($product->images) ? ($product->images[0] ?? null) : null;
+
+        // Description: meta_title específico → descripción recortada → fallback genérico
+        $description = $product->meta_description
+            ?: mb_substr(trim(strip_tags($product->description ?? '')), 0, 155);
+        if (empty($description)) {
+            $description = 'Descubre '.$product->name.' en Belleza Áurea. Insumos y cosmética profesional con envío a toda Colombia.';
+        }
+
+        // Imagen OG: og_image_path del admin → primera imagen del producto → logo de marca
+        $ogImage = null;
+        if (! empty($product->og_image_path)) {
+            $ogImage = asset('storage/'.$product->og_image_path);
+        } elseif (is_array($product->images) && ! empty($product->images[0])) {
+            $ogImage = asset('storage/'.$product->images[0]);
+        } else {
+            $ogImage = asset('img/brand/logo-principal.png');
+        }
 
         $meta = $this->meta(
             $title,
             $description,
-            $image ? asset("storage/{$image}") : null,
+            $ogImage,
             route('products.show', $product->slug),
             'product',
         );
 
-        return $this->applyItemSeo($meta, $product, 'og_image_path', 'twitter_image_path');
+        // applyItemSeo respeta prioridad: si hay valores específicos por-ítem
+        // los usa; si no, mantiene los fallbacks calculados arriba.
+        $meta = $this->applyItemSeo($meta, $product, 'og_image_path', 'twitter_image_path');
+
+        // Keywords: focus_keyword > meta_keywords > categoría + nombre
+        if (empty($meta['keywords'])) {
+            $categoryName = $product->category?->name;
+            $meta['keywords'] = $categoryName
+                ? trim($categoryName.', '.$product->name)
+                : $product->name;
+        }
+
+        // Robots: si el admin marcó noindex/nofollow ya lo aplicó applyItemSeo;
+        // si no, index,follow por defecto (ya lo trae meta()).
+
+        return $meta;
     }
 
     /**

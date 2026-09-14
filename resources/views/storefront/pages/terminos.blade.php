@@ -59,7 +59,7 @@
                 if ($city) { $t1 .= ', con domicilio en '.e($city).', '.e($country); }
                 $t1 .= ' (en adelante, «'.e($brand).'», «nosotros» o «el titular»).';
             @endphp
-            <p>{!! $t1 !!}</p>
+            <p>{!! \App\Support\SafeHtml::sanitize($t1) !!}</p>
             <p>Al navegar, registrarse o realizar una compra en este sitio, el usuario declara que ha leído, entendido y aceptado íntegramente estos Términos y Condiciones, así como la <a href="{{ route('legal.privacy') }}">Política de Privacidad</a> y la <a href="{{ route('legal.cookies') }}">Política de Cookies</a>. Si no está de acuerdo, debe abstenerse de utilizar el sitio.</p>
 
             <h2 id="t2"><span class="num">2.</span>Objeto</h2>

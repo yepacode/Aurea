@@ -38,12 +38,12 @@
                     </h2>
                 </div>
                 <div class="prose prose-sm text-text-muted leading-relaxed max-w-none">
-                    {!! $page->shipping_content ?? '<p>Realizamos envíos a todo el territorio nacional.</p>
+                    {!! \App\Support\SafeHtml::sanitize($page->shipping_content ?? '<p>Realizamos envíos a todo el territorio nacional.</p>
                     <ul>
                         <li>El costo de envío y el monto para <strong>envío gratis</strong> se calculan automáticamente en el carrito según tu zona.</li>
                         <li><strong>Tiempo de entrega:</strong> 2 a 6 días hábiles según tu ubicación.</li>
                         <li>Recibirás la guía para rastrear tu pedido en cuanto sea despachado.</li>
-                    </ul>' !!}
+                    </ul>') !!}
                 </div>
             </div>
 
@@ -60,13 +60,13 @@
                     </h2>
                 </div>
                 <div class="prose prose-sm text-text-muted leading-relaxed max-w-none">
-                    {!! $page->returns_content ?? '<p>Cuentas con el <strong>derecho de retracto</strong>: tienes 5 días hábiles desde que recibes tu pedido para solicitar la devolución.</p>
+                    {!! \App\Support\SafeHtml::sanitize($page->returns_content ?? '<p>Cuentas con el <strong>derecho de retracto</strong>: tienes 5 días hábiles desde que recibes tu pedido para solicitar la devolución.</p>
                     <ul>
                         <li>El producto debe estar sin usar y en su empaque original.</li>
                         <li>Por higiene, algunos productos de uso personal no admiten devolución una vez abiertos.</li>
                         <li>Escríbenos con tu número de pedido y te guiamos en todo el proceso.</li>
                         <li>El reembolso se procesa una vez recibamos y revisemos el producto.</li>
-                    </ul>' !!}
+                    </ul>') !!}
                 </div>
             </div>
 
@@ -83,12 +83,12 @@
                     </h2>
                 </div>
                 <div class="prose prose-sm text-text-muted leading-relaxed max-w-none">
-                    {!! $page->warranty_content ?? '<p>Todos nuestros productos cuentan con la <strong>garantía legal</strong> por defectos de calidad o idoneidad.</p>
+                    {!! \App\Support\SafeHtml::sanitize($page->warranty_content ?? '<p>Todos nuestros productos cuentan con la <strong>garantía legal</strong> por defectos de calidad o idoneidad.</p>
                     <ul>
                         <li>Cubre defectos de fabricación del producto.</li>
                         <li>No cubre daños por mal uso o manipulación inadecuada.</li>
                         <li>Para hacerla efectiva, escríbenos con fotos y tu número de pedido.</li>
-                    </ul>' !!}
+                    </ul>') !!}
                 </div>
             </div>
 

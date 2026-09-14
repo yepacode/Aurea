@@ -186,7 +186,7 @@
     {{-- ── Main column ── --}}
     <main>
         <div class="article-content">
-            {!! $post->content !!}
+            {!! \App\Support\SafeHtml::sanitize($post->content) !!}
         </div>
 
         {{-- Share bar --}}
