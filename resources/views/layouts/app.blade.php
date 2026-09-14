@@ -264,69 +264,8 @@
     {{-- Footer --}}
     @include('partials.footer')
 
-    {{-- WhatsApp floating button — 100% CSS, sin recuadro: burbuja en verde de marca + ramitas de olivo doradas + brillantitos --}}
-    <style>
-        .ba-wa{position:fixed;bottom:20px;right:20px;z-index:9999;width:84px;height:84px;display:block;text-decoration:none;animation:ba-wa-float 5s ease-in-out infinite;}
-        @keyframes ba-wa-float{0%,100%{transform:translateY(0);}50%{transform:translateY(-5px);}}
-        .ba-wa__svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 9px 14px rgba(46,42,38,.32));transition:transform .35s cubic-bezier(.2,.8,.3,1);}
-        .ba-wa:hover .ba-wa__svg{transform:scale(1.08) rotate(-2deg);}
-        .ba-wa .wa-spk{transform-box:fill-box;transform-origin:center;animation:ba-wa-tw 2.6s ease-in-out infinite;}
-        .ba-wa .wa-spk.s2{animation-delay:.7s;}
-        .ba-wa .wa-spk.s3{animation-delay:1.4s;}
-        .ba-wa .wa-spk.s4{animation-delay:2s;}
-        @keyframes ba-wa-tw{0%,100%{opacity:.15;transform:scale(.6);}50%{opacity:1;transform:scale(1);}}
-        .ba-wa__tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%) translateX(8px);background:#2E2A26;color:#F7F3ED;font-family:'Playfair Display',serif;font-size:13px;font-style:italic;padding:9px 16px;border-radius:9999px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .3s ease, transform .3s ease;box-shadow:0 8px 20px rgba(46,42,38,0.3);border:1px solid rgba(217,181,109,0.35);}
-        .ba-wa__tip::after{content:"";position:absolute;left:100%;top:50%;transform:translateY(-50%);border:6px solid transparent;border-left-color:#2E2A26;}
-        .ba-wa:hover .ba-wa__tip{opacity:1;transform:translateY(-50%) translateX(0);}
-        @media (prefers-reduced-motion: reduce){.ba-wa,.ba-wa .wa-spk{animation:none;}}
-        @media (max-width:480px){
-            .ba-wa{width:68px;height:68px;bottom:14px;right:14px;}
-            .ba-wa__tip{display:none;}
-        }
-    </style>
-    <a href="{{ \App\Models\ContactPageSetting::whatsappUrl() }}" target="_blank" rel="noopener"
-       aria-label="Escríbenos por WhatsApp" class="ba-wa">
-        <span class="ba-wa__tip">¿Hablamos?</span>
-        <svg class="ba-wa__svg" viewBox="0 0 84 84" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <linearGradient id="waGreen" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stop-color="#AFB99C"/><stop offset=".55" stop-color="#8A9A73"/><stop offset="1" stop-color="#6E7C55"/>
-                </linearGradient>
-                <linearGradient id="waGold" x1="0" y1="1" x2="1" y2="0">
-                    <stop offset="0" stop-color="#BE9A53"/><stop offset="1" stop-color="#EBD298"/>
-                </linearGradient>
-            </defs>
-            {{-- Corona de laurel: dos ramas que abrazan la burbuja (estilo del logo) --}}
-            <g stroke="url(#waGold)" stroke-width="1.5" fill="none" stroke-linecap="round">
-                <path d="M42 79 C30 77 20 67 16 51 C14.6 45 14 39.5 14.6 34"/>
-                <path d="M42 79 C54 77 64 67 68 51 C69.4 45 70 39.5 69.4 34"/>
-            </g>
-            <g fill="url(#waGold)">
-                {{-- hojas rama izquierda --}}
-                <ellipse cx="34" cy="75.5" rx="4.2" ry="1.7" transform="rotate(26 34 75.5)"/>
-                <ellipse cx="24.5" cy="68.5" rx="4.4" ry="1.8" transform="rotate(48 24.5 68.5)"/>
-                <ellipse cx="18.5" cy="58.5" rx="4.2" ry="1.7" transform="rotate(68 18.5 58.5)"/>
-                <ellipse cx="15.6" cy="47.5" rx="3.7" ry="1.55" transform="rotate(83 15.6 47.5)"/>
-                <ellipse cx="14.7" cy="37.5" rx="3.1" ry="1.4" transform="rotate(92 14.7 37.5)"/>
-                {{-- hojas rama derecha (espejo) --}}
-                <ellipse cx="50" cy="75.5" rx="4.2" ry="1.7" transform="rotate(-26 50 75.5)"/>
-                <ellipse cx="59.5" cy="68.5" rx="4.4" ry="1.8" transform="rotate(-48 59.5 68.5)"/>
-                <ellipse cx="65.5" cy="58.5" rx="4.2" ry="1.7" transform="rotate(-68 65.5 58.5)"/>
-                <ellipse cx="68.4" cy="47.5" rx="3.7" ry="1.55" transform="rotate(-83 68.4 47.5)"/>
-                <ellipse cx="69.3" cy="37.5" rx="3.1" ry="1.4" transform="rotate(-92 69.3 37.5)"/>
-            </g>
-            {{-- Burbuja de WhatsApp en verde de marca + auricular crema --}}
-            <svg x="20" y="16" width="44" height="44" viewBox="0 0 24 24">
-                <path fill="url(#waGreen)" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91C21.95 6.45 17.5 2 12.04 2z"/>
-                <path fill="#FBF7EE" d="M17.5 14.38c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.22 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.19 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35z"/>
-            </svg>
-            {{-- Brillantitos --}}
-            <g transform="translate(19,26)"><path class="wa-spk s1" fill="#EBD298" d="M0-5 C.8-1.5 1.5-.8 5 0 C1.5.8 .8 1.5 0 5 C-.8 1.5 -1.5 .8 -5 0 C-1.5-.8 -.8-1.5 0-5 Z"/></g>
-            <g transform="translate(67,56) scale(.82)"><path class="wa-spk s2" fill="#EBD298" d="M0-5 C.8-1.5 1.5-.8 5 0 C1.5.8 .8 1.5 0 5 C-.8 1.5 -1.5 .8 -5 0 C-1.5-.8 -.8-1.5 0-5 Z"/></g>
-            <g transform="translate(65,19) scale(.55)"><path class="wa-spk s3" fill="#F0DFA8" d="M0-5 C.8-1.5 1.5-.8 5 0 C1.5.8 .8 1.5 0 5 C-.8 1.5 -1.5 .8 -5 0 C-1.5-.8 -.8-1.5 0-5 Z"/></g>
-            <g transform="translate(27,65) scale(.6)"><path class="wa-spk s4" fill="#F0DFA8" d="M0-5 C.8-1.5 1.5-.8 5 0 C1.5.8 .8 1.5 0 5 C-.8 1.5 -1.5 .8 -5 0 C-1.5-.8 -.8-1.5 0-5 Z"/></g>
-        </svg>
-    </a>
+    {{-- WhatsApp: widget con FAB colapsado + popup expandido (online/offline según horario) --}}
+    @include('partials.whatsapp-widget')
 
     {{-- Activa el modo "reveal" solo cuando hay JS (evita contenido invisible si JS falla) --}}
     <script>document.documentElement.classList.add('reveal-ready');</script>

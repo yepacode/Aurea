@@ -125,6 +125,11 @@ Route::put('pages/blue-light', [AdminBlueLightPageController::class, 'update'])-
 Route::get('pages/contact', [AdminContactPageController::class, 'edit'])->name('pages.contact.edit');
 Route::put('pages/contact', [AdminContactPageController::class, 'update'])->name('pages.contact.update');
 
+// Widget WhatsApp — atajo directo al bloque de configuración del widget
+Route::get('whatsapp', function () {
+    return redirect(route('admin.pages.contact.edit') . '#whatsapp-widget', 302);
+})->name('whatsapp.edit');
+
 // Shipping & returns page editor
 Route::get('pages/shipping-returns', [AdminShippingReturnsPageController::class, 'edit'])->name('pages.shipping-returns.edit');
 Route::put('pages/shipping-returns', [AdminShippingReturnsPageController::class, 'update'])->name('pages.shipping-returns.update');
@@ -143,6 +148,9 @@ Route::get('customers/{customer}', [\App\Http\Controllers\Admin\CustomerAdminCon
 // Stock notifications (avisos de "avísame cuando vuelva")
 Route::get('stock-notifications', [\App\Http\Controllers\Admin\StockNotificationAdminController::class, 'index'])->name('stock-notifications.index');
 Route::delete('stock-notifications/{stockNotification}', [\App\Http\Controllers\Admin\StockNotificationAdminController::class, 'destroy'])->name('stock-notifications.destroy');
+
+// NPS post-compra (dashboard)
+Route::get('nps', [\App\Http\Controllers\Admin\NpsAdminController::class, 'index'])->name('nps.index');
 
 // SEO settings
 Route::get('seo', [AdminSeoController::class, 'index'])->name('seo.index');

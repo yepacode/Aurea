@@ -12,6 +12,11 @@
 
     <p class="text-sm text-gray-500 mb-6">Edita el contenido de la página de contacto. Los cambios se reflejan inmediatamente.</p>
 
+    @php
+        $__waHours = $page->whatsappHours();
+        $__waDayLabels = \App\Models\ContactPageSetting::DAY_LABELS_ES;
+    @endphp
+
     <form method="POST" action="{{ route('admin.pages.contact.update') }}">
         @method('PUT')
         @csrf
@@ -101,6 +106,102 @@
                             <p class="text-xs text-gray-400 mt-1">Texto que verá el cliente cargado en WhatsApp al hacer clic.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ═══════════ WIDGET WHATSAPP ═══════════ --}}
+        <div id="whatsapp-widget" class="bg-white rounded-xl shadow-sm border border-gray-200 mb-4">
+            <button type="button" @click="toggle('whatsapp')"
+                    class="w-full flex items-center justify-between px-6 py-4 text-left">
+                <h3 class="text-base font-semibold text-gray-900">Widget flotante de WhatsApp</h3>
+                <svg :class="openSection === 'whatsapp' && 'rotate-180'" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                </svg>
+            </button>
+            <div x-show="openSection === 'whatsapp'" x-collapse class="px-6 pb-6 space-y-5">
+                <p class="text-xs text-gray-500 -mt-1">
+                    Configura el popup del widget: mensajes de bienvenida (en línea / fuera de horario), horario por día
+                    (zona <strong>America/Bogotá</strong>) y visibilidad. El indicador <em>En línea</em> se calcula automáticamente.
+                </p>
+
+                {{-- Encender / apagar --}}
+                <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+                    <input type="hidden" name="whatsapp_widget_enabled" value="0">
+                    <input type="checkbox" name="whatsapp_widget_enabled" value="1"
+                           {{ $page->whatsapp_widget_enabled ? 'checked' : '' }}
+                           class="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500">
+                    <span class="text-sm text-gray-800">Mostrar widget flotante en la tienda</span>
+                </label>
+
+                {{-- Mensajes --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mensaje de bienvenida — En línea</label>
+                        <textarea name="whatsapp_welcome_online" rows="3"
+                                  placeholder="¡Hola! Somos Belleza Áurea. Escríbenos y te respondemos en minutos."
+                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">{{ $page->whatsapp_welcome_online }}</textarea>
+                        <p class="text-xs text-gray-400 mt-1">Se muestra cuando estamos dentro del horario configurado.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Autoresponse — Fuera de horario</label>
+                        <textarea name="whatsapp_welcome_offline" rows="3"
+                                  placeholder="¡Hola! Ahora estamos fuera de horario. Escríbenos y te respondemos apenas abramos."
+                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">{{ $page->whatsapp_welcome_offline }}</textarea>
+                        <p class="text-xs text-gray-400 mt-1">Se muestra cuando el widget detecta que estamos fuera del horario configurado.</p>
+                    </div>
+                </div>
+
+                {{-- Horario semanal --}}
+                <div class="border-t pt-4">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-2">Horario de atención (America/Bogotá)</h4>
+                    <p class="text-xs text-gray-500 mb-3">Marca los días activos y define apertura/cierre en formato 24h.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-left text-gray-500 border-b">
+                                    <th class="py-2 pr-3 font-medium">Día</th>
+                                    <th class="py-2 pr-3 font-medium">Activo</th>
+                                    <th class="py-2 pr-3 font-medium">Abre</th>
+                                    <th class="py-2 pr-3 font-medium">Cierra</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($__waHours as $__day => $__slot)
+                                    <tr class="border-b last:border-b-0">
+                                        <td class="py-2 pr-3 text-gray-800">{{ $__waDayLabels[$__day] }}</td>
+                                        <td class="py-2 pr-3">
+                                            {{-- hidden 0 + checkbox 1 permite que el navegador envíe siempre un valor --}}
+                                            <input type="hidden" name="whatsapp_hours[{{ $__day }}][enabled]" value="0">
+                                            <input type="checkbox" name="whatsapp_hours[{{ $__day }}][enabled]" value="1"
+                                                   {{ $__slot['enabled'] ? 'checked' : '' }}
+                                                   class="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500">
+                                        </td>
+                                        <td class="py-2 pr-3">
+                                            <input type="time" name="whatsapp_hours[{{ $__day }}][open]"
+                                                   value="{{ $__slot['open'] }}"
+                                                   class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                        </td>
+                                        <td class="py-2 pr-3">
+                                            <input type="time" name="whatsapp_hours[{{ $__day }}][close]"
+                                                   value="{{ $__slot['close'] }}"
+                                                   class="rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-2 rounded-lg border border-yellow-200 bg-yellow-50 px-3 py-2 text-xs text-yellow-800">
+                    Estado actual (según horario configurado):
+                    @if($page->isWhatsappOnline())
+                        <strong class="text-green-700">En línea</strong>
+                    @else
+                        <strong class="text-gray-600">Fuera de horario</strong>
+                    @endif
+                    · Resumen: {{ $page->whatsappHoursSummary() }}
                 </div>
             </div>
         </div>

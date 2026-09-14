@@ -483,6 +483,24 @@
                             </div>
                         @endif
                     </dl>
+
+                    {{-- Puntos de fidelidad otorgados con este pedido (si aplica).
+                         Solo mostramos si hay cliente registrado; a los invitados
+                         no se les acredita. --}}
+                    @if($order->customer_id)
+                        @php
+                            $earnedPoints = (int) \App\Models\LoyaltyPoint::where('order_id', $order->id)
+                                ->where('type', 'earned')
+                                ->sum('points');
+                        @endphp
+                        <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                            <span class="text-xs text-gray-500">Puntos ganados con este pedido</span>
+                            <span class="inline-flex items-center gap-1 text-sm font-semibold {{ $earnedPoints > 0 ? 'text-amber-700' : 'text-gray-400' }}">
+                                <span aria-hidden="true">⭐</span>
+                                {{ number_format($earnedPoints, 0, ',', '.') }}
+                            </span>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- Shipping address --}}

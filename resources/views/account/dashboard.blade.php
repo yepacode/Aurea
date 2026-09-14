@@ -38,7 +38,25 @@
             </h1>
             <p style="margin:8px 0 0;color:#6B6157;font-size:15px;">Tienes {{ $ordersCount }} pedido(s)</p>
 
-            <div style="margin-top:26px;background:#FFFFFF;border:1px solid #E5DCC9;border-radius:18px;padding:clamp(20px,3vw,28px);box-shadow:0 18px 44px -34px rgba(120,92,44,.45);">
+            {{-- Widget de puntos de fidelidad --}}
+            @php $loyaltyBalance = $customer->pointsBalance(); @endphp
+            <a href="{{ route('account.loyalty') }}"
+               style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-top:22px;background:linear-gradient(135deg,#FFF8E8,#F6E6C0 55%,#EBCF90);border:1px solid #E0BE77;border-radius:18px;padding:18px 22px;text-decoration:none;color:inherit;box-shadow:0 18px 44px -34px rgba(190,154,83,.55);transition:transform .18s,box-shadow .18s;"
+               onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 22px 52px -30px rgba(190,154,83,.7)'"
+               onmouseout="this.style.transform='none';this.style.boxShadow='0 18px 44px -34px rgba(190,154,83,.55)'">
+                <div style="min-width:0;">
+                    <p style="margin:0;font-family:'Montserrat',sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A6E2E;font-weight:700;">
+                        Mis puntos <span aria-hidden="true">⭐</span>
+                    </p>
+                    <p style="margin:6px 0 0;font-family:'Playfair Display',serif;font-size:28px;font-weight:800;color:#7A5E1C;line-height:1;">
+                        {{ number_format($loyaltyBalance, 0, ',', '.') }}
+                        <span style="font-size:13px;font-weight:600;color:#8A6E2E;letter-spacing:.06em;">puntos</span>
+                    </p>
+                </div>
+                <span style="font-size:13px;font-weight:600;color:#7A5E1C;white-space:nowrap;">Ver historial →</span>
+            </a>
+
+            <div style="margin-top:22px;background:#FFFFFF;border:1px solid #E5DCC9;border-radius:18px;padding:clamp(20px,3vw,28px);box-shadow:0 18px 44px -34px rgba(120,92,44,.45);">
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
                     <h2 style="font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:#2E2A26;margin:0;">Pedidos recientes</h2>
                     @if($recentOrders->isNotEmpty())

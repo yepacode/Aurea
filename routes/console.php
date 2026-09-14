@@ -13,3 +13,6 @@ Schedule::command('orders:request-reviews')->dailyAt('10:00');
 
 // Carrito abandonado: recordatorio 1h+ después de la última actividad (una sola vez).
 Schedule::command('carts:remind-abandoned')->hourly();
+
+// NPS post-compra: pide feedback 15-20 días después del pago (una sola vez por pedido).
+Schedule::command('nps:send')->dailyAt('11:00');

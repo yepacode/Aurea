@@ -49,6 +49,41 @@ class Customer extends Authenticatable
         return $this->belongsToMany(Product::class, 'wishlist_items')->withTimestamps();
     }
 
+    /**
+     * Todos los movimientos de puntos de fidelidad del cliente.
+     */
+    public function loyaltyPoints(): HasMany
+    {
+        return $this->hasMany(LoyaltyPoint::class);
+    }
+
+    /**
+     * Balance de puntos disponibles: suma solo los movimientos activos
+     * (los que no han expirado). Fase 1 solo suma "earned", pero dejamos
+     * la fórmula genérica para que redeemed/expired/adjusted resten cuando
+     * el sprint de canje entre en línea.
+     */
+    public function pointsBalance(): int
+    {
+        return (int) $this->loyaltyPoints()->active()->sum('points');
+    }
+
+    /**
+     * Puntos ganados en total (histórico, incluye expirados).
+     */
+    public function pointsEarnedTotal(): int
+    {
+        return (int) $this->loyaltyPoints()->earned()->sum('points');
+    }
+
+    /**
+     * Puntos ya canjeados por el cliente (valor absoluto positivo).
+     */
+    public function pointsRedeemedTotal(): int
+    {
+        return (int) abs((int) $this->loyaltyPoints()->redeemed()->sum('points'));
+    }
+
     public function hasInWishlist(int $productId): bool
     {
         return $this->wishlist()->where('products.id', $productId)->exists();

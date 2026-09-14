@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\AnalyticsSetting;
 use App\Models\DiscountCode;
 use App\Models\PaymentSetting;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\ShippingSetting;
 use App\Services\CartService;
@@ -43,6 +44,10 @@ class AppServiceProvider extends ServiceProvider
         // Avisos "vuelve a estar disponible" al reponer stock.
         Product::observe(\App\Observers\ProductObserver::class);
         \App\Models\ProductVariant::observe(\App\Observers\ProductVariantObserver::class);
+
+        // Programa de puntos de fidelidad: al marcarse el pago como 'paid'
+        // se acredita al cliente. Ver App\Observers\OrderObserver.
+        Order::observe(\App\Observers\OrderObserver::class);
 
         // ── Rate limiters de endpoints públicos sensibles ──
         // - auth-attempts: bloquea fuerza bruta contra login/registro/reset.

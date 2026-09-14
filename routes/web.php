@@ -138,6 +138,10 @@ Route::middleware('auth:customer')->group(function () {
     Route::post('/favoritos/toggle', [\App\Http\Controllers\Account\WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::delete('/cuenta/favoritos/{product}', [\App\Http\Controllers\Account\WishlistController::class, 'destroy'])->name('wishlist.destroy');
 
+    // Programa de puntos (fase 1: solo ganancia y visibilidad)
+    Route::get('/cuenta/puntos', [\App\Http\Controllers\Account\LoyaltyController::class, 'index'])
+        ->name('account.loyalty');
+
     // Direcciones guardadas
     Route::get('/cuenta/direcciones', [AddressController::class, 'index'])->name('account.addresses');
     Route::post('/cuenta/direcciones', [AddressController::class, 'store'])->name('account.addresses.store');
@@ -161,6 +165,18 @@ Route::post('/leads', [LeadController::class, 'store'])
 // "Avísame cuando vuelva" (notificación de stock)
 Route::post('/avisame', [\App\Http\Controllers\StockNotificationController::class, 'store'])
     ->name('stock.notify')
+    ->middleware('throttle:public-writes');
+
+// NPS post-compra (formulario público sin login; el token del correo autoriza).
+Route::get('/nps/gracias/{token}', [\App\Http\Controllers\NpsController::class, 'thanks'])
+    ->name('nps.thanks')
+    ->where('token', '[A-Za-z0-9]{40}');
+Route::get('/nps/{token}/{score?}', [\App\Http\Controllers\NpsController::class, 'respond'])
+    ->name('nps.respond')
+    ->where(['token' => '[A-Za-z0-9]{40}', 'score' => '[0-9]|10']);
+Route::post('/nps/{token}', [\App\Http\Controllers\NpsController::class, 'submit'])
+    ->name('nps.submit')
+    ->where('token', '[A-Za-z0-9]{40}')
     ->middleware('throttle:public-writes');
 
 // Landing pages & Quiz

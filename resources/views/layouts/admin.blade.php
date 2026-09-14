@@ -166,6 +166,13 @@
                         </svg>
                         <span x-show="sidebarOpen">Descuentos</span>
                     </a>
+                    <a href="{{ route('admin.nps.index') }}"
+                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.nps.*') ? 'bg-white/10' : '' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M7 14l3-3 4 4 5-6"/>
+                        </svg>
+                        <span x-show="sidebarOpen">NPS 📊</span>
+                    </a>
                 </div>
 
                 {{-- ── GRUPO: Contenido ── --}}
