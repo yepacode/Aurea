@@ -9,6 +9,7 @@
     $navItems = [
         ['route' => 'account.dashboard', 'label' => 'Mi cuenta',   'active' => request()->routeIs('account.dashboard')],
         ['route' => 'account.orders',    'label' => 'Mis pedidos', 'active' => request()->routeIs('account.orders') || request()->routeIs('account.order')],
+        ['route' => 'account.subscriptions', 'label' => 'Mis suscripciones 🔄', 'active' => request()->routeIs('account.subscriptions*')],
         ['route' => 'account.wishlist',  'label' => 'Mis favoritos', 'active' => request()->routeIs('account.wishlist')],
         ['route' => 'account.loyalty',   'label' => 'Mis puntos ⭐', 'active' => request()->routeIs('account.loyalty')],
         ['route' => 'account.referrals', 'label' => 'Referidos 💛', 'active' => request()->routeIs('account.referrals')],

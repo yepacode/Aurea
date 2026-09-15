@@ -1,22 +1,33 @@
 <!DOCTYPE html>
-<html lang="es" class="scroll-smooth">
+<html lang="{{ app()->getLocale() }}" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- hreflang para SEO multi-idioma (ES = default sin prefijo, EN = /en/…) --}}
+    @foreach(config('app.available_locales', []) as $__lc => $__lname)
+        <link rel="alternate" hreflang="{{ $__lc }}" href="{{ url(switch_locale_url($__lc)) }}">
+    @endforeach
+    <link rel="alternate" hreflang="x-default" href="{{ url(switch_locale_url(config('app.locale', 'es'))) }}">
+
     {{-- SEO Meta (overridable per page) --}}
     @php
         $__defaultTitle = 'Belleza Áurea | Cosmética natural, elegante y atemporal';
         $__defaultDesc  = 'Belleza natural, elegante y atemporal. Skincare, fragancias y rituales de belleza premium en Belleza Áurea.';
-        $__pageTitle    = trim($__env->yieldContent('title', $__defaultTitle));
-        $__pageDesc     = trim($__env->yieldContent('meta_description', $__defaultDesc));
+        // FIX doble-encoding: en Laravel 12 `@section('title', 'X & Y')` (forma
+        // inline) escapa el valor al almacenarlo, y luego {{ }} lo escapa otra
+        // vez → sale `X &amp;amp; Y`. Normalizamos a texto crudo con
+        // html_entity_decode y dejamos que {{ }} haga UN solo escape final.
+        $__decode = fn (string $s): string => html_entity_decode($s, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $__pageTitle    = trim($__decode($__env->yieldContent('title', $__defaultTitle)));
+        $__pageDesc     = trim($__decode($__env->yieldContent('meta_description', $__defaultDesc)));
         // Si la página define og_title/og_description los usamos; si no, caen al title/description reales de la página
         // (esto evita que TODAS las páginas compartan el mismo OG genérico de marca).
-        $__ogTitle       = trim($__env->yieldContent('og_title')) ?: $__pageTitle;
-        $__ogDesc        = trim($__env->yieldContent('og_description')) ?: $__pageDesc;
-        $__twitterTitle  = trim($__env->yieldContent('twitter_title')) ?: $__ogTitle;
-        $__twitterDesc   = trim($__env->yieldContent('twitter_description')) ?: $__ogDesc;
+        $__ogTitle       = trim($__decode($__env->yieldContent('og_title'))) ?: $__pageTitle;
+        $__ogDesc        = trim($__decode($__env->yieldContent('og_description'))) ?: $__pageDesc;
+        $__twitterTitle  = trim($__decode($__env->yieldContent('twitter_title'))) ?: $__ogTitle;
+        $__twitterDesc   = trim($__decode($__env->yieldContent('twitter_description'))) ?: $__ogDesc;
     @endphp
     <title>{{ $__pageTitle }}</title>
     <meta name="description" content="{{ $__pageDesc }}">
@@ -37,7 +48,7 @@
     <meta property="og:image:height" content="@yield('og_image_height', '630')">
     <meta property="og:image:alt" content="@yield('og_image_alt', 'Belleza Áurea — cosmética e insumos de belleza')">
     <meta property="og:site_name" content="Belleza Áurea">
-    <meta property="og:locale" content="es_CO">
+    <meta property="og:locale" content="{{ app()->getLocale() === 'en' ? 'en_US' : 'es_CO' }}">
 
     {{-- Twitter Card --}}
     <meta name="twitter:card" content="@yield('twitter_card', 'summary_large_image')">
@@ -269,6 +280,9 @@
 
     {{-- WhatsApp: widget con FAB colapsado + popup expandido (online/offline según horario) --}}
     @include('partials.whatsapp-widget')
+
+    {{-- Chatbot FAQ con escalada a WhatsApp humano --}}
+    @include('partials.chatbot')
 
     {{-- Activa el modo "reveal" solo cuando hay JS (evita contenido invisible si JS falla) --}}
     <script>document.documentElement.classList.add('reveal-ready');</script>

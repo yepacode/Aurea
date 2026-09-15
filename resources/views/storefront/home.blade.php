@@ -1706,8 +1706,8 @@
                 <span class="l2">{{ $hero->title_line2 ?? 'tu esencia.' }}</span>
             </h1>
             <p class="ae__sub">{{ $hero->subtitle ?? 'Distribución exclusiva de productos de belleza: piel, uñas, accesorios y estética profesional. Calidad garantizada.' }}</p>
-            <a href="{{ $hero->btn_primary_url ?? route('products.index') }}" class="ae__cta">
-                {{ $hero->btn_primary_text ?? 'Ver catálogo completo' }}
+            <a href="{{ $hero->btn_primary_url ?? locale_route('products.index') }}" class="ae__cta">
+                {{ $hero->btn_primary_text ?? (app()->getLocale() === 'en' ? 'Browse the full catalog' : 'Ver catálogo completo') }}
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </a>
         </div>
@@ -1879,6 +1879,75 @@
     @media(max-width:900px){ .ba-container > div[style*="repeat(3"]{grid-template-columns:repeat(2,1fr) !important;} }
     @media(max-width:600px){ .ba-container > div[style*="repeat(3"]{grid-template-columns:1fr !important;} }
 </style>
+@endif
+
+{{-- ============================================================
+     2.6. MÁS VENDIDOS 💛 — productos con más ventas pagadas.
+     Se oculta si aún no hay pedidos pagados o si no hay stock.
+     Card reutiliza el estilo .ba-card del catálogo (más abajo).
+     ============================================================ --}}
+@if(($bestSellers ?? collect())->isNotEmpty())
+<section class="ba-section ba-section--cream-soft" aria-labelledby="bestsellers-title">
+    <div class="ba-container">
+        <header class="ba-section-head" data-anim="fade-up">
+            <span class="ba-section-head__label">— Más vendidos 💛</span>
+            <h2 id="bestsellers-title" class="ba-section-head__title">Los favoritos de la comunidad</h2>
+            <p class="ba-section-head__sub">Los productos que más se llevan nuestras clientas — probados, amados y recomprados.</p>
+            <div class="ba-divider"></div>
+        </header>
+
+        <div class="ba-prods">
+            @foreach($bestSellers->take(8) as $i => $p)
+                @php
+                    $discountPct = ($p->compare_price && $p->compare_price > $p->price)
+                        ? (int) round((($p->compare_price - $p->price) / $p->compare_price) * 100)
+                        : 0;
+                    $isNew = $p->created_at && $p->created_at->gt(now()->subDays(30));
+                @endphp
+                <a href="{{ route('products.show', ['slug' => $p->slug]) }}"
+                   class="ba-card"
+                   data-anim="fade-up"
+                   style="--stagger: {{ $i % 4 }};">
+                    <div class="ba-card__img {{ empty($p->images) ? 'ba-card__img--ph' : '' }}">
+                        <span class="ba-card__badge ba-card__badge--featured" style="background:linear-gradient(135deg,#D9B56D,#BE9A53);color:#3B310F;">
+                            #{{ $i + 1 }} en ventas
+                        </span>
+                        @if(!empty($p->images))
+                            <img src="{{ asset('storage/'.$p->images[0]) }}" alt="{{ $p->name }}" loading="lazy">
+                        @else
+                            <span>Próximamente</span>
+                        @endif
+                        <div class="ba-card__overlay">
+                            <span class="ba-card__quick">
+                                Ver detalle
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                            </span>
+                        </div>
+                    </div>
+                    @if($p->brand)
+                        <p class="ba-card__brand">{{ $p->brand->name }}</p>
+                    @elseif($p->category)
+                        <p class="ba-card__cat">{{ $p->category->name }}</p>
+                    @endif
+                    <h3 class="ba-card__name">{{ $p->name }}</h3>
+                    <div class="ba-card__price-row">
+                        <span class="ba-card__price">${{ number_format($p->price, 0, ',', '.') }}</span>
+                        @if($p->compare_price && $p->compare_price > $p->price)
+                            <span class="ba-card__compare">${{ number_format($p->compare_price, 0, ',', '.') }}</span>
+                            @if($discountPct >= 5)
+                                <span class="ba-card__discount">-{{ $discountPct }}%</span>
+                            @endif
+                        @endif
+                    </div>
+                </a>
+            @endforeach
+        </div>
+
+        <div style="text-align:center;margin-top:52px;" data-anim="fade-up">
+            <a href="{{ route('products.index') }}" class="ba-btn-ghost">Ver todo el catálogo</a>
+        </div>
+    </div>
+</section>
 @endif
 
 {{-- ============================================================
@@ -2778,8 +2847,18 @@
         @endif
 
         <div class="ba-cta__actions" data-anim="fade-up" style="--stagger: 4;">
-            <a href="{{ route('products.index') }}" class="ba-btn-gold">{{ $homePage->cta_btn_primary_text ?? 'Comprar ahora' }}</a>
-            <a href="{{ route('landing.quiz') }}" class="ba-btn-outline-light">{{ $homePage->cta_btn_secondary_text ?? 'Quiz de piel' }}</a>
+            @php
+                // Enrutamiento inteligente: cada botón apunta a la página que su texto describe.
+                // Si el admin usa "quiz" en el texto → landing.quiz; en otro caso → catálogo.
+                $ctaPrimaryText   = $homePage->cta_btn_primary_text   ?? 'Comprar ahora';
+                $ctaSecondaryText = $homePage->cta_btn_secondary_text ?? 'Quiz de piel';
+                $primaryIsQuiz    = str_contains(mb_strtolower($ctaPrimaryText), 'quiz');
+                $secondaryIsQuiz  = str_contains(mb_strtolower($ctaSecondaryText), 'quiz');
+                $ctaPrimaryHref   = $primaryIsQuiz   ? route('landing.quiz') : route('products.index');
+                $ctaSecondaryHref = $secondaryIsQuiz ? route('landing.quiz') : route('products.index');
+            @endphp
+            <a href="{{ $ctaPrimaryHref }}"   class="ba-btn-gold">{{ $ctaPrimaryText }}</a>
+            <a href="{{ $ctaSecondaryHref }}" class="ba-btn-outline-light">{{ $ctaSecondaryText }}</a>
         </div>
 
         @if(!empty($homePage->cta_trust_items))

@@ -86,6 +86,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Available storefront locales
+    |--------------------------------------------------------------------------
+    |
+    | Idiomas soportados en el storefront. El primero es el default y NO
+    | lleva prefijo en la URL; los demás sí (ej: /en/*). Usado por el
+    | middleware SetLocale, el switcher del navbar y el helper locale_url().
+    |
+    */
+
+    'available_locales' => [
+        'es' => 'Español',
+        'en' => 'English',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------
     |

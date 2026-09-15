@@ -10,6 +10,8 @@ use App\Models\ProductVariant;
 use App\Models\SeoSetting;
 use App\Services\SeoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -81,16 +83,39 @@ class ProductController extends Controller
         $products = $query->paginate(24)->withQueryString();
 
         // ── Datos para los filtros ──
+        // Conteos agregados (categorías + marcas) en 2 queries en vez de N+N.
+        // Se cachean 5 min: los conteos del sidebar no necesitan ser al segundo.
+        [$categoryCounts, $brandCounts] = Cache::remember('catalog.sidebar-counts', 300, function () {
+            $stockCondition = function ($q) {
+                $q->where('stock', '>', 0)
+                  ->orWhereHas('variants', fn ($v) => $v->where('is_active', true)->where('stock', '>', 0));
+            };
+
+            $categoryCounts = Product::query()
+                ->active()
+                ->select('category_id', DB::raw('COUNT(*) as cnt'))
+                ->whereNotNull('category_id')
+                ->where($stockCondition)
+                ->groupBy('category_id')
+                ->pluck('cnt', 'category_id')
+                ->toArray();
+
+            $brandCounts = Product::query()
+                ->active()
+                ->select('brand_id', DB::raw('COUNT(*) as cnt'))
+                ->whereNotNull('brand_id')
+                ->where($stockCondition)
+                ->groupBy('brand_id')
+                ->pluck('cnt', 'brand_id')
+                ->toArray();
+
+            return [$categoryCounts, $brandCounts];
+        });
+
         // Categorías con conteo de productos activos con stock
         $categoriasFiltro = Category::orderBy('sort_order')->orderBy('name')->get()
-            ->map(function ($c) {
-                $count = Product::active()
-                    ->where('category_id', $c->id)
-                    ->where(function ($q) {
-                        $q->where('stock', '>', 0)
-                          ->orWhereHas('variants', fn ($v) => $v->where('is_active', true)->where('stock', '>', 0));
-                    })->count();
-                $c->products_count = $count;
+            ->map(function ($c) use ($categoryCounts) {
+                $c->products_count = (int) ($categoryCounts[$c->id] ?? 0);
                 return $c;
             })
             ->filter(fn ($c) => $c->products_count > 0)
@@ -98,14 +123,8 @@ class ProductController extends Controller
 
         // Marcas con conteo (solo si hay productos con marca)
         $marcasFiltro = \App\Models\Brand::orderBy('name')->get()
-            ->map(function ($b) {
-                $count = Product::active()
-                    ->where('brand_id', $b->id)
-                    ->where(function ($q) {
-                        $q->where('stock', '>', 0)
-                          ->orWhereHas('variants', fn ($v) => $v->where('is_active', true)->where('stock', '>', 0));
-                    })->count();
-                $b->products_count = $count;
+            ->map(function ($b) use ($brandCounts) {
+                $b->products_count = (int) ($brandCounts[$b->id] ?? 0);
                 return $b;
             })
             ->filter(fn ($b) => $b->products_count > 0)

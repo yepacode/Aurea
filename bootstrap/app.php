@@ -20,12 +20,16 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdmin::class,
+            'setlocale' => \App\Http\Middleware\SetLocale::class,
         ]);
 
         // Programa "Recomienda y gana": captura ?ref=XXX en sesión + cookie 30 días.
         // Se agrega al grupo web para que corra en todas las páginas públicas.
+        // SetLocale también corre en todas las públicas para respetar sesión/cookie
+        // aunque la ruta no lleve prefijo /en/ (así la elección persiste al navegar).
         $middleware->web(append: [
             \App\Http\Middleware\CaptureReferral::class,
+            \App\Http\Middleware\SetLocale::class,
         ]);
 
         // Cualquier invitado (a /cuenta o a /admin) va al login unificado.

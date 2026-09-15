@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Checkout | Belleza Áurea')
+@section('title', __('storefront.checkout.title') . ' | Belleza Áurea')
 @section('robots', 'noindex, nofollow')
 
 @section('content')
@@ -98,7 +98,7 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
                 <span style="color:#8E7E70;">Checkout</span>
             </nav>
-            <h1 class="font-brand font-semibold" style="font-family:'Playfair Display',serif;color:#2E2A26;font-size:clamp(30px,4vw,46px);">Finalizar compra</h1>
+            <h1 class="font-brand font-semibold" style="font-family:'Playfair Display',serif;color:#2E2A26;font-size:clamp(30px,4vw,46px);">{{ __('storefront.cart.checkout') }}</h1>
 
             @guest('customer')
             <div style="max-width:900px;margin:16px auto 0;padding:14px 20px;background:linear-gradient(180deg,#FCFAF5,#F6EFE1);border:1px solid rgba(217,181,109,.35);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
@@ -131,7 +131,7 @@
                             <span class="co-head__ic">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"/></svg>
                             </span>
-                            Datos de envío
+                            {{ __('storefront.checkout.shipping_data') }}
                         </h2>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -245,7 +245,7 @@
                             <span class="co-head__ic">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
                             </span>
-                            Método de pago
+                            {{ __('storefront.checkout.payment_method') }}
                         </h2>
 
                         <div class="space-y-3">
@@ -255,7 +255,7 @@
                                 <input type="radio" name="payment_method" x-model="form.payment_method" value="epayco" class="text-primary focus:ring-primary">
                                 <div class="flex-1">
                                     <span class="text-sm font-semibold text-text-dark">PSE, tarjetas, Nequi y efectivo</span>
-                                    <p class="text-xs text-text-muted mt-0.5">Pago seguro con ePayco</p>
+                                    <p class="text-xs text-text-muted mt-0.5">{{ __('storefront.checkout.epayco_desc') }}</p>
                                 </div>
                                 <svg class="w-5 h-5" style="color:#BE9A53;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg>
                             </label>
@@ -278,7 +278,7 @@
                                    :class="form.payment_method === 'cash_on_delivery' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
                                 <input type="radio" name="payment_method" x-model="form.payment_method" value="cash_on_delivery" class="text-primary focus:ring-primary">
                                 <div class="flex-1">
-                                    <span class="text-sm font-semibold text-text-dark">Pago contra entrega</span>
+                                    <span class="text-sm font-semibold text-text-dark">{{ __('storefront.checkout.cod') }}</span>
                                     <p class="text-xs text-text-muted mt-0.5">Paga en efectivo al recibir tu pedido</p>
                                 </div>
                                 <svg class="w-6 h-5" style="color:#BE9A53;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.5 12h3"/></svg>
@@ -402,7 +402,7 @@
                             </div>
                             @endif
                             <div class="flex justify-between">
-                                <span class="text-text-muted">Envío</span>
+                                <span class="text-text-muted">{{ __('storefront.checkout.shipping') }}</span>
                                 <span class="text-text-dark"
                                       x-text="currentShipping > 0 ? money(currentShipping) : 'Gratis'"></span>
                             </div>
@@ -431,7 +431,7 @@
                         <button type="submit" :disabled="processing" class="co-submit">
                             <span x-show="!processing" class="flex items-center justify-center gap-2">
                                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
-                                <span>Confirmar pedido</span>
+                                <span>{{ __('storefront.checkout.confirm') }}</span>
                             </span>
                             <span x-show="processing" class="flex items-center justify-center gap-2">
                                 <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

@@ -15,13 +15,17 @@ class User extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
+     * `is_admin` es un flag de privilegio: NO puede viajar por mass-assignment.
+     * Se asigna siempre de forma explícita (`$user->is_admin = true`) en los
+     * flujos autorizados (seeder / panel admin) para que un `->fill($request->all())`
+     * jamás pueda escalar a un usuario a admin.
+     *
      * @var list<string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'is_admin',
     ];
 
     /**

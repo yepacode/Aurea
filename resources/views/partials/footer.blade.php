@@ -16,47 +16,50 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
             {{-- Brand --}}
             <div class="md:col-span-1">
-                <a href="{{ route('home') }}" style="display:flex;justify-content:center;max-width:280px;margin-top:-28px;margin-bottom:-14px;">
+                <a href="{{ locale_route('home') }}" style="display:flex;justify-content:center;max-width:280px;margin-top:-28px;margin-bottom:-14px;">
                     <img src="{{ asset('img/brand/logo-transparent.png') }}" alt="Belleza Áurea" style="height:158px;width:auto;filter:brightness(1.08);">
                 </a>
                 <p class="mt-5 text-sm" style="color:rgba(247,243,237,0.65);line-height:1.7;max-width:280px;">
-                    Belleza natural, elegante y atemporal. Skincare, fragancias y rituales premium con ingredientes botánicos.
+                    {{ __('storefront.footer.tagline') }}
                 </p>
             </div>
 
             {{-- Tienda --}}
             <div>
-                <h4 class="text-sm font-semibold uppercase mb-5" style="color:#D9B56D;letter-spacing:0.12em;font-family:'Playfair Display',serif;">Tienda</h4>
+                <h4 class="text-sm font-semibold uppercase mb-5" style="color:#D9B56D;letter-spacing:0.12em;font-family:'Playfair Display',serif;">{{ __('storefront.footer.store') }}</h4>
                 <ul class="space-y-3">
-                    <li><a href="{{ route('products.index') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Todos los productos</a></li>
-                    <li><a href="{{ route('products.index', ['category' => 'rostro-y-piel']) }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Rostro y piel</a></li>
-                    <li><a href="{{ route('products.index', ['category' => 'unas']) }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Uñas</a></li>
-                    <li><a href="{{ route('products.index', ['category' => 'pestanas']) }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Pestañas</a></li>
-                    <li><a href="{{ route('products.index', ['category' => 'peluqueria']) }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Peluquería</a></li>
+                    <li><a href="{{ locale_route('products.index') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.footer.all_products') }}</a></li>
+                    <li><a href="{{ locale_route('products.index', ['category' => 'rostro-y-piel']) }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.footer.face_and_skin') }}</a></li>
+                    <li><a href="{{ locale_route('products.index', ['category' => 'unas']) }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.footer.nails') }}</a></li>
+                    <li><a href="{{ locale_route('products.index', ['category' => 'pestanas']) }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.footer.lashes') }}</a></li>
+                    <li><a href="{{ locale_route('products.index', ['category' => 'peluqueria']) }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.footer.hair') }}</a></li>
                 </ul>
             </div>
 
             {{-- Información --}}
             <div>
-                <h4 class="text-sm font-semibold uppercase mb-5" style="color:#D9B56D;letter-spacing:0.12em;font-family:'Playfair Display',serif;">Información</h4>
+                <h4 class="text-sm font-semibold uppercase mb-5" style="color:#D9B56D;letter-spacing:0.12em;font-family:'Playfair Display',serif;">{{ __('storefront.footer.info') }}</h4>
                 <ul class="space-y-3">
-                    <li><a href="{{ route('about') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Sobre nosotras</a></li>
-                    <li><a href="{{ route('landing.quiz') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Quiz de piel</a></li>
-                    <li><a href="{{ route('blue-light') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Rituales</a></li>
-                    <li><a href="{{ route('shipping-returns') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Envíos y devoluciones</a></li>
-                    <li><a href="{{ route('contact') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">Contacto</a></li>
+                    <li><a href="{{ locale_route('about') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.about') }}</a></li>
+                    <li><a href="{{ locale_route('landing.quiz') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.quiz') }}</a></li>
+                    <li><a href="{{ locale_route('blue-light') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.rituals') }}</a></li>
+                    <li><a href="{{ locale_route('shipping-returns') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.shipping') }}</a></li>
+                    @if(\Illuminate\Support\Facades\Route::has('faq.index'))
+                    <li><a href="{{ route('faq.index') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.faq') }}</a></li>
+                    @endif
+                    <li><a href="{{ locale_route('contact') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.contact') }}</a></li>
                 </ul>
             </div>
 
             {{-- Newsletter --}}
             <div>
-                <h4 class="text-sm font-semibold uppercase mb-5" style="color:#D9B56D;letter-spacing:0.12em;font-family:'Playfair Display',serif;">Mantente al día</h4>
-                <p class="text-sm mb-4" style="color:rgba(247,243,237,0.65);line-height:1.6;">Recibe rituales, lanzamientos y un 10% en tu primera compra.</p>
-                <form action="{{ route('leads.store') }}" method="POST" class="flex">
+                <h4 class="text-sm font-semibold uppercase mb-5" style="color:#D9B56D;letter-spacing:0.12em;font-family:'Playfair Display',serif;">{{ __('storefront.footer.newsletter_title') }}</h4>
+                <p class="text-sm mb-4" style="color:rgba(247,243,237,0.65);line-height:1.6;">{{ __('storefront.footer.newsletter_copy') }}</p>
+                <form action="{{ locale_route('leads.store') }}" method="POST" class="flex">
                     @csrf
                     <input type="hidden" name="source" value="footer">
-                    <input type="email" name="email" placeholder="tu@correo.com" required
-                           aria-label="Correo electrónico para suscribirte"
+                    <input type="email" name="email" placeholder="{{ __('storefront.footer.email_placeholder') }}" required
+                           aria-label="{{ __('storefront.footer.email_aria') }}"
                            class="flex-1 rounded-l-lg px-4 py-2.5 text-sm focus:outline-none"
                            style="background:rgba(247,243,237,0.08);border:1px solid rgba(232,204,146,0.25);color:#F7F3ED;">
                     <button type="submit"
@@ -64,7 +67,7 @@
                             style="background:#D9B56D;color:#2E2A26;"
                             onmouseover="this.style.background='#E8CC92'"
                             onmouseout="this.style.background='#D9B56D'">
-                        Suscribirme
+                        {{ __('storefront.buttons.subscribe') }}
                     </button>
                 </form>
             </div>
@@ -73,15 +76,15 @@
         <div class="mt-14 pt-8" style="border-top:1px solid rgba(232,204,146,0.12);">
             {{-- Enlaces legales --}}
             <div class="flex flex-wrap justify-center items-center mb-6" style="gap:8px 18px;">
-                <a href="{{ route('legal.terms') }}" class="text-xs transition-colors" style="color:rgba(247,243,237,0.6);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.6)'">Términos y condiciones</a>
+                <a href="{{ locale_route('legal.terms') }}" class="text-xs transition-colors" style="color:rgba(247,243,237,0.6);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.6)'">{{ __('storefront.footer.terms') }}</a>
                 <span style="color:rgba(232,204,146,0.4);font-size:.7rem;">&#10022;</span>
-                <a href="{{ route('legal.privacy') }}" class="text-xs transition-colors" style="color:rgba(247,243,237,0.6);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.6)'">Política de privacidad</a>
+                <a href="{{ locale_route('legal.privacy') }}" class="text-xs transition-colors" style="color:rgba(247,243,237,0.6);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.6)'">{{ __('storefront.footer.privacy') }}</a>
                 <span style="color:rgba(232,204,146,0.4);font-size:.7rem;">&#10022;</span>
-                <a href="{{ route('legal.cookies') }}" class="text-xs transition-colors" style="color:rgba(247,243,237,0.6);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.6)'">Política de cookies</a>
+                <a href="{{ locale_route('legal.cookies') }}" class="text-xs transition-colors" style="color:rgba(247,243,237,0.6);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.6)'">{{ __('storefront.footer.cookies') }}</a>
             </div>
             <div class="flex flex-col sm:flex-row justify-between items-center gap-2">
-                <p class="text-xs" style="color:rgba(247,243,237,0.45);">&copy; {{ date('Y') }} Belleza Áurea. Todos los derechos reservados.</p>
-                <p class="text-xs" style="color:rgba(247,243,237,0.45);">Belleza natural · elegante · atemporal</p>
+                <p class="text-xs" style="color:rgba(247,243,237,0.45);">{!! __('storefront.footer.rights', ['year' => date('Y')]) !!}</p>
+                <p class="text-xs" style="color:rgba(247,243,237,0.45);">{{ __('storefront.footer.tagline_bottom') }}</p>
             </div>
         </div>
     </div>

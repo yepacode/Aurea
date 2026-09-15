@@ -139,7 +139,7 @@
         </div>
 
         <h1 class="cf-title">{{ $titulo }}</h1>
-        <span class="cf-order">Pedido #{{ $order->id }}</span>
+        <span class="cf-order">{{ __('storefront.confirmation.order_number') }} #{{ $order->id }}</span>
 
         @php $firstName = optional($order->customer)->name ? \Illuminate\Support\Str::of($order->customer->name)->before(' ') : null; @endphp
         <p class="cf-text">

@@ -75,31 +75,37 @@ class CustomerAuthController extends Controller
                 if ($existing) {
                     // Cliente que compró como invitado: se "actualiza" a cuenta
                     // conservando su historial de pedidos.
-                    $update = [
-                        'name'     => $data['name'],
-                        'phone'    => $data['phone'] ?? $existing->phone,
-                        'password' => $data['password'],
-                    ];
+                    $existing->fill([
+                        'name'            => $data['name'],
+                        'phone'           => $data['phone'] ?? $existing->phone,
+                        'password'        => $data['password'],
+                    ]);
 
-                    // Solo asignamos referrer si aún no tiene uno (y no somos nosotras mismas).
+                    // referred_by_customer_id NO es fillable (privilegio). Asignación
+                    // explícita solo si aún no tiene referrer y no es un self-referral.
                     if ($referrer && ! $existing->referred_by_customer_id && $referrer->id !== $existing->id) {
-                        $update['referred_by_customer_id'] = $referrer->id;
-                        $update['referral_source'] = $referralSrc;
+                        $existing->referred_by_customer_id = $referrer->id;
+                        $existing->referral_source         = $referralSrc;
                     }
 
-                    $existing->update($update);
+                    $existing->save();
 
                     return $existing;
                 }
 
-                return Customer::create([
+                $newCustomer = new Customer();
+                $newCustomer->fill([
                     'name'     => $data['name'],
                     'email'    => $data['email'],
                     'phone'    => $data['phone'] ?? null,
                     'password' => $data['password'],
-                    'referred_by_customer_id' => $referrer?->id,
-                    'referral_source'         => $referrer ? $referralSrc : null,
+                    'referral_source' => $referrer ? $referralSrc : null,
                 ]);
+                // referred_by_customer_id NO es fillable (privilegio) → explícito.
+                $newCustomer->referred_by_customer_id = $referrer?->id;
+                $newCustomer->save();
+
+                return $newCustomer;
             });
         } catch (QueryException $e) {
             // 23000 = Integrity constraint violation (incluye UNIQUE).

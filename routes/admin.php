@@ -182,6 +182,25 @@ Route::prefix('reports')->name('reports.')->controller(\App\Http\Controllers\Adm
     Route::get('loyalty',           'loyalty')->name('loyalty');
 });
 
+// FAQs (chatbot) — CRUD categorías y preguntas
+Route::resource('faq-categories', \App\Http\Controllers\Admin\FaqCategoryAdminController::class)
+    ->except(['show'])
+    ->parameters(['faq-categories' => 'faq_category']);
+Route::resource('faqs', \App\Http\Controllers\Admin\FaqAdminController::class)->except(['show']);
+
+// Suscripciones — planes (CRUD) + panel de suscripciones activas
+Route::patch('subscription-plans/{subscription_plan}/toggle',
+    [\App\Http\Controllers\Admin\SubscriptionPlanAdminController::class, 'toggle']
+)->name('subscription-plans.toggle');
+Route::resource('subscription-plans', \App\Http\Controllers\Admin\SubscriptionPlanAdminController::class)
+    ->except(['show']);
+
+Route::get('subscriptions',   [\App\Http\Controllers\Admin\SubscriptionAdminController::class, 'index'])->name('subscriptions.index');
+Route::get('subscriptions/{subscription}', [\App\Http\Controllers\Admin\SubscriptionAdminController::class, 'show'])->name('subscriptions.show');
+Route::patch('subscriptions/{subscription}/pause',   [\App\Http\Controllers\Admin\SubscriptionAdminController::class, 'pause'])->name('subscriptions.pause');
+Route::patch('subscriptions/{subscription}/resume',  [\App\Http\Controllers\Admin\SubscriptionAdminController::class, 'resume'])->name('subscriptions.resume');
+Route::patch('subscriptions/{subscription}/cancel',  [\App\Http\Controllers\Admin\SubscriptionAdminController::class, 'cancel'])->name('subscriptions.cancel');
+
 // SEO settings
 Route::get('seo', [AdminSeoController::class, 'index'])->name('seo.index');
 Route::get('seo/{pageKey}', [AdminSeoController::class, 'edit'])->name('seo.edit');

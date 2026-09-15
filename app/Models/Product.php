@@ -15,8 +15,10 @@ class Product extends Model
         'brand_id',
         'internal_code',
         'name',
+        'name_en',
         'slug',
         'description',
+        'description_en',
         'type',
         'price',           // Precio público (lo que paga el cliente en la web)
         'compare_price',   // Precio sugerido / tachado / PVP físico
@@ -26,7 +28,9 @@ class Product extends Model
         'stock',
         'images',
         'meta_title',
+        'meta_title_en',
         'meta_description',
+        'meta_description_en',
         'meta_keywords',
         'focus_keyword',
         'canonical_url',
@@ -79,6 +83,46 @@ class Product extends Model
             'badge_2x1'     => 'boolean',
             'sort_order'    => 'integer',
         ];
+    }
+
+    /**
+     * Nombre localizado.
+     *
+     * Devuelve `name_en` cuando el locale activo es 'en' y hay traducción;
+     * en cualquier otro caso cae al `name` español (fuente de verdad).
+     */
+    public function localizedName(): string
+    {
+        return app()->getLocale() === 'en' && filled($this->name_en)
+            ? (string) $this->name_en
+            : (string) $this->name;
+    }
+
+    /**
+     * Descripción localizada. Mismo criterio que localizedName().
+     */
+    public function localizedDescription(): ?string
+    {
+        return app()->getLocale() === 'en' && filled($this->description_en)
+            ? $this->description_en
+            : $this->description;
+    }
+
+    /**
+     * Meta title/description localizados (SEO).
+     */
+    public function localizedMetaTitle(): ?string
+    {
+        return app()->getLocale() === 'en' && filled($this->meta_title_en)
+            ? $this->meta_title_en
+            : $this->meta_title;
+    }
+
+    public function localizedMetaDescription(): ?string
+    {
+        return app()->getLocale() === 'en' && filled($this->meta_description_en)
+            ? $this->meta_description_en
+            : $this->meta_description;
     }
 
     /**
@@ -283,13 +327,22 @@ class Product extends Model
      */
     public static function bestSellerIds(int $limit = 8): \Illuminate\Support\Collection
     {
-        return \App\Models\OrderItem::query()
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->where('orders.payment_status', 'paid')
-            ->groupBy('order_items.product_id')
-            ->orderByRaw('SUM(order_items.qty) DESC')
-            ->limit($limit)
-            ->pluck('order_items.product_id');
+        // Cache 10 min: los best-sellers no cambian por minuto y esta query hace JOIN
+        // + GROUP BY sobre order_items/orders — la llamábamos en cada /productos y ficha.
+        $ids = \Illuminate\Support\Facades\Cache::remember(
+            "products.best-sellers.limit-$limit",
+            600,
+            fn () => \App\Models\OrderItem::query()
+                ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                ->where('orders.payment_status', 'paid')
+                ->groupBy('order_items.product_id')
+                ->orderByRaw('SUM(order_items.qty) DESC')
+                ->limit($limit)
+                ->pluck('order_items.product_id')
+                ->all(),
+        );
+
+        return collect($ids);
     }
 
     /**

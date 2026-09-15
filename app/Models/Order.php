@@ -41,6 +41,8 @@ class Order extends Model
         'notes',
         'tracking_token',
         'stock_decremented_at',
+        'is_subscription',
+        'subscription_id',
     ];
 
     protected static function booted(): void
@@ -63,6 +65,7 @@ class Order extends Model
             'total' => 'decimal:2',
             'stock_decremented_at' => 'datetime',
             'payment_raw_response' => 'array',
+            'is_subscription' => 'boolean',
         ];
     }
 
@@ -74,5 +77,10 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class);
     }
 }

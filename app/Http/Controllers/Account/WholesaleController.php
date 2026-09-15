@@ -63,17 +63,22 @@ class WholesaleController extends Controller
             'phone.required'                     => 'Un teléfono comercial nos ayuda a atenderte más rápido.',
         ]);
 
+        // Campos comunes: sí son fillable, van por ->fill().
         $customer->fill([
             'phone'                     => $data['phone'],
             'city'                      => $data['city'],
             'wholesaler_company_name'   => $data['wholesaler_company_name'],
             'wholesaler_nit'            => $data['wholesaler_nit'],
             'wholesaler_monthly_volume' => $data['wholesaler_monthly_volume'],
-            'wholesaler_notes'          => $data['wholesaler_notes'] ?? null,
-            'wholesaler_status'         => 'pending',
             'wholesaler_requested_at'   => now(),
-            'is_wholesaler'             => false,
-        ])->save();
+        ]);
+
+        // Campos de privilegio: SIEMPRE explícitos, jamás por mass-assignment.
+        $customer->wholesaler_notes  = $data['wholesaler_notes'] ?? null;
+        $customer->wholesaler_status = 'pending';
+        $customer->is_wholesaler     = false;
+
+        $customer->save();
 
         // Aviso al admin. En un try/catch para que un fallo de SMTP no rompa
         // la experiencia del cliente: la solicitud queda registrada igual.

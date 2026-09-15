@@ -212,6 +212,34 @@
                         <span x-show="sidebarOpen">Notificaciones push 🔔</span>
                     </a>
 
+                    {{-- Suscripciones (rituales mensuales) --}}
+                    <div x-data="{ openSubs: {{ request()->routeIs('admin.subscriptions.*') || request()->routeIs('admin.subscription-plans.*') ? 'true' : 'false' }} }">
+                        <button type="button" @click="openSubs = !openSubs"
+                                class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.subscriptions.*') || request()->routeIs('admin.subscription-plans.*') ? 'bg-white/10' : '' }}">
+                            <div class="flex items-center space-x-3">
+                                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"/>
+                                </svg>
+                                <span x-show="sidebarOpen">Suscripciones 🔄</span>
+                            </div>
+                            <svg x-show="sidebarOpen" :class="openSubs && 'rotate-180'" class="w-4 h-4 text-white/40 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+                            </svg>
+                        </button>
+                        <div x-show="openSubs && sidebarOpen" x-collapse class="ml-8 space-y-0.5">
+                            <a href="{{ route('admin.subscriptions.index') }}"
+                               class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs {{ request()->routeIs('admin.subscriptions.*') ? 'bg-white/10' : 'text-white/70' }}">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                                <span>Suscripciones activas</span>
+                            </a>
+                            <a href="{{ route('admin.subscription-plans.index') }}"
+                               class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs {{ request()->routeIs('admin.subscription-plans.*') ? 'bg-white/10' : 'text-white/70' }}">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
+                                <span>Planes</span>
+                            </a>
+                        </div>
+                    </div>
+
                     {{-- Reportes descargables --}}
                     <div x-data="{ openReports: {{ request()->routeIs('admin.reports.*') ? 'true' : 'false' }} }">
                         <button type="button" @click="openReports = !openReports"
@@ -290,10 +318,18 @@
                         <span x-show="sidebarOpen">Infografías</span>
                     </a>
 
-                    {{-- Publicaciones (blog) — colapsable con Portada de la página --}}
-                    <div x-data="{ openBlog: {{ request()->routeIs('admin.blog.*', 'admin.pages.blog.*', 'admin.pages.blue-light.*') ? 'true' : 'false' }} }">
+                    {{-- Publicaciones (blog) — colapsable (solo blog).
+                         NOTA: los sub-items "Portada de la página" (blue-light),
+                         "Página productos" (lentes) y "Página Quiz" (quiz) se
+                         removieron del sidebar porque eran residuos NUVION.
+                         Los settings SIGUEN siendo consumidos por el front público
+                         (CartController, CheckoutController, ProductController,
+                         LandingController, StorefrontController@blueLight) así que
+                         los controllers y rutas admin permanecen intactos y solo
+                         se ocultan de la navegación admin. --}}
+                    <div x-data="{ openBlog: {{ request()->routeIs('admin.blog.*', 'admin.pages.blog.*') ? 'true' : 'false' }} }">
                         <button type="button" @click="openBlog = !openBlog"
-                                class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.blog.*', 'admin.pages.blog.*', 'admin.pages.blue-light.*') ? 'bg-white/10' : '' }}">
+                                class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.blog.*', 'admin.pages.blog.*') ? 'bg-white/10' : '' }}">
                             <div class="flex items-center space-x-3">
                                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"/>
@@ -308,34 +344,10 @@
                             <a href="{{ route('admin.blog.index') }}"
                                class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs {{ request()->routeIs('admin.blog.*') ? 'bg-white/10 text-white' : 'text-white/60' }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('admin.blog.*') ? 'bg-yellow-400' : 'bg-white/30' }}"></span>
-                                <span>Publicaciones</span>
-                            </a>
-                            <a href="{{ route('admin.pages.blue-light.edit') }}"
-                               class="flex items-center space-x-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs {{ request()->routeIs('admin.pages.blue-light.*') ? 'bg-white/10 text-white' : 'text-white/60' }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ request()->routeIs('admin.pages.blue-light.*') ? 'bg-yellow-400' : 'bg-white/30' }}"></span>
-                                <span>Portada de la página</span>
+                                <span>Todas las publicaciones</span>
                             </a>
                         </div>
                     </div>
-
-                    {{-- Página productos --}}
-                    <a href="{{ route('admin.pages.lentes.edit') }}"
-                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.pages.lentes.*') ? 'bg-white/10' : '' }}">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
-                        </svg>
-                        <span x-show="sidebarOpen">Página productos</span>
-                    </a>
-
-                    {{-- Quiz --}}
-                    <a href="{{ route('admin.pages.quiz.edit') }}"
-                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.pages.quiz.*') ? 'bg-white/10' : '' }}">
-                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
-                        <span x-show="sidebarOpen">Página Quiz</span>
-                    </a>
 
                     {{-- Contacto --}}
                     <a href="{{ route('admin.pages.contact.edit') }}"
@@ -353,6 +365,15 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"/>
                         </svg>
                         <span x-show="sidebarOpen">Envíos y devol.</span>
+                    </a>
+
+                    {{-- FAQs (chatbot) --}}
+                    <a href="{{ route('admin.faqs.index') }}"
+                       class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm {{ request()->routeIs('admin.faqs.*', 'admin.faq-categories.*') ? 'bg-white/10' : '' }}">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.625 9.75a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 0 1 .778-.332 48.294 48.294 0 0 0 5.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/>
+                        </svg>
+                        <span x-show="sidebarOpen">FAQs 💬</span>
                     </a>
 
                     {{-- Testimonios --}}

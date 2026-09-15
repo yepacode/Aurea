@@ -10,13 +10,11 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'admin@bellezaaurea.com'],
-            [
-                'name' => 'Administrador Belleza Áurea',
-                'password' => Hash::make('aurea2026'),
-                'is_admin' => true,
-            ]
-        );
+        // is_admin NO es fillable (privilegio) → asignación explícita después.
+        $admin = User::firstOrNew(['email' => 'admin@bellezaaurea.com']);
+        $admin->name     = 'Administrador Belleza Áurea';
+        $admin->password = Hash::make('aurea2026');
+        $admin->is_admin = true;
+        $admin->save();
     }
 }

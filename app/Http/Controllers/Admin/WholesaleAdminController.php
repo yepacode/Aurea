@@ -65,11 +65,11 @@ class WholesaleAdminController extends Controller
             return back()->with('error', 'Esta clienta aún no ha solicitado ser mayorista.');
         }
 
-        $customer->update([
-            'is_wholesaler'          => true,
-            'wholesaler_status'      => 'approved',
-            'wholesaler_approved_at' => now(),
-        ]);
+        // Asignación explícita: estos campos NO son fillable (privilegio).
+        $customer->is_wholesaler          = true;
+        $customer->wholesaler_status      = 'approved';
+        $customer->wholesaler_approved_at = now();
+        $customer->save();
 
         try {
             Mail::to($customer->email)->send(new WholesaleApproved($customer));
@@ -90,11 +90,11 @@ class WholesaleAdminController extends Controller
             'notes.required' => 'Explica brevemente el motivo (lo verá la clienta).',
         ]);
 
-        $customer->update([
-            'is_wholesaler'     => false,
-            'wholesaler_status' => 'rejected',
-            'wholesaler_notes'  => $data['notes'],
-        ]);
+        // Asignación explícita: estos campos NO son fillable (privilegio).
+        $customer->is_wholesaler     = false;
+        $customer->wholesaler_status = 'rejected';
+        $customer->wholesaler_notes  = $data['notes'];
+        $customer->save();
 
         try {
             Mail::to($customer->email)->send(new WholesaleRejected($customer));

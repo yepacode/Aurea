@@ -153,11 +153,33 @@ class StorefrontController extends Controller
             ->take(3)
             ->get();
 
+        // Más vendidos — hasta 8 productos activos con stock, ordenados por
+        // Product::bestSellerIds (unidades vendidas en pedidos pagados).
+        $bestSellerIds = Product::bestSellerIds(8);
+        $bestSellers = collect();
+        if ($bestSellerIds->isNotEmpty()) {
+            $bestSellers = Product::active()
+                ->whereIn('id', $bestSellerIds)
+                ->where(function ($q) {
+                    $q->where('stock', '>', 0)
+                      ->orWhereHas('variants', fn ($v) => $v->where('is_active', true)->where('stock', '>', 0));
+                })
+                ->whereNotNull('images')
+                ->whereRaw('JSON_LENGTH(images) > 0')
+                ->with(['variants', 'category', 'brand'])
+                ->get()
+                ->filter(fn ($p) => $p->hasStock())
+                ->sortBy(fn ($p) => $bestSellerIds->search($p->id))
+                ->values()
+                ->take(8);
+        }
+
         return view('storefront.home', compact(
             'hero', 'heroProduct', 'heroMode', 'homePage', 'seoSettings',
             'lentes', 'toallitas', 'coloresDisponibles',
             'recentPosts', 'infographics', 'organizationSchema', 'faqSchema',
             'categories', 'testimonials', 'featuredBrands', 'featuredBundles',
+            'bestSellers',
         ));
     }
 

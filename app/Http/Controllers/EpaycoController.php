@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Services\CheckoutService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -96,55 +95,67 @@ class EpaycoController extends Controller
     }
 
     /**
-     * Redirección del navegador tras el pago. Consulta el estado real por ref_payco
-     * y actualiza el pedido (clave para pruebas en localhost, donde no hay webhook).
+     * Redirección del navegador tras el pago.
+     *
+     * SEGURIDAD: este endpoint NO es fuente de verdad. Los datos llegan por GET
+     * desde el navegador del cliente y son manipulables. La ÚNICA vía autorizada
+     * para actualizar el estado del pago es el webhook `confirmation`, que valida
+     * x_signature contra p_cust_id + p_key.
+     *
+     * Aquí solo:
+     *   1) Leemos `x_extra1` (id del pedido) y `ref_payco` (opcional, log).
+     *   2) Validamos ownership del pedido (sesión o customer autenticado).
+     *   3) Redirigimos a la pantalla de confirmación.
      */
     public function response(Request $request)
     {
-        $ref = $request->input('ref_payco', $request->query('ref_payco'));
-
-        if (! $ref) {
-            return redirect()->route('cart.index')->with('error', 'No recibimos la referencia del pago.');
+        // ref_payco lo aceptamos solo para logging; validamos formato para no
+        // dejar que un valor arbitrario acabe en logs / URLs.
+        $ref = (string) $request->input('ref_payco', '');
+        if ($ref !== '' && ! preg_match('/^[A-Za-z0-9]+$/', $ref)) {
+            $ref = '';
         }
 
-        $order = null;
-
-        try {
-            $res = Http::timeout(15)->get("https://secure.epayco.co/validation/v1/reference/{$ref}");
-            if ($res->ok() && $res->json('success')) {
-                $data = $res->json('data');
-                $orderId = $data['x_extra1'] ?? null;
-                $order = $orderId ? Order::find($orderId) : null;
-
-                if ($order && $order->payment_status !== 'paid') {
-                    // Aseguramos que el ref quede en el payload (la API lo devuelve
-                    // como x_ref_payco pero la URL de retorno lo trae como ref_payco).
-                    $data['x_ref_payco'] = $data['x_ref_payco'] ?? $ref;
-                    $update = $this->mapEpaycoPayload($data, (int) ($data['x_cod_response'] ?? 0));
-                    $order->update($update);
-
-                    if ($update['payment_status'] === 'paid') {
-                        $this->checkout->decrementStockForOrder($order->refresh());
-                    }
-                }
-            }
-        } catch (\Throwable $e) {
-            Log::warning('ePayco response check failed: '.$e->getMessage());
+        $orderId = $request->input('x_extra1');
+        if (! is_numeric($orderId)) {
+            return redirect('/')->with('error', 'Referencia de pago inválida.');
         }
 
+        $order = Order::find((int) $orderId);
         if (! $order) {
-            return redirect()->route('cart.index')
-                ->with('error', 'No pudimos verificar el pago. Si te descontaron, contáctanos con la referencia '.$ref.'.');
+            return redirect('/')->with('error', 'Pedido no encontrado.');
         }
 
-        $flash = match ($order->payment_status) {
-            'paid'       => ['success' => '¡Pago aprobado! Gracias por tu compra 💛'],
-            'processing' => ['success' => 'Tu pago está en proceso. Te avisaremos cuando se confirme.'],
-            'failed'     => ['error'   => 'El pago fue rechazado. Puedes intentar de nuevo.'],
-            default      => ['success' => 'Recibimos tu pedido. Verificaremos el estado del pago.'],
-        };
+        // Ownership: mismo criterio que CheckoutController@authorizeOrderAccess.
+        if (! $this->userOwnsOrder($order)) {
+            abort(403);
+        }
 
-        return redirect()->route('checkout.confirmation', $order->id)->with($flash);
+        if ($ref !== '') {
+            Log::info('ePayco response redirect', ['order' => $order->id, 'ref' => $ref]);
+        }
+
+        // El estado real del pago llega por webhook (confirmation). Aquí solo
+        // redirigimos: la pantalla de confirmación mostrará lo que ya esté en BD.
+        return redirect()->route('checkout.confirmation', $order->id);
+    }
+
+    /**
+     * Autoriza a ver un pedido: la sesión que lo creó, o el cliente autenticado
+     * que es su dueño. Espejo de CheckoutController::authorizeOrderAccess().
+     */
+    private function userOwnsOrder(Order $order): bool
+    {
+        if ((int) session('current_order_id') === (int) $order->id) {
+            return true;
+        }
+
+        $authCustomer = \Illuminate\Support\Facades\Auth::guard('customer')->user();
+        if ($authCustomer && (int) $order->customer_id === (int) $authCustomer->id) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

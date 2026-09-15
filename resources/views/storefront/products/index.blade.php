@@ -193,7 +193,7 @@
                               d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
                     </svg>
                     <input type="search" name="q" value="{{ $qFiltro }}"
-                           placeholder="Buscar productos…" autocomplete="off"
+                           placeholder="{{ __('storefront.products.search_placeholder') }}" autocomplete="off"
                            style="width:100%;border:1px solid #e5e5e5;border-radius:10px;
                                   padding:10px 14px 10px 40px;font-size:14px;background:#fafafa;
                                   color:#2E2A26;font-family:inherit;outline:none;transition:border-color .15s;"
@@ -203,8 +203,8 @@
 
                 {{-- Categoría --}}
                 <select name="category" onchange="document.getElementById('catalogFilters').submit()"
-                        aria-label="Categoría" class="filter-select">
-                    <option value="">Todas las categorías</option>
+                        aria-label="{{ __('storefront.products.category') }}" class="filter-select">
+                    <option value="">{{ __('storefront.products.all_categories') }}</option>
                     @foreach($categoriasFiltro as $cat)
                         <option value="{{ $cat->slug }}" {{ $catFiltro === $cat->slug ? 'selected' : '' }}>
                             {{ $cat->name }} ({{ $cat->products_count }})
@@ -215,8 +215,8 @@
                 {{-- Marca (solo si hay) --}}
                 @if($marcasFiltro->count() > 0)
                 <select name="brand" onchange="document.getElementById('catalogFilters').submit()"
-                        aria-label="Marca" class="filter-select">
-                    <option value="">Todas las marcas</option>
+                        aria-label="{{ __('storefront.products.brand') }}" class="filter-select">
+                    <option value="">{{ __('storefront.products.all_brands') }}</option>
                     @foreach($marcasFiltro as $marca)
                         <option value="{{ $marca->slug }}" {{ $brandFiltro === $marca->slug ? 'selected' : '' }}>
                             {{ $marca->name }}
@@ -227,8 +227,8 @@
 
                 {{-- Precio --}}
                 <select name="price" onchange="document.getElementById('catalogFilters').submit()"
-                        aria-label="Rango de precio" class="filter-select">
-                    <option value="">Cualquier precio</option>
+                        aria-label="{{ __('storefront.products.price') }}" class="filter-select">
+                    <option value="">{{ __('storefront.products.any_price') }}</option>
                     @foreach($rangosPrecios as $val => $label)
                         <option value="{{ $val }}" {{ $priceFiltro === $val ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -239,7 +239,7 @@
 
                 {{-- Ordenar --}}
                 <select name="sort" onchange="document.getElementById('catalogFilters').submit()"
-                        aria-label="Ordenar resultados" class="filter-select">
+                        aria-label="{{ __('storefront.products.sort_aria') }}" class="filter-select">
                     @foreach($opcionesOrden as $val => $label)
                         <option value="{{ $val }}" {{ $sortFiltro === $val ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
@@ -250,7 +250,7 @@
                     <button type="submit"
                             style="background:#2E2A26;color:#fff;border:none;border-radius:10px;
                                    padding:10px 18px;font-size:14px;cursor:pointer;font-family:inherit;">
-                        Aplicar
+                        {{ __('storefront.products.apply') }}
                     </button>
                 </noscript>
             </form>
@@ -258,7 +258,7 @@
             {{-- Chips de filtros activos + conteo + limpiar --}}
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:12px;min-height:24px;">
                 <span style="font-size:13px;color:#888;">
-                    {{ $products->count() }} producto{{ $products->count() !== 1 ? 's' : '' }}
+                    {{ __($products->count() === 1 ? 'storefront.products.count_one' : 'storefront.products.count_other', ['count' => $products->count()]) }}
                 </span>
 
                 @if($activeFilterCount > 0)
@@ -267,32 +267,32 @@
                     @if($qFiltro)
                     <span class="active-chip">
                         “{{ $qFiltro }}”
-                        <a href="{{ route('products.index', request()->except('q')) }}" aria-label="Quitar búsqueda">&times;</a>
+                        <a href="{{ locale_route('products.index', request()->except('q')) }}" aria-label="{{ __('storefront.products.remove_search') }}">&times;</a>
                     </span>
                     @endif
                     @if($currentCat)
                     <span class="active-chip">
                         {{ $currentCat->name }}
-                        <a href="{{ route('products.index', request()->except('category')) }}" aria-label="Quitar categoría">&times;</a>
+                        <a href="{{ locale_route('products.index', request()->except('category')) }}" aria-label="{{ __('storefront.products.remove_category') }}">&times;</a>
                     </span>
                     @endif
                     @if($currentBrand)
                     <span class="active-chip">
                         {{ $currentBrand->name }}
-                        <a href="{{ route('products.index', request()->except('brand')) }}" aria-label="Quitar marca">&times;</a>
+                        <a href="{{ locale_route('products.index', request()->except('brand')) }}" aria-label="{{ __('storefront.products.remove_brand') }}">&times;</a>
                     </span>
                     @endif
                     @if($priceFiltro && isset($rangosPrecios[$priceFiltro]))
                     <span class="active-chip">
                         {{ $rangosPrecios[$priceFiltro] }}
-                        <a href="{{ route('products.index', request()->except('price')) }}" aria-label="Quitar precio">&times;</a>
+                        <a href="{{ locale_route('products.index', request()->except('price')) }}" aria-label="{{ __('storefront.products.remove_price') }}">&times;</a>
                     </span>
                     @endif
 
-                    <a href="{{ route('products.index') }}"
+                    <a href="{{ locale_route('products.index') }}"
                        style="font-size:12px;color:#D9B56D;text-decoration:none;margin-left:4px;"
                        onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-                        Limpiar todo
+                        {{ __('storefront.products.clear_all') }}
                     </a>
                 @endif
             </div>
@@ -464,11 +464,11 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
                     </svg>
                     <p style="font-size:16px;color:#888;margin-bottom:16px;">
-                        No hay productos con esos filtros.
+                        {{ __('storefront.products.no_results') }}
                     </p>
-                    <a href="{{ route('products.index') }}" style="color:#D9B56D;font-size:14px;text-decoration:none;"
+                    <a href="{{ locale_route('products.index') }}" style="color:#D9B56D;font-size:14px;text-decoration:none;"
                        onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
-                        Ver todos los productos
+                        {{ __('storefront.footer.all_products') }}
                     </a>
                 </div>
             @endif

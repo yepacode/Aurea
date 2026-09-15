@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Carrito de compras | Belleza Áurea')
+@section('title', __('storefront.cart.title') . ' | Belleza Áurea')
 @section('robots', 'noindex, follow')
 
 @section('content')
@@ -9,9 +9,9 @@
 
         {{-- Header --}}
         <div class="flex items-center justify-between mb-8">
-            <h1 class="font-brand text-3xl font-bold" style="color:#2E2A26;">Tu carrito</h1>
-            <a href="{{ route('products.index') }}" class="text-sm font-medium transition-colors" style="color:#D9B56D;" onmouseover="this.style.color='#BE9A53'" onmouseout="this.style.color='#D9B56D'">
-                ← Seguir comprando
+            <h1 class="font-brand text-3xl font-bold" style="color:#2E2A26;">{{ __('storefront.cart.title') }}</h1>
+            <a href="{{ locale_route('products.index') }}" class="text-sm font-medium transition-colors" style="color:#D9B56D;" onmouseover="this.style.color='#BE9A53'" onmouseout="this.style.color='#D9B56D'">
+                ← {{ __('storefront.cart.continue_shopping') }}
             </a>
         </div>
 
@@ -21,10 +21,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 mx-auto mb-6" style="color:#d1d5db;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                 </svg>
-                <h2 class="text-xl font-semibold mb-2" style="color:#2E2A26;">Tu carrito está vacío</h2>
-                <p class="mb-6" style="color:#9ca3af;">Agrega productos para comenzar tu compra</p>
-                <a href="{{ route('products.index') }}" class="inline-block text-white px-8 py-3 rounded-lg font-medium transition-colors" style="background:#D9B56D;" onmouseover="this.style.background='#BE9A53'" onmouseout="this.style.background='#D9B56D'">
-                    Explorar productos
+                <h2 class="text-xl font-semibold mb-2" style="color:#2E2A26;">{{ __('storefront.cart.empty') }}</h2>
+                <p class="mb-6" style="color:#9ca3af;">{{ __('storefront.cart.empty_help') }}</p>
+                <a href="{{ locale_route('products.index') }}" class="inline-block text-white px-8 py-3 rounded-lg font-medium transition-colors" style="background:#D9B56D;" onmouseover="this.style.background='#BE9A53'" onmouseout="this.style.background='#D9B56D'">
+                    {{ __('storefront.cart.browse') }}
                 </a>
             </div>
         </template>
@@ -37,10 +37,10 @@
                 <div class="lg:col-span-2 space-y-1">
                     {{-- Table header (desktop) --}}
                     <div class="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs uppercase tracking-wider" style="color:#9ca3af;border-bottom:1px solid #e5e7eb;">
-                        <div class="col-span-6">Producto</div>
-                        <div class="col-span-2 text-center">Precio</div>
-                        <div class="col-span-2 text-center">Cantidad</div>
-                        <div class="col-span-2 text-right">Total</div>
+                        <div class="col-span-6">{{ __('storefront.cart.product') }}</div>
+                        <div class="col-span-2 text-center">{{ __('storefront.cart.price') }}</div>
+                        <div class="col-span-2 text-center">{{ __('storefront.cart.qty') }}</div>
+                        <div class="col-span-2 text-right">{{ __('storefront.cart.total') }}</div>
                     </div>
 
                     {{-- Items --}}
@@ -96,14 +96,14 @@
                         <div class="space-y-3 text-sm">
                             {{-- Subtotal --}}
                             <div class="flex justify-between">
-                                <span style="color:#6b7280;">Subtotal</span>
+                                <span style="color:#6b7280;">{{ __('storefront.cart.subtotal') }}</span>
                                 <span style="color:#2E2A26;" x-text="'$' + fmt(subtotal)"></span>
                             </div>
 
                             {{-- Shipping --}}
                             <div class="flex justify-between">
-                                <span style="color:#6b7280;">Envío</span>
-                                <span x-text="shipping === 0 ? '¡GRATIS!' : '$' + fmt(shipping)"
+                                <span style="color:#6b7280;">{{ __('storefront.cart.shipping') }}</span>
+                                <span x-text="shipping === 0 ? @js(__('storefront.cart.free')) : '$' + fmt(shipping)"
                                       :style="shipping === 0 ? 'color:#16a34a;font-weight:600;' : 'color:#2E2A26;'"></span>
                             </div>
 
@@ -111,8 +111,8 @@
                             <template x-if="freeThreshold > 0 && shipping > 0 && (subtotal - coupon_discount - bundle_discount_total) > 0 && (subtotal - coupon_discount - bundle_discount_total) < freeThreshold">
                                 <div style="padding:10px 14px;background:#f9fafb;border-radius:8px;border:1px solid #f3f4f6;">
                                     <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
-                                        <span style="color:#9ca3af;">Envío gratis</span>
-                                        <span style="color:#D9B56D;font-weight:500;" x-text="'$' + fmt(freeThreshold - (subtotal - coupon_discount - bundle_discount_total)) + ' más'"></span>
+                                        <span style="color:#9ca3af;">{{ __('storefront.cart.free_shipping_label') }}</span>
+                                        <span style="color:#D9B56D;font-weight:500;" x-text="'$' + fmt(freeThreshold - (subtotal - coupon_discount - bundle_discount_total)) + @js(' ' . trim(str_replace(':amount', '', __('storefront.cart.free_shipping_missing'))))"></span>
                                     </div>
                                     <div style="background:#e5e7eb;border-radius:2px;height:4px;overflow:hidden;">
                                         <div style="background:#D9B56D;height:100%;border-radius:2px;transition:width .3s ease;"
@@ -124,7 +124,7 @@
                             {{-- Envio gratis conseguido (solo cuando shipping real es 0) --}}
                             <template x-if="shipping === 0 && (subtotal - coupon_discount - bundle_discount_total) > 0">
                                 <div style="text-align:center;font-size:13px;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 14px;">
-                                    ✓ ¡Envío sin costo!
+                                    {{ __('storefront.cart.free_shipping_ok') }}
                                 </div>
                             </template>
 
@@ -132,7 +132,7 @@
                             <template x-if="coupon_code">
                                 <div class="flex justify-between items-center">
                                     <div class="flex items-center gap-1.5">
-                                        <span style="color:#16a34a;">Cupón</span>
+                                        <span style="color:#16a34a;">{{ __('storefront.cart.coupon') }}</span>
                                         <span style="font-size:11px;padding:1px 6px;border-radius:4px;background:#f0fdf4;color:#16a34a;font-weight:600;font-family:monospace;" x-text="coupon_code"></span>
                                     </div>
                                     <div class="flex items-center gap-2">
@@ -181,19 +181,19 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"/>
                                     </svg>
-                                    ¿Tienes un cupón de descuento?
+                                    {{ __('storefront.cart.coupon_have') }}
                                 </button>
                                 <div x-show="couponOpen" x-collapse x-cloak style="margin-top:10px;">
                                     <div style="display:flex;gap:8px;">
                                         <input type="text" x-model="couponInput" @keydown.enter.prevent="applyCoupon()"
-                                               placeholder="Código de cupón"
+                                               placeholder="{{ __('storefront.cart.coupon_code_aria') }}"
                                                style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;text-transform:uppercase;outline:none;transition:border-color .2s;"
                                                onfocus="this.style.borderColor='#D9B56D'" onblur="this.style.borderColor='#e5e7eb'">
                                         <button @click="applyCoupon()" :disabled="couponLoading"
                                                 style="padding:8px 16px;background:#2E2A26;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:background .2s;font-family:inherit;white-space:nowrap;"
                                                 onmouseover="this.style.background='#D9B56D'" onmouseout="this.style.background='#2E2A26'"
                                                 :style="couponLoading ? 'opacity:0.6;cursor:wait;' : ''">
-                                            <span x-show="!couponLoading">Aplicar</span>
+                                            <span x-show="!couponLoading">{{ __('storefront.cart.coupon_apply') }}</span>
                                             <span x-show="couponLoading" x-cloak>...</span>
                                         </button>
                                     </div>
@@ -207,16 +207,16 @@
 
                         {{-- Total --}}
                         <div class="pt-4 flex justify-between items-center" style="border-top:1px solid #e5e7eb;">
-                            <span class="text-base font-semibold" style="color:#2E2A26;">Total</span>
+                            <span class="text-base font-semibold" style="color:#2E2A26;">{{ __('storefront.cart.total') }}</span>
                             <span class="text-xl font-bold" style="color:#D9B56D;" x-text="'$' + fmt(total)"></span>
                         </div>
 
-                        <a href="{{ route('checkout.index') }}"
+                        <a href="{{ locale_route('checkout.index') }}"
                            class="block w-full text-center py-4 font-semibold transition-all"
                            style="color:#3B310F;background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);border-radius:999px;letter-spacing:.12em;text-transform:uppercase;font-size:13px;box-shadow:0 16px 32px -12px rgba(190,154,83,.65);"
                            onmouseover="this.style.boxShadow='0 22px 44px -12px rgba(190,154,83,.85)';this.style.transform='translateY(-2px)'"
                            onmouseout="this.style.boxShadow='0 16px 32px -12px rgba(190,154,83,.65)';this.style.transform='translateY(0)'">
-                            Finalizar compra
+                            {{ __('storefront.cart.checkout') }}
                         </a>
 
                         {{-- Beneficios (misma fuente que /checkout: editable en /admin/pages/lentes) --}}

@@ -12,6 +12,13 @@ class Customer extends Authenticatable
 {
     use Notifiable;
 
+    /**
+     * Campos mass-assignable. Los flags de privilegio (is_wholesaler,
+     * wholesaler_status, wholesaler_approved_at, wholesaler_notes,
+     * referral_code, referred_by_customer_id) se asignan SIEMPRE de forma
+     * explícita (property = valor) en los controllers para que nunca puedan
+     * viajar por ->fill(), ->update() ni ->create() a partir de un request.
+     */
     protected $fillable = [
         'name',
         'email',
@@ -21,16 +28,10 @@ class Customer extends Authenticatable
         'city',
         'state',
         'zip_code',
-        'is_wholesaler',
-        'wholesaler_status',
         'wholesaler_company_name',
         'wholesaler_nit',
         'wholesaler_monthly_volume',
         'wholesaler_requested_at',
-        'wholesaler_approved_at',
-        'wholesaler_notes',
-        'referral_code',
-        'referred_by_customer_id',
         'referral_source',
     ];
 
@@ -104,6 +105,11 @@ class Customer extends Authenticatable
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
     }
 
     public function addresses(): HasMany

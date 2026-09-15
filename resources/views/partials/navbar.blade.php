@@ -52,6 +52,21 @@
         .ba-mobile-close{position:absolute;top:24px;right:24px;background:none;border:none;color:#8E7E70;
             font-size:30px;line-height:1;cursor:pointer;padding:6px;}
         .ba-mobile-close:hover{color:#2E2A26;}
+        /* Locale switcher */
+        .ba-locale{position:relative;}
+        .ba-locale-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid rgba(184,169,153,0.28);
+            border-radius:999px;padding:6px 10px;cursor:pointer;color:#3A352E;font-family:'Montserrat',system-ui,sans-serif;
+            font-size:11.5px;letter-spacing:.06em;transition:border-color .25s ease, color .25s ease;min-height:34px;}
+        .ba-locale-btn:hover{border-color:#D9B56D;color:#BE9A53;}
+        .ba-locale-flag{font-size:14px;line-height:1;}
+        .ba-locale-code{font-weight:600;}
+        .ba-locale-menu{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid rgba(184,169,153,0.22);
+            border-radius:10px;box-shadow:0 8px 24px -6px rgba(46,42,38,0.18);min-width:150px;padding:4px;z-index:80;}
+        .ba-locale-menu form{margin:0;}
+        .ba-locale-item{width:100%;display:flex;align-items:center;gap:10px;padding:9px 12px;background:none;border:none;
+            font:inherit;font-size:13px;color:#2E2A26;cursor:pointer;text-align:left;border-radius:6px;transition:background .2s ease;}
+        .ba-locale-item:hover{background:#F7F3ED;color:#BE9A53;}
+        .ba-locale-item.is-active{color:#BE9A53;font-weight:600;}
     </style>
     <nav>
         <div class="ba-bar">
@@ -67,30 +82,62 @@
 
             {{-- Links izquierda --}}
             <div class="ba-links ba-links--left">
-                <a class="ba-navlink {{ request()->routeIs('home') ? 'is-active' : '' }}" href="{{ route('home') }}">Inicio</a>
+                <a class="ba-navlink {{ request()->routeIs('home', 'en.home') ? 'is-active' : '' }}" href="{{ locale_route('home') }}">{{ __('storefront.nav.home') }}</a>
                 <span class="ba-sep">&#10022;</span>
-                <a class="ba-navlink {{ request()->routeIs('products.*') && !request()->has('type') ? 'is-active' : '' }}" href="{{ route('products.index') }}">Productos</a>
+                <a class="ba-navlink {{ (request()->routeIs('products.*') || request()->routeIs('en.products.*')) && !request()->has('type') ? 'is-active' : '' }}" href="{{ locale_route('products.index') }}">{{ __('storefront.nav.products') }}</a>
             </div>
 
             {{-- Logo centrado --}}
-            <a href="{{ route('home') }}" class="ba-logo" aria-label="Belleza Áurea — inicio">
+            <a href="{{ locale_route('home') }}" class="ba-logo" aria-label="{{ __('storefront.nav.brand_home') }}">
                 <img class="lg" src="{{ asset('img/logo.png') }}" alt="Belleza Áurea">
                 <img class="sm" src="{{ asset('img/isotipo.png') }}" alt="Belleza Áurea">
             </a>
 
             {{-- Links derecha --}}
             <div class="ba-links ba-links--right">
-                <a class="ba-navlink {{ request()->routeIs('blue-light') ? 'is-active' : '' }}" href="{{ route('blue-light') }}">Rituales</a>
+                <a class="ba-navlink {{ request()->routeIs('blue-light', 'en.blue-light') ? 'is-active' : '' }}" href="{{ locale_route('blue-light') }}">{{ __('storefront.nav.rituals') }}</a>
                 <span class="ba-sep">&#10022;</span>
-                <a class="ba-navlink {{ request()->routeIs('landing.quiz*') ? 'is-active' : '' }}" href="{{ route('landing.quiz') }}">Quiz de piel</a>
+                <a class="ba-navlink {{ request()->routeIs('landing.quiz*', 'en.landing.quiz*') ? 'is-active' : '' }}" href="{{ locale_route('landing.quiz') }}">{{ __('storefront.nav.quiz') }}</a>
             </div>
 
             <div class="ba-actions">
+            {{-- Locale switcher (ES / EN) --}}
+            @php
+                $__currentLocale = app()->getLocale();
+                $__availableLocales = config('app.available_locales', []);
+            @endphp
+            <div class="ba-locale" x-data="{ open: false }" @click.outside="open = false">
+                <button type="button"
+                        class="ba-locale-btn"
+                        @click="open = !open"
+                        :aria-expanded="open"
+                        aria-haspopup="true"
+                        aria-label="{{ __('storefront.locale.switcher_aria') }}">
+                    <span class="ba-locale-flag">{{ $__currentLocale === 'en' ? '🇬🇧' : '🇨🇴' }}</span>
+                    <span class="ba-locale-code">{{ strtoupper($__currentLocale) }}</span>
+                    <svg class="h-3 w-3" fill="none" viewBox="0 0 20 20" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4 4-4"/>
+                    </svg>
+                </button>
+                <div x-show="open" x-cloak x-transition class="ba-locale-menu" role="menu">
+                    @foreach($__availableLocales as $__lc => $__lname)
+                        <form method="POST" action="{{ url('/set-locale') }}" role="none">
+                            @csrf
+                            <input type="hidden" name="locale" value="{{ $__lc }}">
+                            <button type="submit" class="ba-locale-item {{ $__lc === $__currentLocale ? 'is-active' : '' }}" role="menuitem">
+                                <span>{{ $__lc === 'en' ? '🇬🇧' : '🇨🇴' }}</span>
+                                <span>{{ $__lname }}</span>
+                            </button>
+                        </form>
+                    @endforeach
+                </div>
+            </div>
+
             {{-- Cuenta --}}
-            <a href="{{ auth('customer')->check() ? route('account.dashboard') : route('login') }}"
+            <a href="{{ auth('customer')->check() ? locale_route('account.dashboard') : locale_route('login') }}"
                class="ba-cart relative"
-               aria-label="{{ auth('customer')->check() ? 'Mi cuenta' : 'Ingresar' }}"
-               title="{{ auth('customer')->check() ? 'Mi cuenta' : 'Ingresar' }}">
+               aria-label="{{ auth('customer')->check() ? __('storefront.nav.account') : __('storefront.nav.login') }}"
+               title="{{ auth('customer')->check() ? __('storefront.nav.account') : __('storefront.nav.login') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                 </svg>
@@ -100,7 +147,7 @@
             </a>
 
             {{-- Carrito --}}
-            <button @click="$dispatch('toggle-cart-drawer')" class="ba-cart relative" id="cart-badge" aria-label="Carrito">
+            <button @click="$dispatch('toggle-cart-drawer')" class="ba-cart relative" id="cart-badge" aria-label="{{ __('storefront.nav.cart') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                 </svg>
@@ -123,18 +170,31 @@
              x-transition:leave-end="opacity-0"
              class="ba-mobile-menu"
              @click.self="mobileMenuOpen = false">
-            <button class="ba-mobile-close" @click="mobileMenuOpen = false" aria-label="Cerrar menú">&times;</button>
-            <a href="{{ route('home') }}" class="mm-link">Inicio</a>
-            <a href="{{ route('products.index') }}" class="mm-link">Productos</a>
-            <a href="{{ route('blue-light') }}" class="mm-link">Rituales</a>
-            <a href="{{ route('landing.quiz') }}" class="mm-link">Quiz de piel</a>
+            <button class="ba-mobile-close" @click="mobileMenuOpen = false" aria-label="{{ __('storefront.nav.close') }}">&times;</button>
+            <a href="{{ locale_route('home') }}" class="mm-link">{{ __('storefront.nav.home') }}</a>
+            <a href="{{ locale_route('products.index') }}" class="mm-link">{{ __('storefront.nav.products') }}</a>
+            <a href="{{ locale_route('blue-light') }}" class="mm-link">{{ __('storefront.nav.rituals') }}</a>
+            <a href="{{ locale_route('landing.quiz') }}" class="mm-link">{{ __('storefront.nav.quiz') }}</a>
             <span class="mm-sep"></span>
-            <button @click="$dispatch('toggle-cart-drawer'); mobileMenuOpen = false" class="mm-link">Carrito</button>
+            <button @click="$dispatch('toggle-cart-drawer'); mobileMenuOpen = false" class="mm-link">{{ __('storefront.nav.cart') }}</button>
             @if(auth('customer')->check())
-            <a href="{{ route('account.dashboard') }}" class="mm-link">Mi cuenta</a>
+            <a href="{{ locale_route('account.dashboard') }}" class="mm-link">{{ __('storefront.nav.account') }}</a>
             @else
-            <a href="{{ route('login') }}" class="mm-link">Ingresar / Registrarme</a>
+            <a href="{{ locale_route('login') }}" class="mm-link">{{ __('storefront.nav.login_or_register') }}</a>
             @endif
+            <span class="mm-sep"></span>
+            {{-- Locale switcher (móvil) --}}
+            <div style="display:flex;gap:12px;">
+                @foreach(config('app.available_locales', []) as $__lc => $__lname)
+                    <form method="POST" action="{{ url('/set-locale') }}">
+                        @csrf
+                        <input type="hidden" name="locale" value="{{ $__lc }}">
+                        <button type="submit" class="mm-link" style="font-size:16px;{{ $__lc === app()->getLocale() ? 'color:#BE9A53;' : '' }}">
+                            {{ $__lc === 'en' ? '🇬🇧' : '🇨🇴' }} {{ strtoupper($__lc) }}
+                        </button>
+                    </form>
+                @endforeach
+            </div>
         </div>
     </nav>
 </header>
@@ -176,8 +236,8 @@
 
         {{-- Header --}}
         <div class="flex items-center justify-between px-6 py-4 shrink-0" style="border-bottom:1px solid #e5e7eb;">
-            <h2 class="font-brand text-lg font-semibold" style="color:#2E2A26;">Tu carrito</h2>
-            <button @click="close()" aria-label="Cerrar carrito" class="transition-colors" style="color:#9ca3af;" onmouseover="this.style.color='#2E2A26'" onmouseout="this.style.color='#9ca3af'">
+            <h2 class="font-brand text-lg font-semibold" style="color:#2E2A26;">{{ __('storefront.cart.title') }}</h2>
+            <button @click="close()" aria-label="{{ __('storefront.cart.close_aria') }}" class="transition-colors" style="color:#9ca3af;" onmouseover="this.style.color='#2E2A26'" onmouseout="this.style.color='#9ca3af'">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>
@@ -192,9 +252,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4" style="color:#d1d5db;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                     </svg>
-                    <p class="text-sm" style="color:#9ca3af;">Tu carrito está vacío</p>
-                    <a href="{{ route('products.index') }}" class="mt-4 text-sm font-medium transition-colors" style="color:#D9B56D;" onmouseover="this.style.color='#BE9A53'" onmouseout="this.style.color='#D9B56D'">
-                        Explorar productos →
+                    <p class="text-sm" style="color:#9ca3af;">{{ __('storefront.cart.empty') }}</p>
+                    <a href="{{ locale_route('products.index') }}" class="mt-4 text-sm font-medium transition-colors" style="color:#D9B56D;" onmouseover="this.style.color='#BE9A53'" onmouseout="this.style.color='#D9B56D'">
+                        {{ __('storefront.cart.explore_products') }}
                     </a>
                 </div>
             </template>
@@ -230,7 +290,7 @@
                                     style="background:#f9fafb;border:1px solid #e5e7eb;color:#6b7280;"
                                     onmouseover="this.style.color='#2E2A26';this.style.borderColor='#D9B56D'"
                                     onmouseout="this.style.color='#6b7280';this.style.borderColor='#e5e7eb'">+</button>
-                            <button @click="removeItem(item.key)" aria-label="Quitar producto del carrito" class="ml-auto transition-colors" style="color:#d1d5db;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">
+                            <button @click="removeItem(item.key)" aria-label="{{ __('storefront.cart.remove_aria') }}" class="ml-auto transition-colors" style="color:#d1d5db;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                 </svg>
@@ -250,14 +310,14 @@
             <div class="px-6 py-4 space-y-3 shrink-0" style="border-top:1px solid #e5e7eb;background:#f9fafb;border-bottom-left-radius:20px;">
                 {{-- Subtotal --}}
                 <div class="flex justify-between text-sm">
-                    <span style="color:#6b7280;">Subtotal</span>
+                    <span style="color:#6b7280;">{{ __('storefront.cart.subtotal') }}</span>
                     <span style="color:#2E2A26;" x-text="'$' + fmt(subtotal)"></span>
                 </div>
 
                 {{-- Shipping --}}
                 <div class="flex justify-between text-sm">
-                    <span style="color:#6b7280;">Envío</span>
-                    <span x-text="shipping === 0 ? '¡GRATIS!' : '$' + fmt(shipping)"
+                    <span style="color:#6b7280;">{{ __('storefront.cart.shipping') }}</span>
+                    <span x-text="shipping === 0 ? @js(__('storefront.cart.free')) : '$' + fmt(shipping)"
                           :style="shipping === 0 ? 'color:#16a34a;font-weight:600;' : 'color:#2E2A26;'"></span>
                 </div>
 
@@ -265,8 +325,8 @@
                 <template x-if="freeThreshold > 0 && shipping > 0 && (subtotal - coupon_discount) > 0 && (subtotal - coupon_discount) < freeThreshold">
                     <div style="padding:10px 14px;background:#ffffff;border-radius:8px;border:1px solid #e5e7eb;">
                         <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
-                            <span style="color:#9ca3af;">Envío gratis</span>
-                            <span style="color:#D9B56D;font-weight:500;" x-text="'$' + fmt(freeThreshold - (subtotal - coupon_discount)) + ' más'"></span>
+                            <span style="color:#9ca3af;">{{ __('storefront.cart.free_shipping_label') }}</span>
+                            <span style="color:#D9B56D;font-weight:500;" x-text="'$' + fmt(freeThreshold - (subtotal - coupon_discount)) + @js(' ' . trim(str_replace(':amount', '', __('storefront.cart.free_shipping_missing'))))"></span>
                         </div>
                         <div style="background:#e5e7eb;border-radius:2px;height:4px;overflow:hidden;">
                             <div style="background:#D9B56D;height:100%;border-radius:2px;transition:width .3s ease;"
@@ -278,7 +338,7 @@
                 {{-- Free shipping achieved (solo cuando el envio real es 0) --}}
                 <template x-if="shipping === 0 && (subtotal - coupon_discount) > 0">
                     <div style="text-align:center;font-size:13px;color:#16a34a;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 14px;">
-                        ✓ ¡Envío sin costo!
+                        {{ __('storefront.cart.free_shipping_ok') }}
                     </div>
                 </template>
 
@@ -286,12 +346,12 @@
                 <template x-if="coupon_code">
                     <div class="flex justify-between items-center text-sm">
                         <div class="flex items-center gap-1.5">
-                            <span style="color:#16a34a;">Cupón</span>
+                            <span style="color:#16a34a;">{{ __('storefront.cart.coupon') }}</span>
                             <span style="font-size:10px;padding:1px 5px;border-radius:3px;background:#f0fdf4;color:#16a34a;font-weight:600;font-family:monospace;" x-text="coupon_code"></span>
                         </div>
                         <div class="flex items-center gap-1.5">
                             <span style="color:#16a34a;" x-text="'-$' + fmt(coupon_discount)"></span>
-                            <button @click="removeCoupon()" aria-label="Quitar cupón" style="color:#d1d5db;cursor:pointer;background:none;border:none;padding:0;line-height:1;"
+                            <button @click="removeCoupon()" aria-label="{{ __('storefront.cart.coupon_remove_aria') }}" style="color:#d1d5db;cursor:pointer;background:none;border:none;padding:0;line-height:1;"
                                     onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">
                                 <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                             </button>
@@ -307,21 +367,21 @@
                             <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z"/>
                             </svg>
-                            ¿Tienes un cupón?
+                            {{ __('storefront.cart.coupon_have') }}
                         </button>
                         <div x-show="couponOpen" x-collapse x-cloak style="margin-top:8px;">
                             <div style="display:flex;gap:6px;">
                                 <input type="text" x-model="couponInput" @keydown.enter.prevent="applyCoupon()"
-                                       placeholder="Código"
-                                       aria-label="Código de cupón"
+                                       placeholder="{{ __('storefront.cart.coupon_code_placeholder') }}"
+                                       aria-label="{{ __('storefront.cart.coupon_code_aria') }}"
                                        style="flex:1;padding:7px 10px;border:1px solid #e5e7eb;border-radius:6px;font-size:12px;font-family:inherit;text-transform:uppercase;outline:none;transition:border-color .2s;"
                                        onfocus="this.style.borderColor='#D9B56D'" onblur="this.style.borderColor='#e5e7eb'">
                                 <button @click="applyCoupon()" :disabled="couponLoading"
-                                        aria-label="Aplicar cupón"
+                                        aria-label="{{ __('storefront.cart.coupon_apply_aria') }}"
                                         style="padding:7px 12px;background:#2E2A26;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:background .2s;font-family:inherit;"
                                         onmouseover="this.style.background='#D9B56D'" onmouseout="this.style.background='#2E2A26'"
                                         :style="couponLoading ? 'opacity:0.6;cursor:wait;' : ''">
-                                    <span x-show="!couponLoading">Aplicar</span>
+                                    <span x-show="!couponLoading">{{ __('storefront.cart.coupon_apply') }}</span>
                                     <span x-show="couponLoading" x-cloak>...</span>
                                 </button>
                             </div>
@@ -333,23 +393,23 @@
 
                 {{-- Total --}}
                 <div class="flex justify-between text-base font-semibold pt-2" style="border-top:1px solid #e5e7eb;">
-                    <span style="color:#2E2A26;">Total</span>
+                    <span style="color:#2E2A26;">{{ __('storefront.cart.total') }}</span>
                     <span style="color:#D9B56D;" x-text="'$' + fmt(total)"></span>
                 </div>
 
-                <a href="{{ route('checkout.index') }}"
+                <a href="{{ locale_route('checkout.index') }}"
                    class="block w-full text-white text-center py-3 rounded-lg font-medium transition-all mt-2"
                    style="background:#D9B56D;box-shadow:0 12px 24px -8px rgba(190,154,83,0.5);"
                    onmouseover="this.style.background='#BE9A53'"
                    onmouseout="this.style.background='#D9B56D'">
-                    Finalizar compra
+                    {{ __('storefront.cart.checkout') }}
                 </a>
-                <a href="{{ route('cart.index') }}"
+                <a href="{{ locale_route('cart.index') }}"
                    class="block w-full text-center text-sm transition-colors py-2"
                    style="color:#6b7280;"
                    onmouseover="this.style.color='#D9B56D'"
                    onmouseout="this.style.color='#6b7280'">
-                    Ver carrito completo
+                    {{ __('storefront.cart.view_full') }}
                 </a>
             </div>
         </template>
@@ -466,10 +526,10 @@ function cartDrawer() {
                     this.couponInput = '';
                     this.couponOpen = false;
                 } else {
-                    this.couponError = data.message || 'Código no válido.';
+                    this.couponError = data.message || @json(__('storefront.cart.coupon_invalid'));
                 }
             } catch (e) {
-                this.couponError = 'Error al aplicar el cupón.';
+                this.couponError = @json(__('storefront.cart.coupon_error'));
             } finally {
                 this.couponLoading = false;
             }
