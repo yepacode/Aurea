@@ -20,7 +20,7 @@ class CheckoutService
     /**
      * Process checkout: create customer, order, order items, clear cart.
      *
-     * @param  array{name: string, email: string, phone?: string, address: string, city: string, state: string, zip_code: string, payment_method: string, notes?: string}  $data
+     * @param  array{name: string, email: string, phone?: string, address: string, city: string, state: string, zip_code?: ?string, payment_method: string, notes?: string}  $data
      */
     public function process(array $data): Order
     {
@@ -71,7 +71,7 @@ class CheckoutService
                 'address' => $data['address'],
                 'city' => $data['city'] ?? null,
                 'state' => $data['state'],
-                'zip_code' => $data['zip_code'],
+                'zip_code' => $data['zip_code'] ?? null,
             ]);
 
             return $authCustomer;
@@ -93,7 +93,7 @@ class CheckoutService
                 'address' => $data['address'],
                 'city' => $data['city'] ?? null,
                 'state' => $data['state'],
-                'zip_code' => $data['zip_code'],
+                'zip_code' => $data['zip_code'] ?? null,
             ],
         );
     }
@@ -107,7 +107,7 @@ class CheckoutService
             $data['address'],
             $data['city'] ?? null,
             $data['state'],
-            $data['zip_code'],
+            $data['zip_code'] ?? null,
         ]));
 
         $subtotal = $this->cart->getSubtotal();

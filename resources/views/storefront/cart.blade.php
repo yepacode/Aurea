@@ -4,13 +4,75 @@
 @section('robots', 'noindex, follow')
 
 @section('content')
-<section class="py-12 flex-1" style="background:#FBF8F2;" x-data="cartPage()">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+{{-- Responsive tweaks del carrito (móvil < 768px). Convierte cada ítem en tarjeta
+     apilada, agranda tap-targets, reduce paddings, evita overflow horizontal y
+     hace que el resumen fluya después de los productos (sin sticky). --}}
+<style>
+    /* Evita cualquier overflow horizontal en la vista del carrito */
+    .cart-page{overflow-x:hidden;}
+    .cart-page *{max-width:100%;}
+
+    @media (max-width:767px){
+        .cart-page{padding-top:24px;padding-bottom:24px;}
+        .cart-page__wrap{padding-left:16px;padding-right:16px;}
+
+        /* Header compacto en móvil */
+        .cart-page__header{margin-bottom:20px;flex-direction:column;align-items:flex-start;gap:8px;}
+        .cart-page__title{font-size:22px !important;line-height:1.2;}
+        .cart-page__continue{font-size:13px;}
+
+        /* Cada fila-ítem se ve como tarjeta apilada */
+        .cart-item{display:block !important;background:#fff;border:1px solid #f3f4f6;
+            border-radius:14px;padding:14px !important;margin-bottom:10px;
+            box-shadow:0 4px 14px -8px rgba(46,42,38,.15);}
+        .cart-item > *{grid-column:auto !important;}
+
+        /* Fila 1: imagen + nombre/precio */
+        .cart-item__main{gap:12px;}
+        .cart-item__img{width:72px !important;height:72px !important;}
+
+        /* Fila 2 (qty izq / precio+borrar der) */
+        .cart-item__row2{display:flex;align-items:center;justify-content:space-between;
+            gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;}
+
+        /* Tap-targets ≥ 44px en botones de cantidad */
+        .cart-item .qty-btn{width:44px !important;height:44px !important;font-size:18px !important;}
+        .cart-item .qty-val{width:48px !important;height:44px !important;}
+
+        /* Botón quitar más visible/tocable */
+        .cart-item .remove-btn{padding:8px !important;color:#9ca3af !important;}
+        .cart-item .remove-btn svg{width:20px !important;height:20px !important;}
+
+        /* Total del ítem grande en móvil */
+        .cart-item__total{font-size:16px !important;}
+
+        /* Ocultar la cabecera de tabla (ya no aplica en móvil) */
+        .cart-page__thead{display:none !important;}
+
+        /* Resumen (sidebar) full-width y sin sticky */
+        .cart-summary{position:static !important;top:auto !important;padding:20px !important;
+            border-radius:16px !important;}
+
+        /* Cupón: input + botón sin desbordar */
+        .cart-summary .coupon-row{flex-wrap:wrap;}
+        .cart-summary .coupon-row input{min-width:0;flex:1 1 60% !important;}
+        .cart-summary .coupon-row button{flex:0 0 auto;}
+
+        /* CTA Finalizar compra: full width, ≥ 48px */
+        .cart-summary .cta-checkout{padding:16px !important;min-height:52px;font-size:14px !important;}
+
+        /* Beneficios en una sola columna para leer mejor */
+        .cart-summary .benefits-grid{grid-template-columns:1fr !important;}
+    }
+</style>
+
+<section class="py-12 flex-1 cart-page" style="background:#FBF8F2;" x-data="cartPage()">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 cart-page__wrap">
 
         {{-- Header --}}
-        <div class="flex items-center justify-between mb-8">
-            <h1 class="font-brand text-3xl font-bold" style="color:#2E2A26;">{{ __('storefront.cart.title') }}</h1>
-            <a href="{{ locale_route('products.index') }}" class="text-sm font-medium transition-colors" style="color:#D9B56D;" onmouseover="this.style.color='#BE9A53'" onmouseout="this.style.color='#D9B56D'">
+        <div class="flex items-center justify-between mb-8 cart-page__header">
+            <h1 class="font-brand text-3xl font-bold cart-page__title" style="color:#2E2A26;">{{ __('storefront.cart.title') }}</h1>
+            <a href="{{ locale_route('products.index') }}" class="text-sm font-medium transition-colors cart-page__continue" style="color:#D9B56D;" onmouseover="this.style.color='#BE9A53'" onmouseout="this.style.color='#D9B56D'">
                 ← {{ __('storefront.cart.continue_shopping') }}
             </a>
         </div>
@@ -36,7 +98,7 @@
                 {{-- Items list (2/3) --}}
                 <div class="lg:col-span-2 space-y-1">
                     {{-- Table header (desktop) --}}
-                    <div class="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs uppercase tracking-wider" style="color:#9ca3af;border-bottom:1px solid #e5e7eb;">
+                    <div class="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-xs uppercase tracking-wider cart-page__thead" style="color:#9ca3af;border-bottom:1px solid #e5e7eb;">
                         <div class="col-span-6">{{ __('storefront.cart.product') }}</div>
                         <div class="col-span-2 text-center">{{ __('storefront.cart.price') }}</div>
                         <div class="col-span-2 text-center">{{ __('storefront.cart.qty') }}</div>
@@ -45,9 +107,9 @@
 
                     {{-- Items --}}
                     <template x-for="item in items" :key="item.key">
-                        <div class="grid grid-cols-12 gap-4 items-center px-4 py-5 group rounded-lg transition-colors" style="border-bottom:1px solid #f3f4f6;" onmouseover="this.style.background='#ffffff'" onmouseout="this.style.background='transparent'">
-                            <div class="col-span-12 md:col-span-6 flex gap-4">
-                                <div class="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden flex-shrink-0" style="background:#ffffff;border:1px solid #e5e7eb;">
+                        <div class="grid grid-cols-12 gap-4 items-center px-4 py-5 group rounded-lg transition-colors cart-item" style="border-bottom:1px solid #f3f4f6;" onmouseover="this.style.background='#ffffff'" onmouseout="this.style.background='transparent'">
+                            <div class="col-span-12 md:col-span-6 flex gap-4 cart-item__main">
+                                <div class="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden flex-shrink-0 cart-item__img" style="background:#ffffff;border:1px solid #e5e7eb;">
                                     <template x-if="item.image">
                                         <img :src="'/storage/' + item.image" :alt="item.name" style="max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;padding:6px;">
                                     </template>
@@ -68,16 +130,16 @@
                             <div class="hidden md:flex col-span-2 justify-center">
                                 <span class="text-sm" style="color:#2E2A26;" x-text="'$' + fmt(item.unit_price)"></span>
                             </div>
-                            <div class="col-span-8 md:col-span-2 flex justify-start md:justify-center">
+                            <div class="col-span-8 md:col-span-2 flex justify-start md:justify-center cart-item__row2">
                                 <div class="flex items-center rounded-lg overflow-hidden" style="border:1px solid #e5e7eb;">
-                                    <button @click="updateQty(item.key, item.qty - 1)" class="w-9 h-9 flex items-center justify-center text-sm transition-all" style="color:#6b7280;" onmouseover="this.style.color='#2E2A26';this.style.background='#f3f4f6'" onmouseout="this.style.color='#6b7280';this.style.background='transparent'">−</button>
-                                    <span class="w-10 h-9 flex items-center justify-center text-sm font-medium" style="color:#2E2A26;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;background:#f9fafb;" x-text="item.qty"></span>
-                                    <button @click="updateQty(item.key, item.qty + 1)" class="w-9 h-9 flex items-center justify-center text-sm transition-all" style="color:#6b7280;" onmouseover="this.style.color='#2E2A26';this.style.background='#f3f4f6'" onmouseout="this.style.color='#6b7280';this.style.background='transparent'">+</button>
+                                    <button @click="updateQty(item.key, item.qty - 1)" class="w-9 h-9 flex items-center justify-center text-sm transition-all qty-btn" style="color:#6b7280;" onmouseover="this.style.color='#2E2A26';this.style.background='#f3f4f6'" onmouseout="this.style.color='#6b7280';this.style.background='transparent'" aria-label="Disminuir cantidad">−</button>
+                                    <span class="w-10 h-9 flex items-center justify-center text-sm font-medium qty-val" style="color:#2E2A26;border-left:1px solid #e5e7eb;border-right:1px solid #e5e7eb;background:#f9fafb;" x-text="item.qty"></span>
+                                    <button @click="updateQty(item.key, item.qty + 1)" class="w-9 h-9 flex items-center justify-center text-sm transition-all qty-btn" style="color:#6b7280;" onmouseover="this.style.color='#2E2A26';this.style.background='#f3f4f6'" onmouseout="this.style.color='#6b7280';this.style.background='transparent'" aria-label="Aumentar cantidad">+</button>
                                 </div>
                             </div>
                             <div class="col-span-4 md:col-span-2 flex items-center justify-end gap-3">
-                                <span class="text-sm font-semibold" style="color:#2E2A26;" x-text="'$' + fmt(item.total)"></span>
-                                <button @click="removeItem(item.key)" class="transition-colors" style="color:#d1d5db;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'">
+                                <span class="text-sm font-semibold cart-item__total" style="color:#2E2A26;" x-text="'$' + fmt(item.total)"></span>
+                                <button @click="removeItem(item.key)" class="transition-colors remove-btn" style="color:#d1d5db;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d1d5db'" aria-label="Quitar producto">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                                     </svg>
@@ -90,7 +152,7 @@
 
                 {{-- Summary sidebar (1/3) --}}
                 <div class="lg:col-span-1">
-                    <div class="sticky rounded-2xl p-6 space-y-4" style="top:150px;background:linear-gradient(160deg,#FEFCF8,#F8F2E8);border:1px solid rgba(217,181,109,.18);box-shadow:0 30px 60px -34px rgba(120,92,44,.4);">
+                    <div class="sticky rounded-2xl p-6 space-y-4 cart-summary" style="top:150px;background:linear-gradient(160deg,#FEFCF8,#F8F2E8);border:1px solid rgba(217,181,109,.18);box-shadow:0 30px 60px -34px rgba(120,92,44,.4);">
                         <h2 class="font-brand text-lg font-semibold" style="color:#2E2A26;">Resumen del pedido</h2>
 
                         <div class="space-y-3 text-sm">
@@ -184,7 +246,7 @@
                                     {{ __('storefront.cart.coupon_have') }}
                                 </button>
                                 <div x-show="couponOpen" x-collapse x-cloak style="margin-top:10px;">
-                                    <div style="display:flex;gap:8px;">
+                                    <div class="coupon-row" style="display:flex;gap:8px;">
                                         <input type="text" x-model="couponInput" @keydown.enter.prevent="applyCoupon()"
                                                placeholder="{{ __('storefront.cart.coupon_code_aria') }}"
                                                style="flex:1;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;font-family:inherit;text-transform:uppercase;outline:none;transition:border-color .2s;"
@@ -212,7 +274,7 @@
                         </div>
 
                         <a href="{{ locale_route('checkout.index') }}"
-                           class="block w-full text-center py-4 font-semibold transition-all"
+                           class="block w-full text-center py-4 font-semibold transition-all cta-checkout"
                            style="color:#3B310F;background:linear-gradient(120deg,#E0BE77,#D9B56D 45%,#BE9A53);border-radius:999px;letter-spacing:.12em;text-transform:uppercase;font-size:13px;box-shadow:0 16px 32px -12px rgba(190,154,83,.65);"
                            onmouseover="this.style.boxShadow='0 22px 44px -12px rgba(190,154,83,.85)';this.style.transform='translateY(-2px)'"
                            onmouseout="this.style.boxShadow='0 16px 32px -12px rgba(190,154,83,.65)';this.style.transform='translateY(0)'">
@@ -228,7 +290,7 @@
                                 'Soporte por WhatsApp',
                             ];
                         @endphp
-                        <div class="mt-1 pt-3 border-t grid grid-cols-2 gap-2 text-xs" style="border-color:#e5e7eb;color:#9ca3af;">
+                        <div class="mt-1 pt-3 border-t grid grid-cols-2 gap-2 text-xs benefits-grid" style="border-color:#e5e7eb;color:#9ca3af;">
                             @foreach($cartBenefits as $benefit)
                             <span class="flex items-center gap-1.5">
                                 <svg class="w-3.5 h-3.5 flex-shrink-0" style="color:#16a34a;" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -152,23 +152,37 @@
         </tr>
     </table>
 
-    {{-- Bank transfer details --}}
+    {{-- Bank transfer + medios digitales colombianos (Nequi/Daviplata/Bancolombia a la mano) --}}
     @php
-        // Rellena los campos colombianos si el Mail no los pasó (compat).
-        foreach (['account_type','document_type','document_number','account_number','bank_name','account_holder','reference_instructions','additional_notes'] as $__k) {
+        // Rellena los campos si el Mail no los pasó (compat con pedidos antiguos).
+        foreach ([
+            'account_type','document_type','document_number','account_number',
+            'bank_name','account_holder','nit',
+            'reference_instructions','additional_notes',
+            'nequi_enabled','nequi_number','nequi_instructions',
+            'daviplata_enabled','daviplata_number','daviplata_instructions',
+            'bancolombia_amano_enabled','bancolombia_amano_number',
+        ] as $__k) {
             if (! array_key_exists($__k, $bankDetails ?? [])) {
-                $bankDetails[$__k] = \App\Models\BankTransferSetting::get($__k, '');
+                $bankDetails[$__k] = str_ends_with($__k, '_enabled')
+                    ? (bool) \App\Models\BankTransferSetting::get($__k, '')
+                    : \App\Models\BankTransferSetting::get($__k, '');
             }
         }
+        $__hasBank      = ($bankDetails['account_number'] ?? '') !== '';
+        $__hasNequi     = ! empty($bankDetails['nequi_enabled']) && ! empty($bankDetails['nequi_number']);
+        $__hasDaviplata = ! empty($bankDetails['daviplata_enabled']) && ! empty($bankDetails['daviplata_number']);
+        $__hasBamano    = ! empty($bankDetails['bancolombia_amano_enabled']) && ! empty($bankDetails['bancolombia_amano_number']);
     @endphp
-    @if($order->payment_method === 'transfer' && ($bankDetails['account_number'] ?? '') !== '')
+
+    @if($order->payment_method === 'transfer' && $__hasBank)
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
         <tr>
             <td style="padding:0;border-radius:8px;overflow:hidden;border:1px solid #E8CC92;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                         <td style="background-color:#2E2A26;padding:12px 16px;color:#FFFFFF;font-size:15px;font-weight:700;">
-                            Datos para transferencia bancaria
+                            &#127974; Datos para transferencia bancaria
                         </td>
                     </tr>
                     <tr>
@@ -178,12 +192,15 @@
                                 <tr><td style="padding:4px 0;color:#6B7280;width:150px;">Banco:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['bank_name'] }}</td></tr>
                                 @endif
                                 @if(!empty($bankDetails['account_holder']))
-                                <tr><td style="padding:4px 0;color:#6B7280;">Titular:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                                <tr><td style="padding:4px 0;color:#6B7280;">Beneficiario:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                                @endif
+                                @if(!empty($bankDetails['nit']))
+                                <tr><td style="padding:4px 0;color:#6B7280;">NIT:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['nit'] }}</td></tr>
                                 @endif
                                 @if(!empty($bankDetails['account_type']))
                                 <tr><td style="padding:4px 0;color:#6B7280;">Tipo de cuenta:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_type'] }}</td></tr>
                                 @endif
-                                <tr><td style="padding:4px 0;color:#6B7280;">Nº de cuenta:</td><td style="padding:4px 0;font-weight:700;font-family:monospace;letter-spacing:2px;font-size:15px;">{{ $bankDetails['account_number'] }}</td></tr>
+                                <tr><td style="padding:4px 0;color:#6B7280;">No. de cuenta:</td><td style="padding:4px 0;font-weight:700;font-family:monospace;letter-spacing:2px;font-size:15px;">{{ $bankDetails['account_number'] }}</td></tr>
                                 @if(!empty($bankDetails['document_type']))
                                 <tr><td style="padding:4px 0;color:#6B7280;">Tipo de documento:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['document_type'] }}</td></tr>
                                 @endif
@@ -199,6 +216,99 @@
                             @if(!empty($bankDetails['additional_notes']))
                             <p style="margin:8px 0 0;font-size:13px;color:#6B7280;font-style:italic;">{{ $bankDetails['additional_notes'] }}</p>
                             @endif
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    @endif
+
+    {{-- Nequi --}}
+    @if($order->payment_method === 'transfer' && $__hasNequi)
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+        <tr>
+            <td style="padding:0;border-radius:8px;overflow:hidden;border:1px solid #F5C6DD;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="background-color:#DA0081;padding:12px 16px;color:#FFFFFF;font-size:15px;font-weight:700;">
+                            &#128241; Nequi
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#FDF3F9;padding:16px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#2E2A26;">
+                                <tr><td style="padding:4px 0;color:#6B7280;width:150px;">Número Nequi:</td><td style="padding:4px 0;font-weight:700;font-family:monospace;letter-spacing:2px;font-size:15px;">{{ $bankDetails['nequi_number'] }}</td></tr>
+                                @if(!empty($bankDetails['account_holder']))
+                                <tr><td style="padding:4px 0;color:#6B7280;">Beneficiario:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                                @endif
+                                <tr><td style="padding:4px 0;color:#6B7280;">Referencia:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;">Pedido #{{ $order->id }}</td></tr>
+                                <tr><td style="padding:4px 0;color:#6B7280;">Monto:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;font-size:16px;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
+                            </table>
+                            @if(!empty($bankDetails['nequi_instructions']))
+                            <p style="margin:12px 0 0;font-size:13px;color:#4B5563;">{{ $bankDetails['nequi_instructions'] }}</p>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    @endif
+
+    {{-- Daviplata --}}
+    @if($order->payment_method === 'transfer' && $__hasDaviplata)
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+        <tr>
+            <td style="padding:0;border-radius:8px;overflow:hidden;border:1px solid #F5B7B7;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="background-color:#E1002B;padding:12px 16px;color:#FFFFFF;font-size:15px;font-weight:700;">
+                            &#128179; Daviplata
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#FDEDEE;padding:16px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#2E2A26;">
+                                <tr><td style="padding:4px 0;color:#6B7280;width:150px;">Número Daviplata:</td><td style="padding:4px 0;font-weight:700;font-family:monospace;letter-spacing:2px;font-size:15px;">{{ $bankDetails['daviplata_number'] }}</td></tr>
+                                @if(!empty($bankDetails['account_holder']))
+                                <tr><td style="padding:4px 0;color:#6B7280;">Beneficiario:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                                @endif
+                                <tr><td style="padding:4px 0;color:#6B7280;">Referencia:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;">Pedido #{{ $order->id }}</td></tr>
+                                <tr><td style="padding:4px 0;color:#6B7280;">Monto:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;font-size:16px;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
+                            </table>
+                            @if(!empty($bankDetails['daviplata_instructions']))
+                            <p style="margin:12px 0 0;font-size:13px;color:#4B5563;">{{ $bankDetails['daviplata_instructions'] }}</p>
+                            @endif
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    @endif
+
+    {{-- Bancolombia a la mano --}}
+    @if($order->payment_method === 'transfer' && $__hasBamano)
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+        <tr>
+            <td style="padding:0;border-radius:8px;overflow:hidden;border:1px solid #F0DE7A;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="background-color:#FDDA24;padding:12px 16px;color:#003DA5;font-size:15px;font-weight:700;">
+                            &#128176; Bancolombia a la mano
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color:#FFFBEB;padding:16px;">
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#2E2A26;">
+                                <tr><td style="padding:4px 0;color:#6B7280;width:170px;">Número B. a la mano:</td><td style="padding:4px 0;font-weight:700;font-family:monospace;letter-spacing:2px;font-size:15px;">{{ $bankDetails['bancolombia_amano_number'] }}</td></tr>
+                                @if(!empty($bankDetails['account_holder']))
+                                <tr><td style="padding:4px 0;color:#6B7280;">Beneficiario:</td><td style="padding:4px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                                @endif
+                                <tr><td style="padding:4px 0;color:#6B7280;">Referencia:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;">Pedido #{{ $order->id }}</td></tr>
+                                <tr><td style="padding:4px 0;color:#6B7280;">Monto:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;font-size:16px;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
+                            </table>
                         </td>
                     </tr>
                 </table>

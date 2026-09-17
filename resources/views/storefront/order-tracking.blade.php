@@ -244,16 +244,20 @@
                         @endif
                         @if(($bankDetails['account_number'] ?? '') !== '')
                         <div class="bg-blue-50/50 rounded-lg p-4 space-y-2 text-sm">
+                            <p class="text-xs uppercase tracking-wide font-bold text-blue-700 mb-1">Transferencia bancaria</p>
                             @if(!empty($bankDetails['bank_name']))
                             <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Banco:</span><span class="font-semibold text-text-dark" style="text-align:right;overflow-wrap:anywhere;min-width:0;">{{ $bankDetails['bank_name'] }}</span></div>
                             @endif
                             @if(!empty($bankDetails['account_holder']))
-                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Titular:</span><span class="font-semibold text-text-dark" style="text-align:right;overflow-wrap:anywhere;min-width:0;">{{ $bankDetails['account_holder'] }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Beneficiario:</span><span class="font-semibold text-text-dark" style="text-align:right;overflow-wrap:anywhere;min-width:0;">{{ $bankDetails['account_holder'] }}</span></div>
+                            @endif
+                            @if(!empty($bankDetails['nit']))
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">NIT:</span><span class="font-semibold text-text-dark" style="text-align:right;">{{ $bankDetails['nit'] }}</span></div>
                             @endif
                             @if(!empty($bankDetails['account_type']))
                             <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Tipo de cuenta:</span><span class="font-semibold text-text-dark" style="text-align:right;">{{ $bankDetails['account_type'] }}</span></div>
                             @endif
-                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Nº de cuenta:</span><span class="font-bold text-text-dark font-mono" style="text-align:right;word-break:break-all;min-width:0;">{{ $bankDetails['account_number'] }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">No. de cuenta:</span><span class="font-bold text-text-dark font-mono" style="text-align:right;word-break:break-all;min-width:0;">{{ $bankDetails['account_number'] }}</span></div>
                             @if(!empty($bankDetails['document_type']))
                             <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Tipo de documento:</span><span class="font-semibold text-text-dark" style="text-align:right;">{{ $bankDetails['document_type'] }}</span></div>
                             @endif
@@ -262,6 +266,52 @@
                             @endif
                             <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Referencia:</span><span class="font-bold text-secondary" style="text-align:right;overflow-wrap:anywhere;min-width:0;">Pedido #{{ $order->id }}</span></div>
                             <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Monto:</span><span class="font-bold text-secondary text-base" style="text-align:right;">${{ number_format($order->total, 0, ',', '.') }}</span></div>
+                            @if(!empty($bankDetails['reference_instructions']))
+                            <p class="text-xs text-text-muted mt-2 pt-2 border-t border-blue-100">{{ $bankDetails['reference_instructions'] }}</p>
+                            @endif
+                        </div>
+                        @endif
+
+                        {{-- Medios digitales colombianos: se pintan sólo si están activados en admin --}}
+                        @if(!empty($bankDetails['nequi_enabled']) && !empty($bankDetails['nequi_number']))
+                        <div class="rounded-lg p-4 space-y-2 text-sm" style="background:#FDF3F9;border:1px solid #F5C6DD;">
+                            <p class="text-xs uppercase tracking-wide font-bold mb-1" style="color:#DA0081;">Nequi</p>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Número Nequi:</span><span class="font-bold text-text-dark font-mono" style="text-align:right;word-break:break-all;min-width:0;">{{ $bankDetails['nequi_number'] }}</span></div>
+                            @if(!empty($bankDetails['account_holder']))
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Beneficiario:</span><span class="font-semibold text-text-dark" style="text-align:right;overflow-wrap:anywhere;min-width:0;">{{ $bankDetails['account_holder'] }}</span></div>
+                            @endif
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Referencia:</span><span class="font-bold text-secondary" style="text-align:right;">Pedido #{{ $order->id }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Monto:</span><span class="font-bold text-secondary" style="text-align:right;">${{ number_format($order->total, 0, ',', '.') }}</span></div>
+                            @if(!empty($bankDetails['nequi_instructions']))
+                            <p class="text-xs text-text-muted mt-2 pt-2" style="border-top:1px solid #F5C6DD;">{{ $bankDetails['nequi_instructions'] }}</p>
+                            @endif
+                        </div>
+                        @endif
+
+                        @if(!empty($bankDetails['daviplata_enabled']) && !empty($bankDetails['daviplata_number']))
+                        <div class="rounded-lg p-4 space-y-2 text-sm" style="background:#FDEDEE;border:1px solid #F5B7B7;">
+                            <p class="text-xs uppercase tracking-wide font-bold mb-1" style="color:#E1002B;">Daviplata</p>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Número Daviplata:</span><span class="font-bold text-text-dark font-mono" style="text-align:right;word-break:break-all;min-width:0;">{{ $bankDetails['daviplata_number'] }}</span></div>
+                            @if(!empty($bankDetails['account_holder']))
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Beneficiario:</span><span class="font-semibold text-text-dark" style="text-align:right;overflow-wrap:anywhere;min-width:0;">{{ $bankDetails['account_holder'] }}</span></div>
+                            @endif
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Referencia:</span><span class="font-bold text-secondary" style="text-align:right;">Pedido #{{ $order->id }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Monto:</span><span class="font-bold text-secondary" style="text-align:right;">${{ number_format($order->total, 0, ',', '.') }}</span></div>
+                            @if(!empty($bankDetails['daviplata_instructions']))
+                            <p class="text-xs text-text-muted mt-2 pt-2" style="border-top:1px solid #F5B7B7;">{{ $bankDetails['daviplata_instructions'] }}</p>
+                            @endif
+                        </div>
+                        @endif
+
+                        @if(!empty($bankDetails['bancolombia_amano_enabled']) && !empty($bankDetails['bancolombia_amano_number']))
+                        <div class="rounded-lg p-4 space-y-2 text-sm" style="background:#FFFBEB;border:1px solid #F0DE7A;">
+                            <p class="text-xs uppercase tracking-wide font-bold mb-1" style="color:#003DA5;">Bancolombia a la mano</p>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Número:</span><span class="font-bold text-text-dark font-mono" style="text-align:right;word-break:break-all;min-width:0;">{{ $bankDetails['bancolombia_amano_number'] }}</span></div>
+                            @if(!empty($bankDetails['account_holder']))
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Beneficiario:</span><span class="font-semibold text-text-dark" style="text-align:right;overflow-wrap:anywhere;min-width:0;">{{ $bankDetails['account_holder'] }}</span></div>
+                            @endif
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Referencia:</span><span class="font-bold text-secondary" style="text-align:right;">Pedido #{{ $order->id }}</span></div>
+                            <div class="flex justify-between" style="gap:12px;"><span class="text-text-muted" style="flex-shrink:0;">Monto:</span><span class="font-bold text-secondary" style="text-align:right;">${{ number_format($order->total, 0, ',', '.') }}</span></div>
                         </div>
                         @endif
 

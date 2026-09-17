@@ -143,12 +143,9 @@ return [
         'department' => [
             'required' => 'El departamento es requerido.',
         ],
-        'zip_code' => [
-            'required' => 'El código postal es requerido.',
-        ],
-        'zip' => [
-            'required' => 'El código postal es requerido.',
-        ],
+        // Código postal ya no es obligatorio en checkout (2026-09):
+        // los mensajes 'required' quedan sin uso pero se conservan por si
+        // otro flujo lo pide en el futuro.
         'password' => [
             'required' => 'La contraseña es requerida.',
         ],

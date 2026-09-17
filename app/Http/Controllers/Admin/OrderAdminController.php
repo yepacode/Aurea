@@ -62,7 +62,9 @@ class OrderAdminController extends Controller
             'items.*.qty' => 'required|integer|min:1|max:10000',
             'items.*.unit_price' => 'required|numeric|min:0',
             'shipping' => 'nullable|numeric|min:0',
-            'payment_method' => 'required|in:transfer,cash_on_delivery,epayco,manual',
+            // 'cash_on_delivery' quedó DESHABILITADO 2026-09 al crear pedidos desde admin.
+            // Los pedidos históricos con ese método siguen visibles en index/show.
+            'payment_method' => 'required|in:transfer,epayco,manual',
             'payment_status' => 'required|in:pending,paid,processing',
             'notes' => 'nullable|string|max:1000',
         ]);

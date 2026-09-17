@@ -278,11 +278,10 @@
     {{-- Footer --}}
     @include('partials.footer')
 
-    {{-- WhatsApp: widget con FAB colapsado + popup expandido (online/offline según horario) --}}
-    @include('partials.whatsapp-widget')
-
-    {{-- Chatbot FAQ con escalada a WhatsApp humano --}}
-    @include('partials.chatbot')
+    {{-- Widget de ayuda unificado (FAB dorado con tabs FAQ + WhatsApp).
+         Reemplaza a partials.whatsapp-widget y partials.chatbot; los partials
+         antiguos siguen en /partials/ por retro-compat pero ya no se incluyen. --}}
+    @include('partials.help-widget')
 
     {{-- Activa el modo "reveal" solo cuando hay JS (evita contenido invisible si JS falla) --}}
     <script>document.documentElement.classList.add('reveal-ready');</script>

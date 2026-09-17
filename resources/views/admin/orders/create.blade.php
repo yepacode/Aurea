@@ -156,7 +156,8 @@
                     <select name="payment_method" required
                             class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         <option value="transfer" {{ old('payment_method') === 'transfer' ? 'selected' : '' }}>Transferencia bancaria</option>
-                        <option value="cash_on_delivery" {{ old('payment_method') === 'cash_on_delivery' ? 'selected' : '' }}>Contra entrega</option>
+                        {{-- 'cash_on_delivery' DESHABILITADO 2026-09: se conserva soporte histórico
+                             en el modelo Order pero ya no se ofrece al crear pedidos. --}}
                         <option value="epayco" {{ old('payment_method') === 'epayco' ? 'selected' : '' }}>ePayco</option>
                         <option value="manual" {{ old('payment_method', 'manual') === 'manual' ? 'selected' : '' }}>Manual (ya recibido por fuera)</option>
                     </select>

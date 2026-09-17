@@ -223,12 +223,12 @@
                                 <p x-show="errors.state" x-text="errors.state" class="text-danger text-xs mt-1"></p>
                             </div>
 
-                            {{-- Zip code --}}
+                            {{-- Zip code (opcional — muchas zonas rurales/veredas no tienen) --}}
                             <div>
-                                <label for="zip_code" class="block text-sm font-medium text-text-muted mb-1.5">Código postal *</label>
+                                <label for="zip_code" class="block text-sm font-medium text-text-muted mb-1.5">Código postal <span class="text-text-muted/60 font-normal normal-case tracking-normal">(opcional)</span></label>
                                 <input type="text" id="zip_code" name="zip_code" autocomplete="postal-code" x-model="form.zip_code"
                                        class="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark placeholder-text-muted/40 focus:outline-none focus:border-secondary/50 focus:ring-2 focus:ring-secondary/10 transition-colors"
-                                       placeholder="00000" maxlength="10">
+                                       placeholder="Opcional" maxlength="20">
                                 <p x-show="errors.zip_code" x-text="errors.zip_code" class="text-danger text-xs mt-1"></p>
                             </div>
                         </div>
@@ -273,16 +273,9 @@
                             </label>
                             @endif
 
-                            {{-- Contra entrega --}}
-                            <label class="flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200"
-                                   :class="form.payment_method === 'cash_on_delivery' ? 'co-pay--on' : 'border-border-light hover:border-primary/30'">
-                                <input type="radio" name="payment_method" x-model="form.payment_method" value="cash_on_delivery" class="text-primary focus:ring-primary">
-                                <div class="flex-1">
-                                    <span class="text-sm font-semibold text-text-dark">{{ __('storefront.checkout.cod') }}</span>
-                                    <p class="text-xs text-text-muted mt-0.5">Paga en efectivo al recibir tu pedido</p>
-                                </div>
-                                <svg class="w-6 h-5" style="color:#BE9A53;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.5 12h3"/></svg>
-                            </label>
+                            {{-- Contra entrega DESHABILITADO por decisión comercial (2026-09) —
+                                 dejamos la lógica en modelos/seeders para no romper pedidos históricos,
+                                 pero ya no se ofrece en checkout. --}}
 
                         </div>
                     </div>
@@ -685,13 +678,14 @@ function checkoutForm() {
         },
 
         validate() {
+            // Código postal ya NO es requerido (2026-09): muchas zonas rurales/veredas
+            // colombianas no tienen y bloqueaba la conversión.
             const required = {
                 name:     { label: 'Nombre',         msg: 'El nombre es requerido.' },
                 email:    { label: 'Email',          msg: 'El correo es requerido.' },
                 address:  { label: 'Dirección',      msg: 'La dirección es requerida.' },
                 city:     { label: 'Ciudad',         msg: 'La ciudad es requerida.' },
                 state:    { label: 'Departamento',   msg: 'El departamento es requerido.' },
-                zip_code: { label: 'Código postal',  msg: 'El código postal es requerido.' },
             };
             for (const [field, { msg }] of Object.entries(required)) {
                 if (!this.form[field]?.trim()) {

@@ -263,10 +263,14 @@ class CheckoutController extends Controller
 
     public function process(Request $request): RedirectResponse|JsonResponse
     {
-        // Métodos válidos: solo 'card' si Stripe está configurado; siempre los otros.
-        // 'transfer' solo se admite si el admin ya cargó datos bancarios — sin cuenta destino
-        // el cliente no puede completar el pago, así que el checkout no lo ofrece.
-        $allowedMethods = ['cash_on_delivery', 'epayco'];
+        // Métodos válidos: 'epayco' siempre; 'transfer' solo si el admin ya cargó
+        // datos bancarios (sin cuenta destino el cliente no puede completar el pago);
+        // 'card' solo si Stripe está configurado.
+        // 'cash_on_delivery' quedó DESHABILITADO en checkout por decisión comercial
+        // (2026-09): NO se agrega a $allowedMethods, así un POST directo con ese
+        // método devuelve 422. Los pedidos históricos con cash_on_delivery siguen
+        // visibles en admin (sólo se bloquea la creación desde el storefront).
+        $allowedMethods = ['epayco'];
         if (! empty(trim((string) \App\Models\BankTransferSetting::get('account_number', '')))) {
             $allowedMethods[] = 'transfer';
         }
@@ -281,7 +285,9 @@ class CheckoutController extends Controller
             'address' => 'required|string|max:500',
             'city' => 'required|string|max:100',
             'state' => 'required|string|max:100',
-            'zip_code' => 'required|string|max:10',
+            // Código postal ya no es obligatorio (2026-09): zonas rurales/veredas
+            // colombianas no tienen y bloqueaba el checkout.
+            'zip_code' => 'nullable|string|max:20',
             'payment_method' => 'required|in:'.implode(',', $allowedMethods),
             'stripe_payment_intent_id' => 'required_if:payment_method,card|nullable|string',
             'notes' => 'nullable|string|max:1000',
@@ -344,8 +350,36 @@ class CheckoutController extends Controller
 
         $order->load(['items.product', 'items.variant', 'customer']);
 
+        // Si el pedido pidió transferencia, cargamos los datos bancarios +
+        // medios digitales para que la vista de confirmación los muestre
+        // igual que en el seguimiento (así el cliente no tiene que ir a otra
+        // pantalla para saber a dónde transferir).
+        $bankDetails = [];
+        if ($order->payment_method === 'transfer') {
+            $bankDetails = [
+                'bank_name'       => \App\Models\BankTransferSetting::get('bank_name', ''),
+                'account_holder'  => \App\Models\BankTransferSetting::get('account_holder', ''),
+                'nit'             => \App\Models\BankTransferSetting::get('nit', ''),
+                'account_type'    => \App\Models\BankTransferSetting::get('account_type', ''),
+                'account_number'  => \App\Models\BankTransferSetting::get('account_number', ''),
+                'document_type'   => \App\Models\BankTransferSetting::get('document_type', ''),
+                'document_number' => \App\Models\BankTransferSetting::get('document_number', ''),
+                'reference_instructions' => \App\Models\BankTransferSetting::get('reference_instructions', ''),
+                'additional_notes'       => \App\Models\BankTransferSetting::get('additional_notes', ''),
+                'nequi_enabled'              => (bool) \App\Models\BankTransferSetting::get('nequi_enabled', ''),
+                'nequi_number'               => \App\Models\BankTransferSetting::get('nequi_number', ''),
+                'nequi_instructions'         => \App\Models\BankTransferSetting::get('nequi_instructions', ''),
+                'daviplata_enabled'          => (bool) \App\Models\BankTransferSetting::get('daviplata_enabled', ''),
+                'daviplata_number'           => \App\Models\BankTransferSetting::get('daviplata_number', ''),
+                'daviplata_instructions'     => \App\Models\BankTransferSetting::get('daviplata_instructions', ''),
+                'bancolombia_amano_enabled'  => (bool) \App\Models\BankTransferSetting::get('bancolombia_amano_enabled', ''),
+                'bancolombia_amano_number'   => \App\Models\BankTransferSetting::get('bancolombia_amano_number', ''),
+            ];
+        }
+
         return view('storefront.checkout-confirmation', [
             'order' => $order,
+            'bankDetails' => $bankDetails,
         ]);
     }
 
@@ -378,12 +412,23 @@ class CheckoutController extends Controller
             $bankDetails = [
                 'bank_name'       => \App\Models\BankTransferSetting::get('bank_name', ''),
                 'account_holder'  => \App\Models\BankTransferSetting::get('account_holder', ''),
+                'nit'             => \App\Models\BankTransferSetting::get('nit', ''),
                 'account_type'    => \App\Models\BankTransferSetting::get('account_type', ''),
                 'account_number'  => \App\Models\BankTransferSetting::get('account_number', ''),
                 'document_type'   => \App\Models\BankTransferSetting::get('document_type', ''),
                 'document_number' => \App\Models\BankTransferSetting::get('document_number', ''),
                 'reference_instructions' => \App\Models\BankTransferSetting::get('reference_instructions', ''),
                 'additional_notes'       => \App\Models\BankTransferSetting::get('additional_notes', ''),
+                // Medios digitales colombianos — solo cargamos si están activados
+                // en admin. La vista decide si pintar cada bloque.
+                'nequi_enabled'              => (bool) \App\Models\BankTransferSetting::get('nequi_enabled', ''),
+                'nequi_number'               => \App\Models\BankTransferSetting::get('nequi_number', ''),
+                'nequi_instructions'         => \App\Models\BankTransferSetting::get('nequi_instructions', ''),
+                'daviplata_enabled'          => (bool) \App\Models\BankTransferSetting::get('daviplata_enabled', ''),
+                'daviplata_number'           => \App\Models\BankTransferSetting::get('daviplata_number', ''),
+                'daviplata_instructions'     => \App\Models\BankTransferSetting::get('daviplata_instructions', ''),
+                'bancolombia_amano_enabled'  => (bool) \App\Models\BankTransferSetting::get('bancolombia_amano_enabled', ''),
+                'bancolombia_amano_number'   => \App\Models\BankTransferSetting::get('bancolombia_amano_number', ''),
             ];
         }
 

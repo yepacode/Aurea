@@ -261,6 +261,99 @@
         </div>
         @endif
 
+        {{-- ===== Bloques de datos para transferencia + medios digitales =====
+             Se pintan sólo si el método fue "transfer" y el admin cargó al menos
+             uno de los canales activos. Duplica visualmente lo que ve el cliente
+             en el seguimiento (`order-tracking`) para que no tenga que cambiar de
+             pantalla apenas termine el pedido. --}}
+        @if($order->payment_method === 'transfer' && !empty($bankDetails))
+        @php
+            $__hasBank      = ($bankDetails['account_number'] ?? '') !== '';
+            $__hasNequi     = ! empty($bankDetails['nequi_enabled']) && ! empty($bankDetails['nequi_number']);
+            $__hasDaviplata = ! empty($bankDetails['daviplata_enabled']) && ! empty($bankDetails['daviplata_number']);
+            $__hasBamano    = ! empty($bankDetails['bancolombia_amano_enabled']) && ! empty($bankDetails['bancolombia_amano_number']);
+        @endphp
+        @if($__hasBank || $__hasNequi || $__hasDaviplata || $__hasBamano)
+        <div style="max-width:640px;margin:26px auto 0;background:#fff;border:1px solid #E5DCC9;border-radius:14px;padding:22px;text-align:left;">
+            <h3 style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:#2E2A26;margin:0 0 14px;">Datos para tu transferencia</h3>
+
+            @if($__hasBank)
+            <div style="border:1px solid #E8CC92;border-radius:10px;padding:14px;background:#FBF4E6;margin-bottom:12px;">
+                <p style="font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8A6E2E;margin:0 0 8px;">Transferencia bancaria</p>
+                <table style="width:100%;font-size:13.5px;color:#2E2A26;border-collapse:collapse;">
+                    @if(!empty($bankDetails['bank_name']))
+                    <tr><td style="padding:3px 0;color:#6B7280;width:150px;">Banco:</td><td style="padding:3px 0;font-weight:600;">{{ $bankDetails['bank_name'] }}</td></tr>
+                    @endif
+                    @if(!empty($bankDetails['account_holder']))
+                    <tr><td style="padding:3px 0;color:#6B7280;">Beneficiario:</td><td style="padding:3px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                    @endif
+                    @if(!empty($bankDetails['nit']))
+                    <tr><td style="padding:3px 0;color:#6B7280;">NIT:</td><td style="padding:3px 0;font-weight:600;">{{ $bankDetails['nit'] }}</td></tr>
+                    @endif
+                    @if(!empty($bankDetails['account_type']))
+                    <tr><td style="padding:3px 0;color:#6B7280;">Tipo de cuenta:</td><td style="padding:3px 0;font-weight:600;">{{ $bankDetails['account_type'] }}</td></tr>
+                    @endif
+                    <tr><td style="padding:3px 0;color:#6B7280;">No. de cuenta:</td><td style="padding:3px 0;font-weight:700;font-family:ui-monospace,monospace;letter-spacing:1px;">{{ $bankDetails['account_number'] }}</td></tr>
+                    <tr><td style="padding:3px 0;color:#6B7280;">Referencia:</td><td style="padding:3px 0;font-weight:700;color:#BE9A53;">Pedido #{{ $order->id }}</td></tr>
+                    <tr><td style="padding:3px 0;color:#6B7280;">Monto:</td><td style="padding:3px 0;font-weight:700;color:#BE9A53;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
+                </table>
+                @if(!empty($bankDetails['reference_instructions']))
+                <p style="margin:8px 0 0;font-size:12px;color:#4B5563;">{{ $bankDetails['reference_instructions'] }}</p>
+                @endif
+            </div>
+            @endif
+
+            @if($__hasNequi)
+            <div style="border:1px solid #F5C6DD;border-radius:10px;padding:14px;background:#FDF3F9;margin-bottom:12px;">
+                <p style="font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#DA0081;margin:0 0 8px;">Nequi</p>
+                <table style="width:100%;font-size:13.5px;color:#2E2A26;border-collapse:collapse;">
+                    <tr><td style="padding:3px 0;color:#6B7280;width:150px;">Número Nequi:</td><td style="padding:3px 0;font-weight:700;font-family:ui-monospace,monospace;">{{ $bankDetails['nequi_number'] }}</td></tr>
+                    @if(!empty($bankDetails['account_holder']))
+                    <tr><td style="padding:3px 0;color:#6B7280;">Beneficiario:</td><td style="padding:3px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                    @endif
+                    <tr><td style="padding:3px 0;color:#6B7280;">Referencia:</td><td style="padding:3px 0;font-weight:700;color:#BE9A53;">Pedido #{{ $order->id }}</td></tr>
+                    <tr><td style="padding:3px 0;color:#6B7280;">Monto:</td><td style="padding:3px 0;font-weight:700;color:#BE9A53;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
+                </table>
+                @if(!empty($bankDetails['nequi_instructions']))
+                <p style="margin:8px 0 0;font-size:12px;color:#4B5563;">{{ $bankDetails['nequi_instructions'] }}</p>
+                @endif
+            </div>
+            @endif
+
+            @if($__hasDaviplata)
+            <div style="border:1px solid #F5B7B7;border-radius:10px;padding:14px;background:#FDEDEE;margin-bottom:12px;">
+                <p style="font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#E1002B;margin:0 0 8px;">Daviplata</p>
+                <table style="width:100%;font-size:13.5px;color:#2E2A26;border-collapse:collapse;">
+                    <tr><td style="padding:3px 0;color:#6B7280;width:150px;">Número Daviplata:</td><td style="padding:3px 0;font-weight:700;font-family:ui-monospace,monospace;">{{ $bankDetails['daviplata_number'] }}</td></tr>
+                    @if(!empty($bankDetails['account_holder']))
+                    <tr><td style="padding:3px 0;color:#6B7280;">Beneficiario:</td><td style="padding:3px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                    @endif
+                    <tr><td style="padding:3px 0;color:#6B7280;">Referencia:</td><td style="padding:3px 0;font-weight:700;color:#BE9A53;">Pedido #{{ $order->id }}</td></tr>
+                    <tr><td style="padding:3px 0;color:#6B7280;">Monto:</td><td style="padding:3px 0;font-weight:700;color:#BE9A53;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
+                </table>
+                @if(!empty($bankDetails['daviplata_instructions']))
+                <p style="margin:8px 0 0;font-size:12px;color:#4B5563;">{{ $bankDetails['daviplata_instructions'] }}</p>
+                @endif
+            </div>
+            @endif
+
+            @if($__hasBamano)
+            <div style="border:1px solid #F0DE7A;border-radius:10px;padding:14px;background:#FFFBEB;">
+                <p style="font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#003DA5;margin:0 0 8px;">Bancolombia a la mano</p>
+                <table style="width:100%;font-size:13.5px;color:#2E2A26;border-collapse:collapse;">
+                    <tr><td style="padding:3px 0;color:#6B7280;width:150px;">Número:</td><td style="padding:3px 0;font-weight:700;font-family:ui-monospace,monospace;">{{ $bankDetails['bancolombia_amano_number'] }}</td></tr>
+                    @if(!empty($bankDetails['account_holder']))
+                    <tr><td style="padding:3px 0;color:#6B7280;">Beneficiario:</td><td style="padding:3px 0;font-weight:600;">{{ $bankDetails['account_holder'] }}</td></tr>
+                    @endif
+                    <tr><td style="padding:3px 0;color:#6B7280;">Referencia:</td><td style="padding:3px 0;font-weight:700;color:#BE9A53;">Pedido #{{ $order->id }}</td></tr>
+                    <tr><td style="padding:3px 0;color:#6B7280;">Monto:</td><td style="padding:3px 0;font-weight:700;color:#BE9A53;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
+                </table>
+            </div>
+            @endif
+        </div>
+        @endif
+        @endif
+
         {{-- ===== Bloque: Resumen de tu compra (ítems + total) ===== --}}
         <div style="max-width:640px;margin:26px auto 0;background:#fff;border:1px solid #E5DCC9;border-radius:14px;padding:22px;text-align:left;">
             <h3 style="font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:#2E2A26;margin:0 0 14px;">Resumen de tu compra</h3>
