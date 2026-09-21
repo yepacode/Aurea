@@ -68,4 +68,10 @@ return [
         'meta_pixel' => env('META_PIXEL_ID'),        // 15–16 dígitos
     ],
 
+    // Google (Search Console): meta tag de verificación del sitio.
+    // Se emite en el <head> de layouts app y admin si está definida.
+    'google' => [
+        'site_verification' => env('GOOGLE_SITE_VERIFICATION', 'LRPmPb_Df5tYLqU6xyoQcUzMkhtAXe26W6bw4Z2QGis'),
+    ],
+
 ];

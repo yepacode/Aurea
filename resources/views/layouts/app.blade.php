@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    {{-- Verificación de Google Search Console (configurable en .env) --}}
+    @if($__gsv = config('services.google.site_verification'))
+        <meta name="google-site-verification" content="{{ $__gsv }}">
+    @endif
+
     {{-- hreflang para SEO multi-idioma (ES = default sin prefijo, EN = /en/…) --}}
     @foreach(config('app.available_locales', []) as $__lc => $__lname)
         <link rel="alternate" hreflang="{{ $__lc }}" href="{{ url(switch_locale_url($__lc)) }}">
