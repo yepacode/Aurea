@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bundle;
+use App\Models\SeoSetting;
 use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -21,7 +22,9 @@ class BundleController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return view('storefront.bundles.index', compact('bundles'));
+        $seoSettings = SeoSetting::getForPage('bundles-index');
+
+        return view('storefront.bundles.index', compact('bundles', 'seoSettings'));
     }
 
     public function show(string $slug): View

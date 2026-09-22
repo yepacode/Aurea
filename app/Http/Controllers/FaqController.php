@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ContactPageSetting;
 use App\Models\Faq;
 use App\Models\FaqCategory;
+use App\Models\SeoSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,6 +28,7 @@ class FaqController extends Controller
         return view('storefront.faq.index', [
             'categories'  => $categories,
             'whatsappUrl' => ContactPageSetting::whatsappUrl(),
+            'seoSettings' => SeoSetting::getForPage('faq'),
         ]);
     }
 

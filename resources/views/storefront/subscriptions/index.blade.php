@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Rituales mensuales — Belleza Áurea')
-@section('meta_description', 'Suscríbete a tus rituales de belleza y recíbelos automáticamente cada mes con descuento exclusivo de suscriptora. Pausa o cancela cuando quieras.')
+@section('title', $seoSettings?->meta_title ?? 'Rituales mensuales — Belleza Áurea')
+@section('meta_description', $seoSettings?->meta_description ?? 'Suscríbete a tus rituales de belleza y recíbelos automáticamente cada mes con descuento exclusivo de suscriptora. Pausa o cancela cuando quieras.')
+@section('og_title', $seoSettings?->og_title ?? $seoSettings?->meta_title ?? 'Rituales mensuales — Belleza Áurea')
+@section('og_description', $seoSettings?->og_description ?? $seoSettings?->meta_description ?? 'Suscríbete a tus rituales de belleza y recíbelos automáticamente cada mes con descuento exclusivo de suscriptora. Pausa o cancela cuando quieras.')
+@section('twitter_title', $seoSettings?->twitter_title ?? $seoSettings?->meta_title ?? 'Rituales mensuales — Belleza Áurea')
+@section('twitter_description', $seoSettings?->twitter_description ?? $seoSettings?->meta_description ?? 'Suscríbete a tus rituales de belleza y recíbelos automáticamente cada mes con descuento exclusivo de suscriptora. Pausa o cancela cuando quieras.')
+@section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
 @push('head')
 <style>

@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Recomienda y gana | Belleza Áurea')
+@section('title', $seoSettings?->meta_title ?? 'Recomienda y gana | Belleza Áurea')
+@section('meta_description', $seoSettings?->meta_description ?? 'Programa Recomienda y gana de Belleza Áurea: comparte tu código, tus amigas reciben 500 puntos de bienvenida y tú ganas 500 puntos por cada primera compra.')
+@section('og_title', $seoSettings?->og_title ?? $seoSettings?->meta_title ?? 'Recomienda y gana | Belleza Áurea')
+@section('og_description', $seoSettings?->og_description ?? $seoSettings?->meta_description ?? 'Comparte tu código con tus amigas: ellas reciben 500 puntos de bienvenida y tú ganas 500 puntos por cada primera compra.')
+@section('twitter_title', $seoSettings?->twitter_title ?? $seoSettings?->meta_title ?? 'Recomienda y gana | Belleza Áurea')
+@section('twitter_description', $seoSettings?->twitter_description ?? $seoSettings?->meta_description ?? 'Comparte tu código con tus amigas: ellas reciben 500 puntos de bienvenida y tú ganas 500 puntos por cada primera compra.')
+@section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 @section('robots', 'noindex, nofollow')
 
 @section('content')

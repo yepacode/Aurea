@@ -1,7 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Kits & Rituales — Belleza Áurea')
-@section('meta_description', 'Descubre los kits y rituales de Belleza Áurea: combos curados de productos para tu piel, cabello y uñas con precios especiales y ahorro real.')
+@section('title', $seoSettings?->meta_title ?? 'Kits & Rituales — Belleza Áurea')
+@section('meta_description', $seoSettings?->meta_description ?? 'Descubre los kits y rituales de Belleza Áurea: combos curados de productos para tu piel, cabello y uñas con precios especiales y ahorro real.')
+@section('og_title', $seoSettings?->og_title ?? $seoSettings?->meta_title ?? 'Kits & Rituales — Belleza Áurea')
+@section('og_description', $seoSettings?->og_description ?? $seoSettings?->meta_description ?? 'Descubre los kits y rituales de Belleza Áurea: combos curados de productos para tu piel, cabello y uñas con precios especiales y ahorro real.')
+@section('twitter_title', $seoSettings?->twitter_title ?? $seoSettings?->meta_title ?? 'Kits & Rituales — Belleza Áurea')
+@section('twitter_description', $seoSettings?->twitter_description ?? $seoSettings?->meta_description ?? 'Descubre los kits y rituales de Belleza Áurea: combos curados de productos para tu piel, cabello y uñas con precios especiales y ahorro real.')
+@section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
 @push('head')
 <style>

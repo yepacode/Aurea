@@ -246,16 +246,22 @@ class StorefrontController extends Controller
 
     public function terms(): View
     {
-        return view('storefront.pages.terminos');
+        $seoSettings = SeoSetting::getForPage('terms');
+
+        return view('storefront.pages.terminos', compact('seoSettings'));
     }
 
     public function privacy(): View
     {
-        return view('storefront.pages.privacidad');
+        $seoSettings = SeoSetting::getForPage('privacy');
+
+        return view('storefront.pages.privacidad', compact('seoSettings'));
     }
 
     public function cookies(): View
     {
-        return view('storefront.pages.cookies');
+        $seoSettings = SeoSetting::getForPage('cookies');
+
+        return view('storefront.pages.cookies', compact('seoSettings'));
     }
 }

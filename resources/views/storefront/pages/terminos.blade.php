@@ -1,8 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Términos y condiciones | ' . config('legal.brand_name'))
-@section('meta_description', 'Términos y condiciones de uso y compra en ' . config('legal.brand_name') . '. Condiciones de venta, pagos, envíos, derecho de retracto y garantías.')
-@section('canonical', route('legal.terms'))
+@section('title', $seoSettings?->meta_title ?? ('Términos y condiciones | ' . config('legal.brand_name')))
+@section('meta_description', $seoSettings?->meta_description ?? ('Términos y condiciones de uso y compra en ' . config('legal.brand_name') . '. Condiciones de venta, pagos, envíos, derecho de retracto y garantías.'))
+@section('canonical', $seoSettings?->canonical_url ?? route('legal.terms'))
+@section('og_title', $seoSettings?->og_title ?? $seoSettings?->meta_title ?? ('Términos y condiciones | ' . config('legal.brand_name')))
+@section('og_description', $seoSettings?->og_description ?? $seoSettings?->meta_description ?? ('Términos y condiciones de uso y compra en ' . config('legal.brand_name') . '.'))
+@section('twitter_title', $seoSettings?->twitter_title ?? $seoSettings?->meta_title ?? ('Términos y condiciones | ' . config('legal.brand_name')))
+@section('twitter_description', $seoSettings?->twitter_description ?? $seoSettings?->meta_description ?? ('Términos y condiciones de uso y compra en ' . config('legal.brand_name') . '.'))
+@section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
 @php
     // Muestra los valores del config; si es un placeholder [ ... ] lo resalta.

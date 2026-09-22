@@ -1,8 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Política de cookies | ' . config('legal.brand_name'))
-@section('meta_description', 'Política de cookies de ' . config('legal.brand_name') . '. Qué cookies usamos, para qué sirven y cómo puedes gestionarlas o desactivarlas.')
-@section('canonical', route('legal.cookies'))
+@section('title', $seoSettings?->meta_title ?? ('Política de cookies | ' . config('legal.brand_name')))
+@section('meta_description', $seoSettings?->meta_description ?? ('Política de cookies de ' . config('legal.brand_name') . '. Qué cookies usamos, para qué sirven y cómo puedes gestionarlas o desactivarlas.'))
+@section('canonical', $seoSettings?->canonical_url ?? route('legal.cookies'))
+@section('og_title', $seoSettings?->og_title ?? $seoSettings?->meta_title ?? ('Política de cookies | ' . config('legal.brand_name')))
+@section('og_description', $seoSettings?->og_description ?? $seoSettings?->meta_description ?? ('Qué cookies usamos, para qué sirven y cómo puedes gestionarlas o desactivarlas.'))
+@section('twitter_title', $seoSettings?->twitter_title ?? $seoSettings?->meta_title ?? ('Política de cookies | ' . config('legal.brand_name')))
+@section('twitter_description', $seoSettings?->twitter_description ?? $seoSettings?->meta_description ?? ('Qué cookies usamos, para qué sirven y cómo puedes gestionarlas o desactivarlas.'))
+@section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
 @php
     $ph = fn ($v) => \Illuminate\Support\Str::startsWith((string) $v, '[')

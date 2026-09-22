@@ -1,8 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Política de privacidad y tratamiento de datos | ' . config('legal.brand_name'))
-@section('meta_description', 'Política de tratamiento de datos personales de ' . config('legal.brand_name') . ' conforme a la Ley 1581 de 2012 (Habeas Data) y el Decreto 1377 de 2013.')
-@section('canonical', route('legal.privacy'))
+@section('title', $seoSettings?->meta_title ?? ('Política de privacidad y tratamiento de datos | ' . config('legal.brand_name')))
+@section('meta_description', $seoSettings?->meta_description ?? ('Política de tratamiento de datos personales de ' . config('legal.brand_name') . ' conforme a la Ley 1581 de 2012 (Habeas Data) y el Decreto 1377 de 2013.'))
+@section('canonical', $seoSettings?->canonical_url ?? route('legal.privacy'))
+@section('og_title', $seoSettings?->og_title ?? $seoSettings?->meta_title ?? ('Política de privacidad y tratamiento de datos | ' . config('legal.brand_name')))
+@section('og_description', $seoSettings?->og_description ?? $seoSettings?->meta_description ?? ('Cómo tratamos tus datos personales conforme a la Ley 1581 de 2012 (Habeas Data).'))
+@section('twitter_title', $seoSettings?->twitter_title ?? $seoSettings?->meta_title ?? ('Política de privacidad y tratamiento de datos | ' . config('legal.brand_name')))
+@section('twitter_description', $seoSettings?->twitter_description ?? $seoSettings?->meta_description ?? ('Cómo tratamos tus datos personales conforme a la Ley 1581 de 2012 (Habeas Data).'))
+@section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
 @php
     $ph = fn ($v) => \Illuminate\Support\Str::startsWith((string) $v, '[')

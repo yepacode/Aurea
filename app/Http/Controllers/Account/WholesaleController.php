@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
 use App\Mail\WholesaleRequestReceived;
+use App\Models\SeoSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,8 +31,9 @@ class WholesaleController extends Controller
     {
         $customer = $this->customer();
         $volumeOptions = config('wholesale.monthly_volume_options', []);
+        $seoSettings = SeoSetting::getForPage('wholesale');
 
-        return view('account.wholesale-request', compact('customer', 'volumeOptions'));
+        return view('account.wholesale-request', compact('customer', 'volumeOptions', 'seoSettings'));
     }
 
     public function submit(Request $request): RedirectResponse

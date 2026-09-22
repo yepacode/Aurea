@@ -1,8 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Preguntas frecuentes | Belleza Áurea')
-@section('meta_description', 'Respuestas a las preguntas más frecuentes sobre envíos, pagos, devoluciones, productos y programa de mayoristas de Belleza Áurea.')
-@section('canonical', route('faq.index'))
+@section('title', $seoSettings?->meta_title ?? 'Preguntas frecuentes | Belleza Áurea')
+@section('meta_description', $seoSettings?->meta_description ?? 'Respuestas a las preguntas más frecuentes sobre envíos, pagos, devoluciones, productos y programa de mayoristas de Belleza Áurea.')
+@section('canonical', $seoSettings?->canonical_url ?? route('faq.index'))
+@section('og_title', $seoSettings?->og_title ?? $seoSettings?->meta_title ?? 'Preguntas frecuentes | Belleza Áurea')
+@section('og_description', $seoSettings?->og_description ?? $seoSettings?->meta_description ?? 'Respuestas a las preguntas más frecuentes sobre envíos, pagos, devoluciones, productos y programa de mayoristas de Belleza Áurea.')
+@section('twitter_title', $seoSettings?->twitter_title ?? $seoSettings?->meta_title ?? 'Preguntas frecuentes | Belleza Áurea')
+@section('twitter_description', $seoSettings?->twitter_description ?? $seoSettings?->meta_description ?? 'Respuestas a las preguntas más frecuentes sobre envíos, pagos, devoluciones, productos y programa de mayoristas de Belleza Áurea.')
+@section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
 @push('schema')
 <script type="application/ld+json">

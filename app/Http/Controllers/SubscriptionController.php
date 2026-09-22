@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\SubscriptionCreated;
+use App\Models\SeoSetting;
 use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,9 @@ class SubscriptionController extends Controller
             ->with(['products' => fn ($q) => $q->select('products.id', 'products.name', 'products.slug', 'products.price', 'products.images')])
             ->get();
 
-        return view('storefront.subscriptions.index', compact('plans'));
+        $seoSettings = SeoSetting::getForPage('subscriptions-index');
+
+        return view('storefront.subscriptions.index', compact('plans', 'seoSettings'));
     }
 
     /** Ficha detallada de un plan. */

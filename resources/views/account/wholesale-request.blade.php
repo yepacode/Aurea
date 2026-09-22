@@ -1,6 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Programa mayorista | Belleza Áurea')
+@section('title', $seoSettings?->meta_title ?? 'Programa mayorista | Belleza Áurea')
+@section('meta_description', $seoSettings?->meta_description ?? 'Programa mayorista de Belleza Áurea: descuentos exclusivos y condiciones especiales para negocios, salones y distribuidoras.')
+@section('og_title', $seoSettings?->og_title ?? $seoSettings?->meta_title ?? 'Programa mayorista | Belleza Áurea')
+@section('og_description', $seoSettings?->og_description ?? $seoSettings?->meta_description ?? 'Descuentos exclusivos y condiciones especiales para negocios, salones y distribuidoras.')
+@section('twitter_title', $seoSettings?->twitter_title ?? $seoSettings?->meta_title ?? 'Programa mayorista | Belleza Áurea')
+@section('twitter_description', $seoSettings?->twitter_description ?? $seoSettings?->meta_description ?? 'Descuentos exclusivos y condiciones especiales para negocios, salones y distribuidoras.')
+@section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 @section('robots', 'noindex, nofollow')
 
 @php

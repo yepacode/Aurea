@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
+use App\Models\SeoSetting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -45,6 +46,8 @@ class ReferralsController extends Controller
             ->where('status', 'completed')
             ->sum('reward_referrer_points');
 
+        $seoSettings = SeoSetting::getForPage('referrals');
+
         return view('account.referrals', compact(
             'customer',
             'shareUrl',
@@ -53,6 +56,7 @@ class ReferralsController extends Controller
             'totalReferrals',
             'completedReferrals',
             'pointsEarned',
+            'seoSettings',
         ));
     }
 }
