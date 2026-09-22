@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\SeoSetting;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,20 @@ class CustomerPasswordController extends Controller
 
     public function showForgot(): View
     {
-        return view('account.password-forgot');
+        // Fix prod 500 (feedback 2026-09-22): la vista se pintaba sin `$seoSettings`
+        //   mientras que otras vistas de auth ya migraron al pattern estándar. En
+        //   producción, si el layout evolucionaba y algún parcial referenciaba
+        //   $seoSettings, el render explotaba. Lo pasamos siempre — si la tabla
+        //   `seo_settings` aún no existe o la clave no está, cae en null y las
+        //   secciones usan su fallback estático.
+        $seoSettings = null;
+        try {
+            $seoSettings = SeoSetting::getForPage('password-forgot');
+        } catch (\Throwable $e) {
+            // Tabla SEO ausente o clave sin fila — el fallback de la vista aplica.
+        }
+
+        return view('account.password-forgot', compact('seoSettings'));
     }
 
     public function sendResetLink(Request $request): RedirectResponse

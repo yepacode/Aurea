@@ -210,8 +210,16 @@
                                 <tr><td style="padding:4px 0;color:#6B7280;">Referencia:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;">Pedido #{{ $order->id }}</td></tr>
                                 <tr><td style="padding:4px 0;color:#6B7280;">Monto:</td><td style="padding:4px 0;font-weight:700;color:#2E2A26;font-size:16px;">${{ number_format($order->total, 0, ',', '.') }} COP</td></tr>
                             </table>
+                            {{-- Instrucción clave que la cliente pidió mostrar
+                                 explícita (feedback prod 2026-09-22): usar el
+                                 número de pedido como referencia y transferir
+                                 dentro de 24 h para reservar los productos. --}}
+                            <p style="margin:12px 0 0;padding:10px 12px;background:#FEF6E1;border-left:3px solid #D9B56D;border-radius:6px;font-size:13px;color:#3B310F;line-height:1.55;">
+                                <strong>Usa tu número de pedido como referencia.</strong>
+                                Realiza la transferencia dentro de las <strong>24 horas</strong> para reservar tus productos — cuando confirmemos el pago te avisamos por correo.
+                            </p>
                             @if(!empty($bankDetails['reference_instructions']))
-                            <p style="margin:12px 0 0;font-size:13px;color:#4B5563;">{{ $bankDetails['reference_instructions'] }}</p>
+                            <p style="margin:8px 0 0;font-size:13px;color:#4B5563;">{{ $bankDetails['reference_instructions'] }}</p>
                             @endif
                             @if(!empty($bankDetails['additional_notes']))
                             <p style="margin:8px 0 0;font-size:13px;color:#6B7280;font-style:italic;">{{ $bankDetails['additional_notes'] }}</p>

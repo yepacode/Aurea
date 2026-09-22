@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Recuperar contraseña | Belleza Áurea')
+@section('title', ($seoSettings?->meta_title ?? null) ?: 'Recuperar contraseña | Belleza Áurea')
+@section('meta_description', ($seoSettings?->meta_description ?? null) ?: 'Recupera el acceso a tu cuenta de Belleza Áurea: te enviamos un enlace seguro para restablecer tu contraseña.')
 @section('robots', 'noindex, nofollow')
 
 @section('content')
