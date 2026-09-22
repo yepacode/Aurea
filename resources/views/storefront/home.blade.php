@@ -1740,7 +1740,9 @@
                 </svg>
 
                 @if($heroVideoUrl)
-                    <video class="ae__prod" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+                    {{-- preload="metadata" evita descargar 19MB en el primer paint;
+                         el video empieza a cargar cuando el navegador va a reproducirlo. --}}
+                    <video class="ae__prod" autoplay muted loop playsinline preload="metadata" aria-hidden="true" @isset($heroImg) poster="{{ $heroImg }}" @endisset>
                         <source src="{{ $heroVideoUrl }}" type="video/{{ $heroExt === 'mov' ? 'quicktime' : $heroExt }}">
                     </video>
                 @else

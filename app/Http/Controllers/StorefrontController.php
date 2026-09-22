@@ -16,6 +16,7 @@ use App\Models\Testimonial;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\SeoService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class StorefrontController extends Controller
@@ -26,11 +27,25 @@ class StorefrontController extends Controller
 
     public function home(): View
     {
-        // Productos principales del home: featured primero, luego sort_order,
-        // luego más recientes. Garantiza stock. Cargamos variantes + categoría
-        // + brand para las cards.
-        // Filtro de imagen: solo productos con al menos 1 imagen (campo images
-        // es JSON array). En el home solo se ven productos "presentables".
+        // Cache 5 min de todo lo que no cambia por request. heroProduct queda
+        // FUERA del cache para preservar la rotación aleatoria en cada visita.
+        $data = Cache::remember('storefront.home.v1.'.app()->getLocale(), 300, function () {
+            return $this->buildHomeData();
+        });
+
+        // heroProduct — rota aleatoriamente por request; el ID fijo (star_product_id)
+        // sí se cachea (dentro de buildHomeData) para no volver a consultarlo cada vez.
+        $heroProduct = $this->resolveHeroProduct($data['starProduct'] ?? null);
+        unset($data['starProduct']);
+
+        return view('storefront.home', array_merge($data, compact('heroProduct')));
+    }
+
+    /**
+     * Extrae toda la data cacheable del home (todo menos heroProduct aleatorio).
+     */
+    private function buildHomeData(): array
+    {
         $lentes = Product::active()
             ->where(fn ($q) => $q->whereJsonContains('type', 'miopia')
                 ->orWhereJsonContains('type', 'lectura')
@@ -94,14 +109,11 @@ class StorefrontController extends Controller
             ])->all()
         );
 
-        // Producto estrella:
-        //   1. Si el admin fijó star_product_id Y ese producto cumple los criterios
-        //      (imagen + descripción + precio > 0), se respeta.
-        //   2. En cualquier otro caso → rota aleatoriamente entre productos activos
-        //      con stock, imagen, descripción y precio. Cada visita carga uno distinto.
-        $heroProduct = null;
+        // Producto estrella FIJO (star_product_id): resuelto aquí para cachear
+        // el candidato. El aleatorio se resuelve fuera del cache (ver home()).
+        $starProduct = null;
         if ($homePage->star_product_id) {
-            $candidate = Product::active()
+            $starProduct = Product::active()
                 ->where('id', $homePage->star_product_id)
                 ->whereNotNull('images')
                 ->whereRaw('JSON_LENGTH(images) > 0')
@@ -109,21 +121,6 @@ class StorefrontController extends Controller
                 ->where('description', '!=', '')
                 ->where('price', '>', 0)
                 ->with('variants')
-                ->first();
-            if ($candidate) {
-                $heroProduct = $candidate;
-            }
-        }
-        if (! $heroProduct) {
-            $heroProduct = Product::active()
-                ->where('stock', '>', 0)
-                ->whereNotNull('images')
-                ->whereRaw('JSON_LENGTH(images) > 0')
-                ->whereNotNull('description')
-                ->where('description', '!=', '')
-                ->where('price', '>', 0)
-                ->with('variants')
-                ->inRandomOrder()
                 ->first();
         }
 
@@ -174,13 +171,34 @@ class StorefrontController extends Controller
                 ->take(8);
         }
 
-        return view('storefront.home', compact(
-            'hero', 'heroProduct', 'heroMode', 'homePage', 'seoSettings',
+        return compact(
+            'hero', 'starProduct', 'heroMode', 'homePage', 'seoSettings',
             'lentes', 'toallitas', 'coloresDisponibles',
             'recentPosts', 'infographics', 'organizationSchema', 'faqSchema',
             'categories', 'testimonials', 'featuredBrands', 'featuredBundles',
             'bestSellers',
-        ));
+        );
+    }
+
+    /**
+     * heroProduct: si hay star_product_id se respeta; si no, aleatorio por request.
+     */
+    private function resolveHeroProduct($starProduct): ?Product
+    {
+        if ($starProduct) {
+            return $starProduct;
+        }
+
+        return Product::active()
+            ->where('stock', '>', 0)
+            ->whereNotNull('images')
+            ->whereRaw('JSON_LENGTH(images) > 0')
+            ->whereNotNull('description')
+            ->where('description', '!=', '')
+            ->where('price', '>', 0)
+            ->with('variants')
+            ->inRandomOrder()
+            ->first();
     }
 
     public function blueLight(): View

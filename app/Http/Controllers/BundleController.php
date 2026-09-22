@@ -6,6 +6,7 @@ use App\Models\Bundle;
 use App\Models\SeoSetting;
 use App\Services\CartService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class BundleController extends Controller
@@ -16,15 +17,20 @@ class BundleController extends Controller
 
     public function index(): View
     {
-        $bundles = Bundle::active()
-            ->with(['items' => fn ($q) => $q->select('products.id', 'name', 'slug', 'images', 'price')])
-            ->orderBy('sort_order')
-            ->orderByDesc('created_at')
-            ->get();
+        // Cache 10 min — los kits cambian rara vez.
+        $payload = Cache::remember('bundles.index.v1.'.app()->getLocale(), 600, function () {
+            $bundles = Bundle::active()
+                ->with(['items' => fn ($q) => $q->select('products.id', 'name', 'slug', 'images', 'price')])
+                ->orderBy('sort_order')
+                ->orderByDesc('created_at')
+                ->get();
 
-        $seoSettings = SeoSetting::getForPage('bundles-index');
+            $seoSettings = SeoSetting::getForPage('bundles-index');
 
-        return view('storefront.bundles.index', compact('bundles', 'seoSettings'));
+            return compact('bundles', 'seoSettings');
+        });
+
+        return view('storefront.bundles.index', $payload);
     }
 
     public function show(string $slug): View

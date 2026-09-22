@@ -41,8 +41,11 @@
                 <h4 class="text-sm font-semibold uppercase mb-5" style="color:#D9B56D;letter-spacing:0.12em;font-family:'Playfair Display',serif;">{{ __('storefront.footer.info') }}</h4>
                 <ul class="space-y-3">
                     <li><a href="{{ locale_route('about') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.about') }}</a></li>
-                    <li><a href="{{ locale_route('landing.quiz') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.quiz') }}</a></li>
-                    <li><a href="{{ locale_route('blue-light') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.rituals') }}</a></li>
+                    <li><a href="{{ locale_route('bundles.index') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.kits') }}</a></li>
+                    <li><a href="{{ locale_route('subscriptions.index') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.subscriptions') }}</a></li>
+                    @if(\Illuminate\Support\Facades\Route::has('blog.index'))
+                    <li><a href="{{ route('blog.index') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.blog') }}</a></li>
+                    @endif
                     <li><a href="{{ locale_route('shipping-returns') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.shipping') }}</a></li>
                     @if(\Illuminate\Support\Facades\Route::has('faq.index'))
                     <li><a href="{{ route('faq.index') }}" class="text-sm transition-colors" style="color:rgba(247,243,237,0.7);" onmouseover="this.style.color='#D9B56D'" onmouseout="this.style.color='rgba(247,243,237,0.7)'">{{ __('storefront.nav.faq') }}</a></li>

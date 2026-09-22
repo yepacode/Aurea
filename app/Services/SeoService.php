@@ -27,7 +27,9 @@ class SeoService
             'twitter_description' => $description,
             'twitter_image' => $image ?? asset('images/og-default.jpg'),
             'keywords' => null,
-            'robots' => 'index, follow',
+            // Guard multi-idioma (ver applyItemSeo): páginas /en/ salen noindex
+            // mientras el contenido no esté traducido de verdad.
+            'robots' => app()->getLocale() === 'en' ? 'noindex, follow' : 'index, follow',
             'custom_schema' => null,
         ];
     }
@@ -84,6 +86,14 @@ class SeoService
         $follow = ! empty($item->nofollow) ? 'nofollow' : 'follow';
         $meta['robots'] = "{$index}, {$follow}";
 
+        // Guard multi-idioma: mientras el contenido /en/ NO esté traducido de
+        // verdad (los meta/descs siguen en español), forzamos noindex para no
+        // canibalizar la versión ES en el SERP. Se puede retirar este bloque
+        // cuando los campos *_en estén poblados en producción.
+        if (app()->getLocale() === 'en') {
+            $meta['robots'] = 'noindex, ' . (! empty($item->nofollow) ? 'nofollow' : 'follow');
+        }
+
         // JSON-LD personalizado
         if (! empty($item->custom_schema_markup)) {
             $meta['custom_schema'] = $item->custom_schema_markup;
@@ -120,11 +130,14 @@ class SeoService
             $ogImage = asset('img/brand/logo-principal.png');
         }
 
+        // Canonical respeta el idioma activo: en /en/productos/{slug} debe
+        // apuntar a la versión EN, no a la ES (bug SEO real).
+        $canonicalHelper = function_exists('locale_route') ? 'locale_route' : 'route';
         $meta = $this->meta(
             $title,
             $description,
             $ogImage,
-            route('products.show', $product->slug),
+            $canonicalHelper('products.show', ['slug' => $product->slug]),
             'product',
         );
 

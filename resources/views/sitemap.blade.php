@@ -12,15 +12,29 @@
         <priority>0.9</priority>
     </url>
     <url>
-        <loc>{{ route('blue-light') }}</loc>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
+        <loc>{{ route('bundles.index') }}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.85</priority>
     </url>
     <url>
-        <loc>{{ route('landing.quiz') }}</loc>
-        <changefreq>monthly</changefreq>
+        <loc>{{ route('subscriptions.index') }}</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.85</priority>
+    </url>
+    @if(\Illuminate\Support\Facades\Route::has('blog.index'))
+    <url>
+        <loc>{{ route('blog.index') }}</loc>
+        <changefreq>weekly</changefreq>
         <priority>0.7</priority>
     </url>
+    @endif
+    @if(\Illuminate\Support\Facades\Route::has('faq.index'))
+    <url>
+        <loc>{{ route('faq.index') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    @endif
     <url>
         <loc>{{ route('contact') }}</loc>
         <changefreq>monthly</changefreq>

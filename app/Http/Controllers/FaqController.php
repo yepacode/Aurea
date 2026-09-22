@@ -8,78 +8,93 @@ use App\Models\FaqCategory;
 use App\Models\SeoSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class FaqController extends Controller
 {
     /**
-     * Página pública SEO con todas las FAQs y schema.org.
+     * Página pública SEO con todas las FAQs y schema.org. Cache 15 min.
      */
     public function index(): View
     {
-        $categories = FaqCategory::active()
-            ->with(['faqs' => function ($q) {
-                $q->active()->orderBy('sort_order')->orderBy('id');
-            }])
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $payload = Cache::remember('faq.index.v1.'.app()->getLocale(), 900, function () {
+            $categories = FaqCategory::active()
+                ->with(['faqs' => function ($q) {
+                    $q->active()->orderBy('sort_order')->orderBy('id');
+                }])
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get();
 
-        return view('storefront.faq.index', [
-            'categories'  => $categories,
-            'whatsappUrl' => ContactPageSetting::whatsappUrl(),
-            'seoSettings' => SeoSetting::getForPage('faq'),
-        ]);
+            return [
+                'categories'  => $categories,
+                'whatsappUrl' => ContactPageSetting::whatsappUrl(),
+                'seoSettings' => SeoSetting::getForPage('faq'),
+            ];
+        });
+
+        return view('storefront.faq.index', $payload);
     }
 
     /**
-     * JSON — lista de categorías activas con conteo de FAQs.
+     * JSON — lista de categorías activas con conteo de FAQs. Cache 15 min.
      */
     public function categoriesJson(): JsonResponse
     {
-        $categories = FaqCategory::active()
-            ->withCount(['faqs' => fn ($q) => $q->where('is_active', true)])
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get()
-            ->map(fn (FaqCategory $c) => [
-                'id'    => $c->id,
-                'name'  => $c->name,
-                'slug'  => $c->slug,
-                'emoji' => $c->emoji,
-                'count' => (int) $c->faqs_count,
-            ]);
+        $categories = Cache::remember('faq.categories.v1.'.app()->getLocale(), 900, function () {
+            return FaqCategory::active()
+                ->withCount(['faqs' => fn ($q) => $q->where('is_active', true)])
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (FaqCategory $c) => [
+                    'id'    => $c->id,
+                    'name'  => $c->name,
+                    'slug'  => $c->slug,
+                    'emoji' => $c->emoji,
+                    'count' => (int) $c->faqs_count,
+                ]);
+        });
 
         return response()->json(['data' => $categories]);
     }
 
     /**
-     * JSON — FAQs de una categoría por slug.
+     * JSON — FAQs de una categoría por slug. Cache 15 min por slug.
      */
     public function categoryJson(string $slug): JsonResponse
     {
-        $category = FaqCategory::active()->where('slug', $slug)->firstOrFail();
+        $payload = Cache::remember(
+            'faq.category.'.$slug.'.v1.'.app()->getLocale(),
+            900,
+            function () use ($slug) {
+                $category = FaqCategory::active()->where('slug', $slug)->firstOrFail();
 
-        $faqs = $category->faqs()
-            ->active()
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get(['id', 'question', 'answer'])
-            ->map(fn (Faq $f) => [
-                'id'       => $f->id,
-                'question' => $f->question,
-                'answer'   => $f->answer,
-            ]);
+                $faqs = $category->faqs()
+                    ->active()
+                    ->orderBy('sort_order')
+                    ->orderBy('id')
+                    ->get(['id', 'question', 'answer'])
+                    ->map(fn (Faq $f) => [
+                        'id'       => $f->id,
+                        'question' => $f->question,
+                        'answer'   => $f->answer,
+                    ]);
 
-        return response()->json([
-            'category' => [
-                'id'    => $category->id,
-                'name'  => $category->name,
-                'slug'  => $category->slug,
-                'emoji' => $category->emoji,
-            ],
-            'faqs' => $faqs,
-        ]);
+                return [
+                    'category' => [
+                        'id'    => $category->id,
+                        'name'  => $category->name,
+                        'slug'  => $category->slug,
+                        'emoji' => $category->emoji,
+                    ],
+                    'faqs' => $faqs,
+                ];
+            }
+        );
+
+        return response()->json($payload);
     }
 
     /**

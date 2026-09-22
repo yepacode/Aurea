@@ -49,7 +49,29 @@
                     <p class="text-sm truncate" style="color: #1a0dab; font-family: arial, sans-serif; font-size: 20px; line-height: 1.3;"
                        x-text="metaTitle || 'Título de la página'">&nbsp;</p>
                     <p class="text-xs mt-0.5" style="color: #006621; font-family: arial, sans-serif; font-size: 14px;">
-                        {{ ['home' => url('/'), 'products-index' => route('products.index'), 'blue-light' => route('blue-light'), 'blog' => route('blog.index'), 'contact' => route('contact'), 'shipping-returns' => route('shipping-returns'), 'quiz' => route('landing.quiz'), 'brands' => route('brands.index')][$pageKey] ?? url('/' . $pageKey) }}
+                        @php
+                            $__previewMap = [
+                                'home'                => url('/'),
+                                'products-index'      => route('products.index'),
+                                'bundles-index'       => route('bundles.index'),
+                                'subscriptions-index' => route('subscriptions.index'),
+                                'brands'              => route('brands.index'),
+                                'blog'                => \Illuminate\Support\Facades\Route::has('blog.index') ? route('blog.index') : url('/blog'),
+                                'about'               => route('about'),
+                                'contact'             => route('contact'),
+                                'shipping-returns'    => route('shipping-returns'),
+                                'faq'                 => \Illuminate\Support\Facades\Route::has('faq.index') ? route('faq.index') : url('/preguntas-frecuentes'),
+                                'terms'               => route('legal.terms'),
+                                'privacy'             => route('legal.privacy'),
+                                'cookies'             => route('legal.cookies'),
+                                'wholesale'           => \Illuminate\Support\Facades\Route::has('account.wholesale.request') ? route('account.wholesale.request') : url('/cuenta/mayorista/solicitar'),
+                                'referrals'           => \Illuminate\Support\Facades\Route::has('account.referrals') ? route('account.referrals') : url('/cuenta/referidos'),
+                                // Heredadas
+                                'blue-light'          => route('blue-light'),
+                                'quiz'                => route('landing.quiz'),
+                            ];
+                        @endphp
+                        {{ $__previewMap[$pageKey] ?? url('/' . $pageKey) }}
                     </p>
                     <p class="text-sm mt-1" style="color: #545454; font-family: arial, sans-serif; font-size: 14px; line-height: 1.58; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"
                        x-text="metaDesc || 'Descripción de la página...'"></p>

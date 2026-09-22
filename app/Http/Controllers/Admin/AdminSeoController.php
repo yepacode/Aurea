@@ -9,27 +9,48 @@ use Illuminate\Support\Facades\Storage;
 
 class AdminSeoController extends Controller
 {
+    /**
+     * Lista de páginas del storefront con SEO editable.
+     * 'legacy' => true marca páginas heredadas de la etapa NUVION (blue-light, quiz)
+     * que ya no están enlazadas desde el nav/footer pero siguen accesibles por URL.
+     */
     private array $pageLabels = [
-        'home' => 'Inicio',
-        'products-index' => 'Catálogo',
-        'blue-light' => 'Rituales',
-        'blog' => 'Blog',
-        'contact' => 'Contacto',
-        'shipping-returns' => 'Envíos y devoluciones',
-        'quiz' => 'Quiz de piel',
-        'brands' => 'Marcas',
+        // Núcleo del storefront
+        'home'              => ['label' => 'Inicio',                'desc' => 'Página principal (/)'],
+        'products-index'    => ['label' => 'Catálogo',              'desc' => 'Listado de productos (/productos)'],
+        'bundles-index'     => ['label' => 'Kits',                  'desc' => 'Página de kits y combos (/kits)'],
+        'subscriptions-index' => ['label' => 'Rituales mensuales',  'desc' => 'Planes de suscripción (/rituales-mensuales)'],
+        'brands'            => ['label' => 'Marcas',                'desc' => 'Listado de marcas (/marcas)'],
+        'blog'              => ['label' => 'Blog',                  'desc' => 'Blog de tips y rituales (/blog)'],
+        // Contenido y ayuda
+        'about'             => ['label' => 'Sobre nosotras',        'desc' => 'Historia y valores (/sobre-nosotras)'],
+        'contact'           => ['label' => 'Contacto',              'desc' => 'Formulario de contacto (/contacto)'],
+        'shipping-returns'  => ['label' => 'Envíos y devoluciones', 'desc' => 'Política de envíos (/envios-y-devoluciones)'],
+        'faq'               => ['label' => 'Preguntas frecuentes',  'desc' => 'FAQs (/preguntas-frecuentes)'],
+        // Legales
+        'terms'             => ['label' => 'Términos y condiciones','desc' => 'Legal (/terminos-y-condiciones)'],
+        'privacy'           => ['label' => 'Política de privacidad','desc' => 'Legal (/politica-de-privacidad)'],
+        'cookies'           => ['label' => 'Política de cookies',   'desc' => 'Legal (/politica-de-cookies)'],
+        // Programas de cliente (dentro de "Mi cuenta")
+        'wholesale'         => ['label' => 'Mayoristas',            'desc' => 'Solicitud de cuenta mayorista (/cuenta/mayorista/solicitar)'],
+        'referrals'         => ['label' => 'Programa de referidos', 'desc' => 'Programa de referidos (/cuenta/referidos)'],
+        // Páginas heredadas — se mantienen accesibles por URL pero ya no van en el nav
+        'blue-light'        => ['label' => 'Rituales (legacy)',     'desc' => 'Página heredada NUVION (/rituales) — ya no está en el menú', 'legacy' => true],
+        'quiz'              => ['label' => 'Quiz de piel (legacy)', 'desc' => 'Landing heredada NUVION (/landing) — ya no está en el menú', 'legacy' => true],
     ];
 
     public function index()
     {
         $pages = [];
-        foreach ($this->pageLabels as $key => $label) {
+        foreach ($this->pageLabels as $key => $meta) {
             $seo = SeoSetting::getForPage($key);
             $pages[] = [
-                'key' => $key,
-                'label' => $label,
-                'configured' => $seo && $seo->meta_title,
-                'meta_title' => $seo->meta_title ?? null,
+                'key'         => $key,
+                'label'       => $meta['label'],
+                'desc'        => $meta['desc'] ?? null,
+                'legacy'      => $meta['legacy'] ?? false,
+                'configured'  => $seo && $seo->meta_title,
+                'meta_title'  => $seo->meta_title ?? null,
             ];
         }
 
@@ -41,7 +62,8 @@ class AdminSeoController extends Controller
         $seo = SeoSetting::getForPage($pageKey)
             ?? SeoSetting::create(['page_key' => $pageKey, 'is_active' => true]);
 
-        $pageLabel = $this->pageLabels[$pageKey] ?? $pageKey;
+        $meta = $this->pageLabels[$pageKey] ?? null;
+        $pageLabel = is_array($meta) ? $meta['label'] : ($meta ?? $pageKey);
 
         return view('admin.seo.edit', compact('seo', 'pageKey', 'pageLabel'));
     }

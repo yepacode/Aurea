@@ -73,7 +73,9 @@ $storefrontRoutes = function () {
     // Kits & Bundles (combos de productos con descuento)
     Route::get('/kits',                    [BundleController::class, 'index'])->name('bundles.index');
     Route::get('/kits/{slug}',             [BundleController::class, 'show'])->name('bundles.show');
-    Route::post('/kits/{slug}/agregar',    [BundleController::class, 'add'])->name('bundles.add');
+    Route::post('/kits/{slug}/agregar',    [BundleController::class, 'add'])
+        ->name('bundles.add')
+        ->middleware('throttle:public-writes');
     Route::delete('/kits/descuento/{bundleId}', [BundleController::class, 'removeDiscount'])->name('bundles.remove-discount')
         ->whereNumber('bundleId');
 
@@ -91,10 +93,18 @@ $storefrontRoutes = function () {
         ->middleware(['auth:customer', 'throttle:public-writes']);
 
     // Cart
+    // throttle:60,1 (60 escrituras/min por IP) — más permisivo que public-writes
+    // porque un usuario legítimo edita el carrito varias veces seguidas.
     Route::get('/carrito', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/carrito/agregar', [CartController::class, 'add'])->name('cart.add');
-    Route::patch('/carrito/actualizar/{itemId}', [CartController::class, 'update'])->name('cart.update');
-    Route::delete('/carrito/eliminar/{itemId}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/carrito/agregar', [CartController::class, 'add'])
+        ->name('cart.add')
+        ->middleware('throttle:60,1');
+    Route::patch('/carrito/actualizar/{itemId}', [CartController::class, 'update'])
+        ->name('cart.update')
+        ->middleware('throttle:60,1');
+    Route::delete('/carrito/eliminar/{itemId}', [CartController::class, 'remove'])
+        ->name('cart.remove')
+        ->middleware('throttle:60,1');
 
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');

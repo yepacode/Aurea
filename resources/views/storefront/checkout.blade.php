@@ -112,10 +112,16 @@
         </div>
     </section>
 
-    @include('partials.ba-divider')
+    {{-- El divisor botánico se ve estupendo entre bloques, pero para invitados
+         el prompt "¿Ya tienes cuenta?" ya rompe el ritmo visual — dos separadores
+         seguidos generaban un hueco de ~300px entre el prompt y el formulario. --}}
+    @auth('customer')
+        @include('partials.ba-divider')
+    @endauth
 
     {{-- Checkout form --}}
-    <section class="checkout-scope" style="padding-top:clamp(32px,5vw,56px);padding-bottom:clamp(80px,10vw,128px);">
+    {{-- Padding-top más ajustado para invitados: sin divisor arriba, no hace falta el aire extra. --}}
+    <section class="checkout-scope" style="padding-top:{{ auth('customer')->check() ? 'clamp(32px,5vw,56px)' : 'clamp(20px,2.5vw,32px)' }};padding-bottom:clamp(80px,10vw,128px);">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
              x-data="checkoutForm()" x-cloak>
 

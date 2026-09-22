@@ -6,31 +6,34 @@ use App\Models\Brand;
 use App\Models\Product;
 use App\Models\SeoSetting;
 use App\Services\SeoService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class BrandController extends Controller
 {
     /**
-     * /marcas — listado de todas las marcas activas.
+     * /marcas — listado de todas las marcas activas. Cache 15 min.
      */
     public function index(): View
     {
-        // Solo marcas que YA tienen productos activos, para no mostrar
-        // páginas de marca vacías ("Próximamente") mientras no se asignen.
-        $brands = Brand::active()->ordered()
-            ->whereHas('activeProducts')
-            ->withCount('activeProducts')
-            ->get();
+        $payload = Cache::remember('brands.index.v1.'.app()->getLocale(), 900, function () {
+            $brands = Brand::active()->ordered()
+                ->whereHas('activeProducts')
+                ->withCount('activeProducts')
+                ->get();
 
-        $s = SeoSetting::getForPage('brands');
-        $seo = [
-            'title'       => ($s->meta_title ?? null) ?: 'Marcas que distribuimos | Belleza Áurea',
-            'description' => ($s->meta_description ?? null) ?: 'Descubre todas las marcas premium de cosmética, skincare y rituales que distribuimos en Belleza Áurea.',
-            'canonical'   => ($s->canonical_url ?? null) ?: url('/marcas'),
-            'og_image'    => ($s->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'),
-        ];
+            $s = SeoSetting::getForPage('brands');
+            $seo = [
+                'title'       => ($s->meta_title ?? null) ?: 'Marcas que distribuimos | Belleza Áurea',
+                'description' => ($s->meta_description ?? null) ?: 'Descubre todas las marcas premium de cosmética, skincare y rituales que distribuimos en Belleza Áurea.',
+                'canonical'   => ($s->canonical_url ?? null) ?: url('/marcas'),
+                'og_image'    => ($s->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'),
+            ];
 
-        return view('storefront.brands.index', compact('brands', 'seo'));
+            return compact('brands', 'seo');
+        });
+
+        return view('storefront.brands.index', $payload);
     }
 
     /**

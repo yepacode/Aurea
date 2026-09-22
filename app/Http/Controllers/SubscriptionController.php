@@ -9,21 +9,26 @@ use App\Models\SubscriptionPlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class SubscriptionController extends Controller
 {
-    /** Landing pública "Rituales mensuales". */
+    /** Landing pública "Rituales mensuales". Cache 15 min. */
     public function index(): View
     {
-        $plans = SubscriptionPlan::active()->ordered()
-            ->with(['products' => fn ($q) => $q->select('products.id', 'products.name', 'products.slug', 'products.price', 'products.images')])
-            ->get();
+        $payload = Cache::remember('subscriptions.index.v1.'.app()->getLocale(), 900, function () {
+            $plans = SubscriptionPlan::active()->ordered()
+                ->with(['products' => fn ($q) => $q->select('products.id', 'products.name', 'products.slug', 'products.price', 'products.images')])
+                ->get();
 
-        $seoSettings = SeoSetting::getForPage('subscriptions-index');
+            $seoSettings = SeoSetting::getForPage('subscriptions-index');
 
-        return view('storefront.subscriptions.index', compact('plans', 'seoSettings'));
+            return compact('plans', 'seoSettings');
+        });
+
+        return view('storefront.subscriptions.index', $payload);
     }
 
     /** Ficha detallada de un plan. */

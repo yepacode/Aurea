@@ -20,10 +20,21 @@
             </thead>
             <tbody class="divide-y divide-gray-100">
                 @foreach($pages as $page)
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50 {{ ($page['legacy'] ?? false) ? 'opacity-70' : '' }}">
                     <td class="px-6 py-4">
-                        <span class="text-sm font-medium text-gray-900">{{ $page['label'] }}</span>
-                        <p class="text-xs text-gray-400 mt-0.5">{{ $page['key'] }}</p>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-gray-900">{{ $page['label'] }}</span>
+                            @if($page['legacy'] ?? false)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-800" title="Página heredada — ya no está en el menú">
+                                    Legacy
+                                </span>
+                            @endif
+                        </div>
+                        @if(!empty($page['desc']))
+                            <p class="text-xs text-gray-500 mt-0.5">{{ $page['desc'] }}</p>
+                        @else
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $page['key'] }}</p>
+                        @endif
                     </td>
                     <td class="px-6 py-4">
                         @if($page['meta_title'])

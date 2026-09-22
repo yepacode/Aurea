@@ -14,7 +14,9 @@
     @foreach(config('app.available_locales', []) as $__lc => $__lname)
         <link rel="alternate" hreflang="{{ $__lc }}" href="{{ url(switch_locale_url($__lc)) }}">
     @endforeach
-    <link rel="alternate" hreflang="x-default" href="{{ url(switch_locale_url(config('app.locale', 'es'))) }}">
+    {{-- x-default apunta al idioma default REAL del storefront (no a config('app.locale'),
+         que el middleware muta en /en/ y provocaba x-default hacia /en). --}}
+    <link rel="alternate" hreflang="x-default" href="{{ url(switch_locale_url(default_storefront_locale())) }}">
 
     {{-- SEO Meta (overridable per page) --}}
     @php
@@ -36,7 +38,14 @@
     @endphp
     <title>{{ $__pageTitle }}</title>
     <meta name="description" content="{{ $__pageDesc }}">
-    <meta name="robots" content="@yield('robots', 'index, follow')">
+    {{-- Robots: mientras /en/ no esté REALMENTE traducido (contenido sigue en español)
+         forzamos noindex,follow para no canibalizar la versión ES en SERP. Cuando se
+         complete la traducción real quitar este bloque y volver al @yield normal. --}}
+    @php
+        $__isEnUntranslated = app()->getLocale() === 'en';
+        $__robotsDefault = $__isEnUntranslated ? 'noindex, follow' : 'index, follow';
+    @endphp
+    <meta name="robots" content="@yield('robots', $__robotsDefault)">
     @hasSection('keywords')<meta name="keywords" content="@yield('keywords')">@endif
 
     {{-- Canonical --}}
@@ -153,12 +162,35 @@
     @stack('head')
 
     {{-- PWA: registro del service worker (app instalable) --}}
+    {{-- Sólo se registra en HTTPS o en localhost (contexto seguro). En dev sobre 127.0.0.1
+         algunos navegadores devuelven "unknown error occurred when fetching the script"
+         cuando el proxy de Vite u otras extensiones interfieren; por eso el guard extra
+         y el try/catch silencioso. --}}
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function () {
-                navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function () {});
-            });
-        }
+        (function () {
+            try {
+                if (!('serviceWorker' in navigator)) return;
+                var isSecure = window.isSecureContext === true;
+                var host = window.location.hostname;
+                var isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '[::1]';
+                // En dev NO registramos el SW: evita el ruido en consola y falsos
+                // "unknown error" mientras trabajamos. En producción (HTTPS) sí.
+                @if(app()->environment('production'))
+                if (!isSecure) return;
+                @else
+                // Dev/local: no registrar. Limpiar cualquier SW ya instalado en esta pestaña.
+                if (isLocalhost || !isSecure) {
+                    navigator.serviceWorker.getRegistrations().then(function (regs) {
+                        regs.forEach(function (r) { r.unregister().catch(function () {}); });
+                    }).catch(function () {});
+                    return;
+                }
+                @endif
+                window.addEventListener('load', function () {
+                    navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function () {});
+                });
+            } catch (e) { /* silencioso */ }
+        })();
     </script>
 
     {{-- Analytics (GA4 + Meta Pixel) — solo se imprime si el admin capturó IDs y no estamos en local --}}
@@ -195,7 +227,7 @@
         @media (prefers-reduced-motion: reduce){#ba-intro{display:none!important;}}
     </style>
     <div id="ba-intro" role="dialog" aria-label="Introducción Belleza Áurea">
-        <video id="ba-intro__video" muted playsinline preload="auto" autoplay aria-hidden="true">
+        <video id="ba-intro__video" muted playsinline preload="metadata" autoplay aria-hidden="true">
             <source src="{{ asset('intro/intro.mp4') }}" type="video/mp4">
         </video>
         <div id="ba-intro__dim"></div>

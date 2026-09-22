@@ -95,9 +95,9 @@
 
             {{-- Links derecha --}}
             <div class="ba-links ba-links--right">
-                <a class="ba-navlink {{ request()->routeIs('blue-light', 'en.blue-light') ? 'is-active' : '' }}" href="{{ locale_route('blue-light') }}">{{ __('storefront.nav.rituals') }}</a>
+                <a class="ba-navlink {{ request()->routeIs('subscriptions.*', 'en.subscriptions.*') ? 'is-active' : '' }}" href="{{ locale_route('subscriptions.index') }}">{{ __('storefront.nav.subscriptions') }}</a>
                 <span class="ba-sep">&#10022;</span>
-                <a class="ba-navlink {{ request()->routeIs('landing.quiz*', 'en.landing.quiz*') ? 'is-active' : '' }}" href="{{ locale_route('landing.quiz') }}">{{ __('storefront.nav.quiz') }}</a>
+                <a class="ba-navlink {{ request()->routeIs('bundles.*', 'en.bundles.*') ? 'is-active' : '' }}" href="{{ locale_route('bundles.index') }}">{{ __('storefront.nav.kits') }}</a>
             </div>
 
             <div class="ba-actions">
@@ -173,8 +173,8 @@
             <button class="ba-mobile-close" @click="mobileMenuOpen = false" aria-label="{{ __('storefront.nav.close') }}">&times;</button>
             <a href="{{ locale_route('home') }}" class="mm-link">{{ __('storefront.nav.home') }}</a>
             <a href="{{ locale_route('products.index') }}" class="mm-link">{{ __('storefront.nav.products') }}</a>
-            <a href="{{ locale_route('blue-light') }}" class="mm-link">{{ __('storefront.nav.rituals') }}</a>
-            <a href="{{ locale_route('landing.quiz') }}" class="mm-link">{{ __('storefront.nav.quiz') }}</a>
+            <a href="{{ locale_route('subscriptions.index') }}" class="mm-link">{{ __('storefront.nav.subscriptions') }}</a>
+            <a href="{{ locale_route('bundles.index') }}" class="mm-link">{{ __('storefront.nav.kits') }}</a>
             <span class="mm-sep"></span>
             <button @click="$dispatch('toggle-cart-drawer'); mobileMenuOpen = false" class="mm-link">{{ __('storefront.nav.cart') }}</button>
             @if(auth('customer')->check())

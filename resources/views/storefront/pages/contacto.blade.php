@@ -87,7 +87,7 @@
                 </div>
                 <h3 class="font-brand text-xl font-bold mb-2" style="font-family:'Playfair Display',serif;color:#2E2A26;">Escríbenos cuando quieras</h3>
                 <p class="text-sm mb-6" style="color:#6B6157;">Estamos preparando nuestros canales de atención. Mientras tanto, suscríbete y te avisamos de todo, o escríbenos por WhatsApp usando el botón flotante.</p>
-                <a href="{{ route('landing.quiz') }}"
+                <a href="{{ route('subscriptions.index') }}"
                    class="inline-block px-7 py-3 rounded-full font-semibold text-sm transition-all duration-200"
                    style="background:linear-gradient(135deg,#EBCF90,#D9B56D 55%,#C4A057);color:#3B310F;box-shadow:0 10px 24px -13px rgba(190,154,83,0.85);"
                    onmouseover="this.style.filter='brightness(1.04)'" onmouseout="this.style.filter='none'">
