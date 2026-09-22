@@ -23,7 +23,9 @@ use Illuminate\Support\Str;
  */
 class ProductsSeoRewrite extends Command
 {
-    protected $signature = 'products:seo-rewrite {--dry-run : mostrar cambios sin guardar}';
+    protected $signature = 'products:seo-rewrite
+        {--dry-run : mostrar cambios sin guardar}
+        {--force : re-escribir meta_title y meta_description aunque ya estén pobladas}';
 
     protected $description = 'Genera meta_title y meta_description reales para productos activos, y normaliza el nombre a Title Case si es MAYÚSCULA TOTAL.';
 
@@ -44,14 +46,15 @@ class ProductsSeoRewrite extends Command
 
     public function handle(): int
     {
-        $dry = (bool) $this->option('dry-run');
+        $dry   = (bool) $this->option('dry-run');
+        $force = (bool) $this->option('force');
 
         $updated = 0;
         $skipped = 0;
         $renamed = 0;
         $samples = [];
 
-        Product::active()->with('category')->orderBy('id')->chunkById(100, function ($chunk) use (&$updated, &$skipped, &$renamed, &$samples, $dry) {
+        Product::active()->with('category')->orderBy('id')->chunkById(100, function ($chunk) use (&$updated, &$skipped, &$renamed, &$samples, $dry, $force) {
             foreach ($chunk as $p) {
                 $payload = [];
 
@@ -66,19 +69,17 @@ class ProductsSeoRewrite extends Command
                     }
                 }
 
-                // 2) meta_title — sólo si viene vacío.
-                $needsTitle = empty(trim((string) $p->meta_title));
-                $newTitle   = $needsTitle ? $this->buildTitle($name, $p) : $p->meta_title;
+                // 2) meta_title — sólo si viene vacío (o con --force).
+                $needsTitle = $force || empty(trim((string) $p->meta_title));
                 if ($needsTitle) {
-                    $payload['meta_title'] = $newTitle;
+                    $payload['meta_title'] = $this->buildTitle($name, $p);
                 }
 
-                // 3) meta_description — sólo si viene vacío o <100 chars (nombre repetido).
+                // 3) meta_description — sólo si viene vacía o <100 chars (o con --force).
                 $currentDesc = trim((string) $p->meta_description);
-                $needsDesc   = ($currentDesc === '' || mb_strlen($currentDesc) < 100);
-                $newDesc     = $needsDesc ? $this->buildDescription($name, $p) : $currentDesc;
+                $needsDesc   = $force || $currentDesc === '' || mb_strlen($currentDesc) < 100;
                 if ($needsDesc) {
-                    $payload['meta_description'] = $newDesc;
+                    $payload['meta_description'] = $this->buildDescription($name, $p);
                 }
 
                 if (empty($payload)) {
@@ -154,13 +155,69 @@ class ProductsSeoRewrite extends Command
         $categorySlug = $p->category?->slug ?? '';
         $categoryName = $p->category?->name ?? '';
 
-        // Descripción corta a partir de la descripción real (si existe) — para inyectar en plantillas.
-        $short = trim(strip_tags((string) $p->description));
-        $short = $short !== '' ? mb_substr($short, 0, 80) : '';
+        $short = $this->cleanSnippet((string) $p->description, $name);
 
         $tpl = $this->descriptionTemplateFor($categorySlug, $categoryName, $name, $short);
 
         return $this->clipTo($tpl, 160);
+    }
+
+    /**
+     * Extrae un fragmento usable de la descripción del producto para inyectar
+     * en las plantillas. Devuelve '' cuando el fragmento no aporta valor, para
+     * que la plantilla caiga en su texto genérico.
+     *
+     * - Corta en palabra completa (nunca a mitad).
+     * - Quita la puntuación final (la plantilla ya añade su propio punto).
+     * - Descarta el fragmento si sólo repite el nombre del producto.
+     */
+    private function cleanSnippet(string $raw, string $name): string
+    {
+        $s = trim(preg_replace('/\s+/u', ' ', strip_tags($raw)));
+        if ($s === '') {
+            return '';
+        }
+
+        // Si el texto sólo repite el nombre, no aporta nada a la meta.
+        $norm = fn (string $v): string => mb_strtolower(trim($v, " \t\n\r\0\x0B.,;:-—"), 'UTF-8');
+        if ($norm($s) === $norm($name) || Str::startsWith($norm($s), $norm($name) . ' ') && mb_strlen($s) <= mb_strlen($name) + 12) {
+            return '';
+        }
+
+        if (mb_strlen($s) > 90) {
+            $cut = mb_substr($s, 0, 90);
+
+            // 1) Preferimos cerrar en una oración completa (último punto útil).
+            $dot = mb_strrpos($cut, '.');
+            if ($dot !== false && $dot >= 35) {
+                $s = mb_substr($cut, 0, $dot);
+            } else {
+                // 2) Si no hay punto, cortamos en palabra completa.
+                $pos = mb_strrpos($cut, ' ');
+                $s   = $pos !== false && $pos >= 30 ? mb_substr($cut, 0, $pos) : $cut;
+            }
+        }
+
+        // La plantilla añade su propio punto: quitamos puntuación final.
+        $s = rtrim($s, " \t.,;:-—…");
+
+        // Evitar que la frase termine colgando en artículo/preposición/conjunción.
+        $dangling = array_merge($this->lowerWords, ['un', 'una', 'unos', 'unas', 'que', 'su', 'sus', 'tu', 'tus', 'lo']);
+        $guard = 0;
+        while ($guard++ < 6) {
+            $pos = mb_strrpos($s, ' ');
+            if ($pos === false) {
+                break;
+            }
+            $last = mb_strtolower(mb_substr($s, $pos + 1), 'UTF-8');
+            if (! in_array($last, $dangling, true)) {
+                break;
+            }
+            $s = rtrim(mb_substr($s, 0, $pos), " \t.,;:-—");
+        }
+
+        // Un fragmento demasiado corto queda pobre en la meta.
+        return mb_strlen($s) >= 15 ? $s : '';
     }
 
     private function descriptionTemplateFor(string $slug, string $categoryName, string $name, string $short): string
@@ -217,13 +274,14 @@ class ProductsSeoRewrite extends Command
         if (mb_strlen($s) <= $max) {
             return $s;
         }
-        $cut = mb_substr($s, 0, $max);
-        // Retroceder hasta el último espacio para no cortar palabras.
+        // Reservamos 1 char para la elipsis final.
+        $cut = mb_substr($s, 0, $max - 1);
+        // Retroceder hasta el último espacio para no cortar palabras a mitad.
         $pos = mb_strrpos($cut, ' ');
-        if ($pos !== false && $pos > $max - 20) {
+        if ($pos !== false && $pos >= (int) ($max * 0.6)) {
             $cut = mb_substr($cut, 0, $pos);
         }
-        return rtrim($cut, ",;:-— ") . '…';
+        return rtrim($cut, " \t.,;:-—") . '…';
     }
 
     /**
