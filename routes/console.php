@@ -20,3 +20,12 @@ Schedule::command('nps:send')->dailyAt('11:00');
 // Suscripciones "rituales mensuales": genera pedidos recurrentes de las suscripciones
 // activas cuya próxima entrega ya se cumplió. Corre diario a las 7:00.
 Schedule::command('subscriptions:generate')->dailyAt('07:00');
+
+// Sincroniza stock, precios (informativos) e imágenes desde el catálogo de
+// Miracle (por URL). Corre diario a las 6:00 hora Colombia. Sin textos por
+// defecto para no pisar el SEO; añade --con-textos si se quiere.
+Schedule::command('aurea:sync-miracle')
+    ->dailyAt('06:00')
+    ->timezone('America/Bogota')
+    ->withoutOverlapping()
+    ->runInBackground();
