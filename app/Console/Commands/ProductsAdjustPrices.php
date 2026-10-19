@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Product;
+use App\Services\MiracleCatalog;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 
 /**
  * Ajuste competitivo de precios contra el catálogo de Miracle.
@@ -186,45 +186,24 @@ class ProductsAdjustPrices extends Command
         return self::SUCCESS;
     }
 
-    /** Descarga el catálogo de Miracle indexado por referencia en minúsculas. */
+    /**
+     * Descarga el catálogo de Miracle indexado por referencia en minúsculas.
+     * La paginación la resuelve MiracleCatalog: el endpoint de producción
+     * pagina y quedarse con la primera página daría precios a medias.
+     */
     private function traerCatalogoMiracle(): ?array
     {
-        $url   = (string) config('miracle.api_url');
-        $token = (string) config('miracle.api_token');
-
-        if ($url === '' || $token === '') {
-            $this->error('Falta MIRACLE_API_URL o MIRACLE_API_TOKEN en el .env.');
-            return null;
-        }
-
         $this->line('Consultando el catálogo de Miracle…');
 
         try {
-            $res = Http::timeout((int) config('miracle.timeout', 120))
-                ->acceptJson()
-                ->get($url, ['token' => $token]);
+            $byRef = app(MiracleCatalog::class)->porReferencia(
+                function (int $pagina, int $enPagina, int $acumulado) {
+                    $this->line("  página {$pagina}: {$enPagina} filas (acumulado {$acumulado})");
+                }
+            );
         } catch (\Throwable $e) {
-            $this->error('No se pudo contactar a Miracle: ' . $e->getMessage());
+            $this->error($e->getMessage());
             return null;
-        }
-
-        if (! $res->successful()) {
-            $this->error('Miracle respondió HTTP ' . $res->status());
-            return null;
-        }
-
-        $data = $res->json('data');
-        if (! is_array($data) || empty($data)) {
-            $this->error('La respuesta de Miracle no trae productos.');
-            return null;
-        }
-
-        $byRef = [];
-        foreach ($data as $p) {
-            $ref = mb_strtolower(trim((string) ($p['referencia'] ?? '')));
-            if ($ref !== '') {
-                $byRef[$ref] = $p;
-            }
         }
 
         $this->line('Catálogo recibido: ' . count($byRef) . ' referencias.');

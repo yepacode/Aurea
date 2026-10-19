@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Product;
+use App\Services\MiracleCatalog;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
@@ -77,8 +78,15 @@ class SyncMiracleProducts extends Command
 
         // --- 1) Traer el catálogo de Miracle --------------------------------
         $this->line('Consultando Miracle...');
-        $productosMiracle = $this->fetchMiracle($url, $token, $timeout, $soloRef);
-        if ($productosMiracle === null) {
+        try {
+            $productosMiracle = app(MiracleCatalog::class)->paginas(
+                function (int $pagina, int $enPagina, int $acumulado) {
+                    $this->line("  página {$pagina}: {$enPagina} filas (acumulado {$acumulado})");
+                },
+                ['referencia' => $soloRef]
+            );
+        } catch (\Throwable $e) {
+            $this->error($e->getMessage());
             return self::FAILURE;
         }
         $this->info('Productos recibidos de Miracle: '.count($productosMiracle));
@@ -230,51 +238,6 @@ class SyncMiracleProducts extends Command
         return self::SUCCESS;
     }
 
-    /**
-     * Trae todos los productos del endpoint de Miracle (sigue paginación si la hay).
-     */
-    private function fetchMiracle(string $url, string $token, int $timeout, ?string $soloRef): ?array
-    {
-        $todos = [];
-        $page = 1;
-
-        do {
-            $params = ['token' => $token];
-            if ($soloRef) {
-                $params['referencia'] = $soloRef;
-            }
-            if ($page > 1) {
-                $params['page'] = $page;
-            }
-
-            try {
-                $resp = Http::timeout($timeout)->acceptJson()->get($url, $params);
-            } catch (\Throwable $e) {
-                $this->error('No se pudo conectar con Miracle: '.$e->getMessage());
-                return null;
-            }
-
-            if (! $resp->successful()) {
-                $this->error('Miracle respondió HTTP '.$resp->status().': '.Str::limit($resp->body(), 200));
-                return null;
-            }
-
-            $json = $resp->json();
-            if (! is_array($json) || empty($json['success'])) {
-                $this->error('Respuesta inesperada de Miracle.');
-                return null;
-            }
-
-            foreach (($json['data'] ?? []) as $row) {
-                $todos[] = $row;
-            }
-
-            $totalPaginas = (int) ($json['meta']['total_paginas'] ?? 1);
-            $page++;
-        } while ($page <= $totalPaginas);
-
-        return $todos;
-    }
 
     /**
      * Descarga, optimiza a WebP y guarda las imágenes de un producto.
