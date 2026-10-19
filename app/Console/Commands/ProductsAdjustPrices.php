@@ -23,19 +23,28 @@ class ProductsAdjustPrices extends Command
 {
     protected $signature = 'products:adjust-prices
         {--dry-run : simular sin guardar}
-        {--descuento=10 : % por debajo del precio público de Miracle}
+        {--subir : modo inverso: sólo SUBE los productos cuyo margen está bajo el piso}
+        {--descuento=10 : % por debajo del precio público de Miracle (modo bajar)}
         {--piso=25 : margen mínimo garantizado sobre el costo (%)}
+        {--objetivo=30 : margen al que se lleva el producto en modo --subir (%)}
         {--redondeo=100 : redondear el precio final a múltiplos de N}
         {--csv= : exportar el detalle a este archivo CSV}';
 
-    protected $description = 'Baja precios para quedar bajo el público de Miracle sin romper un piso de margen. Nunca sube precios.';
+    protected $description = 'Ajusta precios contra el catálogo de Miracle. Por defecto sólo baja (para quedar bajo su precio público sin romper un piso de margen); con --subir sólo corrige al alza los productos que están regalados.';
 
     public function handle(): int
     {
         $dry       = (bool) $this->option('dry-run');
+        $subir     = (bool) $this->option('subir');
         $descuento = max(0, (float) $this->option('descuento'));
         $piso      = max(0, (float) $this->option('piso'));
+        $objetivo  = max(0, (float) $this->option('objetivo'));
         $redondeo  = max(1, (int) $this->option('redondeo'));
+
+        if ($subir && $objetivo < $piso) {
+            $this->error("El margen objetivo ({$objetivo}%) no puede ser menor al piso ({$piso}%).");
+            return self::FAILURE;
+        }
 
         $catalogo = $this->traerCatalogoMiracle();
         if ($catalogo === null) {
@@ -43,11 +52,11 @@ class ProductsAdjustPrices extends Command
         }
 
         $this->info(sprintf(
-            '%sRegla: %s%% bajo el público de Miracle · piso de margen %s%% · redondeo a %s',
+            '%s%s',
             $dry ? '[DRY-RUN] ' : '',
-            $descuento,
-            $piso,
-            number_format($redondeo, 0, ',', '.')
+            $subir
+                ? "Modo SUBIR: productos con margen < {$piso}% se llevan a {$objetivo}% · redondeo a " . number_format($redondeo, 0, ',', '.')
+                : "Modo BAJAR: {$descuento}% bajo el público de Miracle · piso de margen {$piso}% · redondeo a " . number_format($redondeo, 0, ',', '.')
         ));
         $this->newLine();
 
@@ -59,7 +68,7 @@ class ProductsAdjustPrices extends Command
             ->where('is_active', 1)
             ->whereNotNull('internal_code')
             ->orderBy('id')
-            ->chunkById(200, function ($chunk) use ($catalogo, $descuento, $piso, $redondeo, &$bajan, &$sinTocar, &$sinMatch) {
+            ->chunkById(200, function ($chunk) use ($catalogo, $subir, $descuento, $piso, $objetivo, $redondeo, &$bajan, &$sinTocar, &$sinMatch) {
                 foreach ($chunk as $p) {
                     $ref = mb_strtolower(trim((string) $p->internal_code));
                     $m = $catalogo[$ref] ?? null;
@@ -72,25 +81,47 @@ class ProductsAdjustPrices extends Command
                     $publico  = (float) ($m['precios']['centro_experiencia'] ?? 0);
                     $actual   = (float) $p->price;
 
-                    if ($costo <= 0 || $publico <= 0) {
+                    if ($costo <= 0) {
                         $sinTocar++;
                         continue;
                     }
 
-                    $objetivo = $publico * (1 - $descuento / 100);
-                    $minimo   = $costo * (1 + $piso / 100);
-                    $nuevo    = (float) (round(max($objetivo, $minimo) / $redondeo) * $redondeo);
+                    $minimo = $costo * (1 + $piso / 100);
 
-                    // El redondeo hacia abajo puede dejar el precio bajo el piso de
-                    // margen; en ese caso subimos al siguiente múltiplo.
-                    if ($nuevo < $minimo) {
-                        $nuevo = (float) (ceil($minimo / $redondeo) * $redondeo);
-                    }
+                    if ($subir) {
+                        // Sólo tocamos los que están por debajo del piso de margen.
+                        if ($actual >= $minimo) {
+                            $sinTocar++;
+                            continue;
+                        }
+                        // Se llevan al margen objetivo, redondeando hacia arriba para
+                        // no quedar por debajo de él tras el redondeo.
+                        $nuevo = (float) (ceil($costo * (1 + $objetivo / 100) / $redondeo) * $redondeo);
 
-                    // Este comando SÓLO baja. Si no mejora el precio, se deja igual.
-                    if ($nuevo >= $actual) {
-                        $sinTocar++;
-                        continue;
+                        if ($nuevo <= $actual) {
+                            $sinTocar++;
+                            continue;
+                        }
+                    } else {
+                        if ($publico <= 0) {
+                            $sinTocar++;
+                            continue;
+                        }
+
+                        $target = $publico * (1 - $descuento / 100);
+                        $nuevo  = (float) (round(max($target, $minimo) / $redondeo) * $redondeo);
+
+                        // El redondeo hacia abajo puede dejar el precio bajo el piso de
+                        // margen; en ese caso subimos al siguiente múltiplo.
+                        if ($nuevo < $minimo) {
+                            $nuevo = (float) (ceil($minimo / $redondeo) * $redondeo);
+                        }
+
+                        // En modo bajar, si no mejora el precio se deja igual.
+                        if ($nuevo >= $actual) {
+                            $sinTocar++;
+                            continue;
+                        }
                     }
 
                     $bajan[] = [
@@ -110,7 +141,9 @@ class ProductsAdjustPrices extends Command
             });
 
         if (empty($bajan)) {
-            $this->warn('Ningún producto cumple la regla para bajar de precio.');
+            $this->warn($subir
+                ? 'Ningún producto está por debajo del piso de margen. Nada que subir.'
+                : 'Ningún producto cumple la regla para bajar de precio.');
             return self::SUCCESS;
         }
 
@@ -121,8 +154,17 @@ class ProductsAdjustPrices extends Command
             return self::FAILURE;
         }
 
-        $this->mostrarMuestra($bajan);
-        $this->mostrarResumen($bajan, $sinTocar, $sinMatch, $piso);
+        // Guard extra en modo subir: ningún precio puede terminar más bajo.
+        if ($subir) {
+            $retrocesos = array_filter($bajan, fn ($b) => $b['nuevo'] <= $b['actual']);
+            if (! empty($retrocesos)) {
+                $this->error('Abortado: ' . count($retrocesos) . ' producto(s) bajarían de precio en modo --subir.');
+                return self::FAILURE;
+            }
+        }
+
+        $this->mostrarMuestra($bajan, $subir);
+        $this->mostrarResumen($bajan, $sinTocar, $sinMatch, $piso, $subir);
 
         if ($ruta = $this->option('csv')) {
             $this->exportarCsv($bajan, $ruta);
@@ -191,41 +233,54 @@ class ProductsAdjustPrices extends Command
         return $byRef;
     }
 
-    private function mostrarMuestra(array $bajan): void
+    private function mostrarMuestra(array $bajan, bool $subir = false): void
     {
         $muestra = $bajan;
         usort($muestra, fn ($a, $b) => $b['stock'] <=> $a['stock']);
 
         $this->table(
-            ['Producto', 'Hoy', 'Nuevo', 'Baja', 'Costo', 'Margen', 'Stock'],
+            ['Producto', 'Hoy', 'Nuevo', $subir ? 'Sube' : 'Baja', 'Costo', 'Público', 'Margen', 'Stock'],
             array_map(fn ($b) => [
-                mb_substr($b['nombre'], 0, 38),
+                mb_substr($b['nombre'], 0, 34),
                 '$' . number_format($b['actual'], 0, ',', '.'),
                 '$' . number_format($b['nuevo'], 0, ',', '.'),
-                '-$' . number_format($b['baja'], 0, ',', '.'),
+                ($subir ? '+$' : '-$') . number_format(abs($b['baja']), 0, ',', '.'),
                 '$' . number_format($b['costo'], 0, ',', '.'),
+                $b['publico'] > 0 ? '$' . number_format($b['publico'], 0, ',', '.') : '—',
                 round($b['margen'], 1) . '%',
                 number_format($b['stock'], 0, ',', '.'),
-            ], array_slice($muestra, 0, 20))
+            ], array_slice($muestra, 0, 25))
         );
     }
 
-    private function mostrarResumen(array $bajan, int $sinTocar, int $sinMatch, float $piso): void
+    private function mostrarResumen(array $bajan, int $sinTocar, int $sinMatch, float $piso, bool $subir = false): void
     {
         $margenes = array_column($bajan, 'margen');
         sort($margenes);
         $n = count($margenes);
-        $bajas = array_column($bajan, 'baja');
+        $deltas = array_map('abs', array_column($bajan, 'baja'));
+
+        // Cuántos quedan por encima del precio público de Miracle (sólo informativo).
+        $sobrePublico = count(array_filter(
+            $bajan,
+            fn ($b) => $b['publico'] > 0 && $b['nuevo'] > $b['publico']
+        ));
 
         $this->info('── Resumen ──');
-        $this->line('  Productos que bajan:     ' . $n);
-        $this->line('  Sin tocar:               ' . $sinTocar . ' (no se puede bajar sin romper el piso)');
+        $this->line('  Productos que ' . ($subir ? 'suben' : 'bajan') . ':    ' . $n);
+        $this->line('  Sin tocar:               ' . $sinTocar . ($subir ? ' (ya están sobre el piso)' : ' (no se puede bajar sin romper el piso)'));
         $this->line('  Sin match en Miracle:    ' . $sinMatch);
-        $this->line('  Rebaja promedio:         $' . number_format(array_sum($bajas) / max(1, $n), 0, ',', '.'));
-        $this->line('  Rebaja máxima:           $' . number_format(max($bajas), 0, ',', '.'));
-        $this->line('  Margen mínimo resultante:' . round($margenes[0], 1) . '%  (piso pedido: ' . $piso . '%)');
+        $this->line('  Ajuste promedio:         ' . ($subir ? '+' : '-') . '$' . number_format(array_sum($deltas) / max(1, $n), 0, ',', '.'));
+        $this->line('  Ajuste máximo:           ' . ($subir ? '+' : '-') . '$' . number_format(max($deltas), 0, ',', '.'));
+        $this->line('  Margen mínimo resultante: ' . round($margenes[0], 1) . '%  (piso pedido: ' . $piso . '%)');
         $this->line('  Margen mediano:          ' . round($margenes[(int) ($n * 0.5)], 1) . '%');
         $this->line('  Productos en pérdida:    ' . count(array_filter($margenes, fn ($m) => $m < 0)));
+
+        if ($subir && $sobrePublico > 0) {
+            $this->newLine();
+            $this->comment('  Nota: ' . $sobrePublico . ' producto(s) quedan por encima del precio público de Miracle.');
+            $this->comment('  Es esperable: Miracle vende al por mayor a salones y tú al detal a consumidora final.');
+        }
     }
 
     private function exportarCsv(array $bajan, string $ruta): void
