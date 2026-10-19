@@ -117,6 +117,30 @@ class Product extends Model
     }
 
     /**
+     * Descripción lista para pintar como HTML en la ficha.
+     *
+     * El cuerpo de la ficha admite marcado básico (lo genera
+     * `products:enrich-descriptions` y lo puede editar el admin), así que se
+     * recorta a una lista blanca de etiquetas y se le quitan TODOS los
+     * atributos: `strip_tags` deja pasar cosas como `<p onclick="...">`.
+     */
+    public function descriptionHtml(): string
+    {
+        $raw = (string) $this->localizedDescription();
+
+        if (trim($raw) === '') {
+            return '';
+        }
+
+        $clean = strip_tags($raw, '<p><br><ul><ol><li><strong><em><b><i>');
+
+        // Etiqueta sin atributos: <p style="..."> => <p>
+        $clean = preg_replace('/<\s*([a-z][a-z0-9]*)\b[^>]*?(\/?)>/i', '<$1$2>', $clean);
+
+        return trim((string) $clean);
+    }
+
+    /**
      * Meta title/description localizados (SEO).
      */
     public function localizedMetaTitle(): ?string

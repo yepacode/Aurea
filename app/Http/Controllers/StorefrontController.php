@@ -231,12 +231,19 @@ class StorefrontController extends Controller
 
         $breadcrumbSchema = $this->seo->breadcrumbSchema([
             ['name' => 'Inicio', 'url' => url('/')],
-            ['name' => 'Rituales', 'url' => route('blue-light')],
+            ['name' => 'Rituales', 'url' => $this->seo->localeUrl('blue-light')],
         ]);
+
+        // Blog + blogPost[] con los rituales publicados.
+        $blogSchema = $this->seo->blogSchema(
+            BlogPost::published()->orderByDesc('published_at')->get(),
+            $blueLightPage->hero_title ?: 'Rituales de belleza | Belleza Áurea',
+            $this->seo->localeUrl('blue-light'),
+        );
 
         $seoSettings = SeoSetting::getForPage('blue-light');
 
-        return view('storefront.pages.que-es-luz-azul', compact('faqSchema', 'breadcrumbSchema', 'blueLightPage', 'seoSettings'));
+        return view('storefront.pages.que-es-luz-azul', compact('faqSchema', 'breadcrumbSchema', 'blogSchema', 'blueLightPage', 'seoSettings'));
     }
 
     public function contact(): View
@@ -244,7 +251,18 @@ class StorefrontController extends Controller
         $contactPage = ContactPageSetting::getCurrent();
         $seoSettings = SeoSetting::getForPage('contact');
 
-        return view('storefront.pages.contacto', compact('contactPage', 'seoSettings'));
+        // Schema.org: ficha del negocio + ContactPage + miga de pan.
+        $localBusinessSchema = $this->seo->localBusinessSchema($contactPage);
+        $contactPageSchema = $this->seo->contactPageSchema();
+        $breadcrumbSchema = $this->seo->breadcrumbSchema([
+            ['name' => 'Inicio', 'url' => url('/')],
+            ['name' => 'Contacto', 'url' => $this->seo->localeUrl('contact')],
+        ]);
+
+        return view('storefront.pages.contacto', compact(
+            'contactPage', 'seoSettings',
+            'localBusinessSchema', 'contactPageSchema', 'breadcrumbSchema',
+        ));
     }
 
     public function shippingReturns(): View
@@ -259,7 +277,18 @@ class StorefrontController extends Controller
     {
         $seoSettings = SeoSetting::getForPage('about');
 
-        return view('storefront.pages.sobre-nosotras', compact('seoSettings'));
+        // Schema.org: AboutPage (mainEntity → Organization) + miga de pan.
+        $aboutPageSchema = $this->seo->aboutPageSchema(
+            $seoSettings->meta_description ?? null,
+        );
+        $breadcrumbSchema = $this->seo->breadcrumbSchema([
+            ['name' => 'Inicio', 'url' => url('/')],
+            ['name' => 'Sobre nosotras', 'url' => $this->seo->localeUrl('about')],
+        ]);
+
+        return view('storefront.pages.sobre-nosotras', compact(
+            'seoSettings', 'aboutPageSchema', 'breadcrumbSchema',
+        ));
     }
 
     public function terms(): View

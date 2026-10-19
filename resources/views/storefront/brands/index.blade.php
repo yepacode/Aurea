@@ -12,6 +12,12 @@
 @section('og_title', $seo['title'])
 @section('og_description', $seo['description'])
 
+{{-- Schema.org JSON-LD (BreadcrumbList + ItemList de marcas) --}}
+@push('schema')
+    @if(!empty($breadcrumbSchema)){!! $breadcrumbSchema !!}@endif
+    @if(!empty($brandsListSchema)){!! $brandsListSchema !!}@endif
+@endpush
+
 @section('content')
 <main style="background:#FBF8F2;padding:clamp(72px,10vw,140px) 0;">
     <div class="ba-container">

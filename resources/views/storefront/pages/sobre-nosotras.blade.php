@@ -10,6 +10,12 @@
 @section('og_image', ($seoSettings->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 @section('twitter_image', ($seoSettings->twitter_image_url ?? $seoSettings->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
+{{-- Schema.org JSON-LD (AboutPage con mainEntity → Organization + BreadcrumbList) --}}
+@push('schema')
+    @if(!empty($aboutPageSchema)){!! $aboutPageSchema !!}@endif
+    @if(!empty($breadcrumbSchema)){!! $breadcrumbSchema !!}@endif
+@endpush
+
 @section('content')
 
     {{-- ══════════════ HERO — Nuestra historia ══════════════ --}}

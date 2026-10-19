@@ -208,7 +208,8 @@
                 </div>
                 <div class="md:col-span-2">
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Descripción *</label>
-                    <textarea id="description" name="description" rows="4" required
+                    <p class="text-xs text-gray-500 mb-1">Es el cuerpo visible de la ficha. Admite HTML básico: &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;, &lt;em&gt;. Cualquier otra etiqueta se descarta al mostrarla.</p>
+                    <textarea id="description" name="description" rows="14" required
                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">{{ old('description', $product->description) }}</textarea>
                 </div>
             </div>

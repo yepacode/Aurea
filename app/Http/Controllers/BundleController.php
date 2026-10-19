@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bundle;
 use App\Models\SeoSetting;
 use App\Services\CartService;
+use App\Services\SeoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
@@ -15,10 +16,11 @@ class BundleController extends Controller
         private CartService $cart,
     ) {}
 
-    public function index(): View
+    public function index(SeoService $seo): View
     {
-        // Cache 10 min — los kits cambian rara vez.
-        $payload = Cache::remember('bundles.index.v1.'.app()->getLocale(), 600, function () {
+        // Cache 10 min — los kits cambian rara vez. La clave incluye el locale,
+        // así que las URLs absolutas de los schemas se pueden cachear con ella.
+        $payload = Cache::remember('bundles.index.v2.'.app()->getLocale(), 600, function () use ($seo) {
             $bundles = Bundle::active()
                 ->with(['items' => fn ($q) => $q->select('products.id', 'name', 'slug', 'images', 'price')])
                 ->orderBy('sort_order')
@@ -27,7 +29,14 @@ class BundleController extends Controller
 
             $seoSettings = SeoSetting::getForPage('bundles-index');
 
-            return compact('bundles', 'seoSettings');
+            // Schema.org: BreadcrumbList + ItemList (null si no hay kits).
+            $breadcrumbSchema = $seo->breadcrumbSchema([
+                ['name' => 'Inicio', 'url' => url('/')],
+                ['name' => 'Kits', 'url' => $seo->localeUrl('bundles.index')],
+            ]);
+            $bundlesListSchema = $seo->bundleListSchema($bundles, 'Kits y rituales');
+
+            return compact('bundles', 'seoSettings', 'breadcrumbSchema', 'bundlesListSchema');
         });
 
         return view('storefront.bundles.index', $payload);

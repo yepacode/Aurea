@@ -330,11 +330,16 @@
                     @endforeach
                 @endif
 
-                {{-- Descripción corta --}}
-                @if($product->description)
-                <p style="font-size:14px;color:#666;line-height:1.6;margin-bottom:20px;">
-                    {{ $product->description }}
-                </p>
+                {{-- Descripción de la ficha (admite <p>/<ul> saneados) --}}
+                @php $descHtml = $product->descriptionHtml(); @endphp
+                @if($descHtml !== '')
+                <div class="ba-product-desc" style="font-size:14px;color:#666;line-height:1.6;margin-bottom:20px;">
+                    @if(\Illuminate\Support\Str::contains($descHtml, '<'))
+                        {!! $descHtml !!}
+                    @else
+                        <p>{{ $descHtml }}</p>
+                    @endif
+                </div>
                 @endif
 
                 {{-- ✨ Bundles activos que incluyen este producto --}}
@@ -598,6 +603,16 @@
          ============================================================ --}}
     @if(($relatedProducts ?? collect())->count() > 0)
     <style>
+        /* Cuerpo de la ficha: el texto enriquecido trae <p> y <ul>. */
+        .ba-product-desc p{margin:0 0 12px;}
+        .ba-product-desc p:last-child{margin-bottom:0;}
+        /* El reset global pone list-style:none, hay que devolverle la viñeta. */
+        .ba-product-desc ul{margin:0 0 12px;padding-left:20px;list-style:disc outside;}
+        .ba-product-desc ol{margin:0 0 12px;padding-left:20px;list-style:decimal outside;}
+        .ba-product-desc li{margin-bottom:6px;display:list-item;}
+        .ba-product-desc li::marker{color:#D9B56D;}
+        .ba-product-desc strong{color:#2E2A26;font-weight:600;}
+
         .relx-wrap{max-width:1200px;margin:0 auto;padding:clamp(48px,7vw,80px) 24px 32px;}
         .relx-title{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 44px;text-align:center;}
         .relx-title__flower{color:#D9B56D;font-size:20px;line-height:1;opacity:.85;flex-shrink:0;

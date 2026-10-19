@@ -179,6 +179,17 @@ class SeoService
      */
     public function organizationSchema(): string
     {
+        return $this->toJsonLd($this->organizationData());
+    }
+
+    /**
+     * Datos crudos de la Organization (sin envolver en <script>), para poder
+     * reutilizarlos como nodo anidado (p. ej. mainEntity de AboutPage).
+     *
+     * @return array<string, mixed>
+     */
+    public function organizationData(): array
+    {
         $legal = config('legal', []);
         $usable = fn ($v) => $v && ! \Illuminate\Support\Str::startsWith(trim((string) $v), '[');
 
@@ -222,7 +233,7 @@ class SeoService
             $data['sameAs'] = $sameAs;
         }
 
-        return $this->toJsonLd($data);
+        return $data;
     }
 
     /**
@@ -483,6 +494,334 @@ class SeoService
                 'item' => $item['url'],
             ], $items, array_keys($items)),
         ]);
+    }
+
+    /**
+     * ItemList genérico. Devuelve null si no hay elementos: un ItemList vacío
+     * es peor que no emitirlo (Google lo marca como structured data inválido).
+     *
+     * @param  array<int, array<string, mixed>>  $items  objetos schema.org ya armados
+     */
+    public function itemListSchema(array $items, ?string $name = null): ?string
+    {
+        $items = array_values(array_filter($items));
+        if (empty($items)) {
+            return null;
+        }
+
+        $data = ['@context' => 'https://schema.org', '@type' => 'ItemList'];
+        if ($name) {
+            $data['name'] = $name;
+        }
+        $data['numberOfItems'] = count($items);
+        $data['itemListElement'] = array_map(fn ($item, $i) => [
+            '@type' => 'ListItem',
+            'position' => $i + 1,
+            'item' => $item,
+        ], $items, array_keys($items));
+
+        return $this->toJsonLd($data);
+    }
+
+    /**
+     * ItemList de marcas (/marcas). Cada ítem es un Brand.
+     *
+     * @param  iterable<\App\Models\Brand>  $brands
+     */
+    public function brandListSchema(iterable $brands, ?string $name = null): ?string
+    {
+        $items = [];
+        foreach ($brands as $brand) {
+            $item = array_filter([
+                '@type' => 'Brand',
+                'name' => $brand->name,
+                'url' => $this->localeUrl('brands.show', ['slug' => $brand->slug]),
+                'logo' => $brand->logo_url ?: null,
+                'description' => $brand->short_description ?: null,
+            ], fn ($v) => $v !== null && $v !== '');
+            $items[] = $item;
+        }
+
+        return $this->itemListSchema($items, $name);
+    }
+
+    /**
+     * ItemList de productos. Cada ítem es un Product con su Offer en COP.
+     *
+     * @param  iterable<Product>  $products
+     */
+    public function productListSchema(iterable $products, ?string $name = null): ?string
+    {
+        $items = [];
+        foreach ($products as $product) {
+            $image = null;
+            if (is_array($product->images) && ! empty($product->images[0])) {
+                $image = asset('storage/'.$product->images[0]);
+            }
+
+            $items[] = array_filter([
+                '@type' => 'Product',
+                'name' => $product->name,
+                'url' => $this->localeUrl('products.show', ['slug' => $product->slug]),
+                'image' => $image,
+                'offers' => [
+                    '@type' => 'Offer',
+                    'url' => $this->localeUrl('products.show', ['slug' => $product->slug]),
+                    'price' => $this->schemaPrice($product->price),
+                    'priceCurrency' => 'COP',
+                    'availability' => $product->hasStock()
+                        ? 'https://schema.org/InStock'
+                        : 'https://schema.org/OutOfStock',
+                ],
+            ], fn ($v) => $v !== null && $v !== '');
+        }
+
+        return $this->itemListSchema($items, $name);
+    }
+
+    /**
+     * ItemList de kits/bundles (/kits). Cada ítem es un Product con su Offer.
+     *
+     * @param  iterable<\App\Models\Bundle>  $bundles
+     */
+    public function bundleListSchema(iterable $bundles, ?string $name = null): ?string
+    {
+        $items = [];
+        foreach ($bundles as $bundle) {
+            $items[] = array_filter([
+                '@type' => 'Product',
+                'name' => $bundle->name,
+                'url' => $this->localeUrl('bundles.show', ['slug' => $bundle->slug]),
+                'image' => $bundle->image_url ?: null,
+                'description' => $bundle->description
+                    ? mb_substr(trim(strip_tags($bundle->description)), 0, 500)
+                    : null,
+                'offers' => [
+                    '@type' => 'Offer',
+                    'url' => $this->localeUrl('bundles.show', ['slug' => $bundle->slug]),
+                    'price' => $this->schemaPrice($bundle->price),
+                    'priceCurrency' => 'COP',
+                    'availability' => 'https://schema.org/InStock',
+                ],
+            ], fn ($v) => $v !== null && $v !== '');
+        }
+
+        return $this->itemListSchema($items, $name);
+    }
+
+    /**
+     * LocalBusiness (subtipo HealthAndBeautyBusiness) para /contacto.
+     *
+     * Sólo emite lo que existe de verdad: la dirección se omite si no hay
+     * datos cargados, y el teléfono sale del WhatsApp configurado en el admin.
+     */
+    public function localBusinessSchema(?\App\Models\ContactPageSetting $contact = null): string
+    {
+        $contact = $contact ?: \App\Models\ContactPageSetting::getCurrent();
+        $legal = config('legal', []);
+        $usable = fn ($v) => $v && ! \Illuminate\Support\Str::startsWith(trim((string) $v), '[');
+
+        $data = [
+            '@context' => 'https://schema.org',
+            '@type' => 'HealthAndBeautyBusiness',
+            'name' => 'Belleza Áurea',
+            'url' => url('/'),
+            'logo' => asset('img/brand/logo-principal.png'),
+            'image' => asset('img/brand/logo-principal.png'),
+            'description' => 'Distribuidora de insumos y cosmética profesional de belleza en Colombia: uñas, piel, maquillaje, cabello y estética.',
+        ];
+
+        // Teléfono: WhatsApp del admin → teléfono del admin → config/legal.php.
+        // Se normaliza a E.164 cuando sólo tenemos dígitos.
+        $phone = null;
+        $digits = $contact->whatsappDigits();
+        if ($digits !== '') {
+            $phone = '+'.$digits;
+        } elseif ($usable($contact->phone ?? null)) {
+            $phone = $contact->phone;
+        } elseif ($usable($legal['phone'] ?? null)) {
+            $phone = $legal['phone'];
+        }
+        if ($phone) {
+            $data['telephone'] = $phone;
+        }
+
+        if ($usable($contact->email ?? null)) {
+            $data['email'] = $contact->email;
+        } elseif ($usable($legal['email'] ?? null)) {
+            $data['email'] = $legal['email'];
+        }
+
+        // Dirección: SOLO si hay datos reales. Nada inventado.
+        // ContactPageSetting no tiene columna de dirección hoy; si se agrega,
+        // manda ella y si no caemos a config/legal.php (misma fuente que lo legal).
+        $street = $usable($contact->address ?? null)
+            ? $contact->address
+            : ($usable($legal['address'] ?? null) ? $legal['address'] : null);
+        $city = $usable($contact->city ?? null)
+            ? $contact->city
+            : ($usable($legal['city'] ?? null) ? $legal['city'] : null);
+
+        // Si "address" es en realidad sólo la ciudad/país (p. ej. "Bucaramanga,
+        // Colombia") no la publicamos como streetAddress: sería un dato falso.
+        if ($street && $city) {
+            $rest = str_ireplace([$city, (string) ($legal['country'] ?? '')], '', $street);
+            if (trim(preg_replace('/[\s,.\-]+/u', '', $rest)) === '') {
+                $street = null;
+            }
+        }
+
+        if ($street || $city) {
+            $data['address'] = array_filter([
+                '@type' => 'PostalAddress',
+                'streetAddress' => $street,
+                'addressLocality' => $city,
+                'addressCountry' => 'CO',
+            ]);
+        }
+
+        // Horario de atención desde whatsapp_hours_json (7 días con open/close/enabled)
+        $hoursMap = [
+            'mon' => 'https://schema.org/Monday',
+            'tue' => 'https://schema.org/Tuesday',
+            'wed' => 'https://schema.org/Wednesday',
+            'thu' => 'https://schema.org/Thursday',
+            'fri' => 'https://schema.org/Friday',
+            'sat' => 'https://schema.org/Saturday',
+            'sun' => 'https://schema.org/Sunday',
+        ];
+        $opening = [];
+        foreach ($contact->whatsappHours() as $day => $slot) {
+            if (empty($slot['enabled']) || ! isset($hoursMap[$day])) {
+                continue;
+            }
+            $opening[] = [
+                '@type' => 'OpeningHoursSpecification',
+                'dayOfWeek' => $hoursMap[$day],
+                'opens' => $slot['open'],
+                'closes' => $slot['close'],
+            ];
+        }
+        if (! empty($opening)) {
+            $data['openingHoursSpecification'] = $opening;
+        }
+
+        $data['areaServed'] = ['@type' => 'Country', 'name' => 'Colombia'];
+
+        $sameAs = array_values(array_filter([
+            $contact->instagram_url ?? null,
+            $contact->facebook_url ?? null,
+            $contact->tiktok_url ?? null,
+        ]));
+        if (! empty($sameAs)) {
+            $data['sameAs'] = $sameAs;
+        }
+
+        return $this->toJsonLd($data);
+    }
+
+    /**
+     * ContactPage para /contacto.
+     */
+    public function contactPageSchema(): string
+    {
+        return $this->toJsonLd([
+            '@context' => 'https://schema.org',
+            '@type' => 'ContactPage',
+            'name' => 'Contacto | Belleza Áurea',
+            'url' => $this->localeUrl('contact'),
+            'inLanguage' => app()->getLocale(),
+            'isPartOf' => [
+                '@type' => 'WebSite',
+                'name' => 'Belleza Áurea',
+                'url' => url('/'),
+            ],
+        ]);
+    }
+
+    /**
+     * AboutPage para /sobre-nosotras, con mainEntity → Organization.
+     */
+    public function aboutPageSchema(?string $description = null): string
+    {
+        $organization = $this->organizationData();
+        unset($organization['@context']);
+
+        $data = [
+            '@context' => 'https://schema.org',
+            '@type' => 'AboutPage',
+            'name' => 'Sobre nosotras | Belleza Áurea',
+            'url' => $this->localeUrl('about'),
+            'inLanguage' => app()->getLocale(),
+        ];
+        if ($description) {
+            $data['description'] = $description;
+        }
+        $data['mainEntity'] = $organization;
+
+        return $this->toJsonLd($data);
+    }
+
+    /**
+     * Blog con sus blogPost[] para el índice de /rituales.
+     * Devuelve null si no hay posts publicados.
+     *
+     * @param  iterable<BlogPost>  $posts
+     */
+    public function blogSchema(iterable $posts, ?string $name = null, ?string $url = null): ?string
+    {
+        $entries = [];
+        foreach ($posts as $post) {
+            $entries[] = array_filter([
+                '@type' => 'BlogPosting',
+                'headline' => $post->title,
+                'url' => $this->localeUrl('ritual.show', ['slug' => $post->slug]),
+                'image' => $post->image ? asset('storage/'.$post->image) : null,
+                'datePublished' => $post->published_at?->toIso8601String(),
+                'dateModified' => $post->updated_at?->toIso8601String(),
+            ], fn ($v) => $v !== null && $v !== '');
+        }
+
+        if (empty($entries)) {
+            return null;
+        }
+
+        return $this->toJsonLd([
+            '@context' => 'https://schema.org',
+            '@type' => 'Blog',
+            'name' => $name ?: 'Rituales de belleza | Belleza Áurea',
+            'url' => $url ?: $this->localeUrl('blue-light'),
+            'inLanguage' => app()->getLocale(),
+            'publisher' => [
+                '@type' => 'Organization',
+                'name' => 'Belleza Áurea',
+                'url' => url('/'),
+                'logo' => [
+                    '@type' => 'ImageObject',
+                    'url' => asset('img/brand/logo-principal.png'),
+                ],
+            ],
+            'blogPost' => $entries,
+        ]);
+    }
+
+    /**
+     * URL absoluta respetando el idioma activo (igual que el resto del front).
+     */
+    public function localeUrl(string $routeName, array $params = []): string
+    {
+        return function_exists('locale_route')
+            ? locale_route($routeName, $params)
+            : route($routeName, $params);
+    }
+
+    /**
+     * Precio tal y como lo exige schema.org: numérico, punto decimal,
+     * sin separador de miles y sin símbolo de moneda.
+     */
+    private function schemaPrice($price): string
+    {
+        return number_format((float) $price, 2, '.', '');
     }
 
     /**

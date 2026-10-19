@@ -17,6 +17,8 @@
 
 @push('schema')
 <script type="application/ld+json">{!! $brandSchema !!}</script>
+@if(!empty($breadcrumbSchema)){!! $breadcrumbSchema !!}@endif
+@if(!empty($productsListSchema)){!! $productsListSchema !!}@endif
 @endpush
 
 @section('content')

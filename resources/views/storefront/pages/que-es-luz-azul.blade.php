@@ -12,6 +12,8 @@
 
 @push('schema')
     @if(!empty($breadcrumbSchema)){!! $breadcrumbSchema !!}@endif
+    @if(!empty($blogSchema)){!! $blogSchema !!}@endif
+    @if(!empty($faqSchema)){!! $faqSchema !!}@endif
 @endpush
 
 @section('content')

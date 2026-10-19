@@ -10,6 +10,13 @@
 @section('og_image', ($seoSettings->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 @section('twitter_image', ($seoSettings->twitter_image_url ?? $seoSettings->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
+{{-- Schema.org JSON-LD (HealthAndBeautyBusiness + ContactPage + BreadcrumbList) --}}
+@push('schema')
+    @if(!empty($localBusinessSchema)){!! $localBusinessSchema !!}@endif
+    @if(!empty($contactPageSchema)){!! $contactPageSchema !!}@endif
+    @if(!empty($breadcrumbSchema)){!! $breadcrumbSchema !!}@endif
+@endpush
+
 @section('content')
 
     {{-- Hero con identidad de marca (ramitas doradas + rocío) --}}

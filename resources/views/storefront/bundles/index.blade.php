@@ -9,6 +9,12 @@
 @section('og_image', ($seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 @section('twitter_image', ($seoSettings?->twitter_image_url ?? $seoSettings?->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
 
+{{-- Schema.org JSON-LD (BreadcrumbList + ItemList de kits; sin kits NO se emite ItemList) --}}
+@push('schema')
+    @if(!empty($breadcrumbSchema)){!! $breadcrumbSchema !!}@endif
+    @if(!empty($bundlesListSchema)){!! $bundlesListSchema !!}@endif
+@endpush
+
 @push('head')
 <style>
     .kits-hero{
