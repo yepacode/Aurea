@@ -29,6 +29,13 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(self)');
 
+        // HSTS: fuerza HTTPS en el navegador por 1 año. Solo en respuestas seguras
+        // (evita romper el dev local por HTTP). Sin 'preload' a propósito: entrar a
+        // la lista de preload es difícil de revertir; se puede añadir más adelante.
+        if ($request->secure()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
+
         // CSP conservadora: permite CDN comunes + ePayco + GA4 + Meta Pixel.
         // 'unsafe-inline' y 'unsafe-eval' se mantienen porque hoy la app usa
         // <script> inline y librerías (Alpine/Tailwind CDN) que los requieren.

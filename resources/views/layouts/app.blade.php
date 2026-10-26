@@ -56,8 +56,8 @@
     <meta property="og:title" content="{{ $__ogTitle }}">
     <meta property="og:description" content="{{ $__ogDesc }}">
     <meta property="og:url" content="@yield('canonical', url()->current())">
-    <meta property="og:image" content="@yield('og_image', asset('img/brand/logo-principal.png'))">
-    <meta property="og:image:secure_url" content="@yield('og_image', asset('img/brand/logo-principal.png'))">
+    <meta property="og:image" content="@yield('og_image', asset('img/brand/og-default.jpg'))">
+    <meta property="og:image:secure_url" content="@yield('og_image', asset('img/brand/og-default.jpg'))">
     <meta property="og:image:width" content="@yield('og_image_width', '1200')">
     <meta property="og:image:height" content="@yield('og_image_height', '630')">
     <meta property="og:image:alt" content="@yield('og_image_alt', 'Belleza Áurea — cosmética e insumos de belleza')">
@@ -68,7 +68,7 @@
     <meta name="twitter:card" content="@yield('twitter_card', 'summary_large_image')">
     <meta name="twitter:title" content="{{ $__twitterTitle }}">
     <meta name="twitter:description" content="{{ $__twitterDesc }}">
-    <meta name="twitter:image" content="@yield('twitter_image', asset('img/brand/logo-principal.png'))">
+    <meta name="twitter:image" content="@yield('twitter_image', asset('img/brand/og-default.jpg'))">
     <meta name="twitter:image:alt" content="@yield('og_image_alt', 'Belleza Áurea — cosmética e insumos de belleza')">
 
     {{-- Theme color --}}

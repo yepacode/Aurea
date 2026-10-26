@@ -1704,6 +1704,10 @@
             <h1 class="ae__title">
                 <span class="l1">{{ $hero->title_line1 ?? 'Tu belleza,' }}</span>
                 <span class="l2">{{ $hero->title_line2 ?? 'tu esencia.' }}</span>
+                {{-- Descriptor con keywords para SEO/accesibilidad (no altera el diseño visual del hero) --}}
+                <span class="sr-only">{{ app()->getLocale() === 'en'
+                    ? ' — Distributor of beauty supplies and professional cosmetics in Colombia'
+                    : ' — Distribuidora de insumos y cosmética profesional de belleza en Colombia' }}</span>
             </h1>
             <p class="ae__sub">{{ $hero->subtitle ?? 'Distribución exclusiva de productos de belleza: piel, uñas, accesorios y estética profesional. Calidad garantizada.' }}</p>
             <a href="{{ $hero->btn_primary_url ?? locale_route('products.index') }}" class="ae__cta">
