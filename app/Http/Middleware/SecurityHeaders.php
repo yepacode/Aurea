@@ -40,16 +40,16 @@ class SecurityHeaders
         // 'unsafe-inline' y 'unsafe-eval' se mantienen porque hoy la app usa
         // <script> inline y librerías (Alpine/Tailwind CDN) que los requieren.
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://cdn.tailwindcss.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://checkout.epayco.co https://apify.epayco.co; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://cdn.tailwindcss.com https://www.googletagmanager.com https://www.google-analytics.com https://connect.facebook.net https://*.epayco.co; " .
                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; " .
                "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; " .
                "img-src 'self' data: https: blob:; " .
                "media-src 'self' data: blob: https:; " .
-               "connect-src 'self' https://www.google-analytics.com https://checkout.epayco.co https://apify.epayco.co https://secure.epayco.co wss:; " .
-               "frame-src 'self' https://checkout.epayco.co https://www.youtube.com https://player.vimeo.com; " .
+               "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://*.epayco.co wss:; " .
+               "frame-src 'self' https://*.epayco.co https://www.youtube.com https://player.vimeo.com; " .
                "object-src 'none'; " .
                "base-uri 'self'; " .
-               "form-action 'self' https://checkout.epayco.co;";
+               "form-action 'self' https://*.epayco.co;";
 
         $response->headers->set('Content-Security-Policy', $csp);
 

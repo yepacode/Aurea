@@ -11,8 +11,8 @@
 @section('og_description', $seoSettings->og_description ?? $seoSettings->meta_description ?? 'Belleza natural, elegante y atemporal.')
 @section('twitter_title', $seoSettings->twitter_title ?? $seoSettings->meta_title ?? 'Belleza Áurea')
 @section('twitter_description', $seoSettings->twitter_description ?? $seoSettings->meta_description ?? 'Belleza natural, elegante y atemporal.')
-@section('og_image', ($seoSettings->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
-@section('twitter_image', ($seoSettings->twitter_image_url ?? $seoSettings->og_image_url ?? null) ?: asset('img/brand/logo-principal.png'))
+@section('og_image', ($seoSettings->og_image_url ?? null) ?: asset('img/brand/og-default.jpg'))
+@section('twitter_image', ($seoSettings->twitter_image_url ?? $seoSettings->og_image_url ?? null) ?: asset('img/brand/og-default.jpg'))
 
 @push('schema')
     {{-- Organization JSON-LD (vienen como <script>...</script> completos del SeoService) --}}
