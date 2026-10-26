@@ -312,13 +312,13 @@
 {{-- ── Analytics: view_cart / (Meta: no oficial → usamos ViewContent con múltiples ids) ── --}}
 @php
     $__gaItems = collect($items)->map(fn($it) => [
-        'item_id'       => (string) $it['product']->id,
-        'item_name'     => (string) $it['product']->name,
-        'item_category' => optional($it['product']->category)->name,
+        'item_id'       => (string) ($it['id'] ?? ''),
+        'item_name'     => (string) ($it['name'] ?? ''),
+        'item_category' => $it['category'] ?? null,
         'price'         => (float) $it['unit_price'],
         'quantity'      => (int) $it['qty'],
     ])->values();
-    $__fbIds = collect($items)->map(fn($it) => (string) $it['product']->id)->values();
+    $__fbIds = collect($items)->map(fn($it) => (string) ($it['id'] ?? ''))->values();
     $__cartVal = (float) $subtotal;
 @endphp
 <script>

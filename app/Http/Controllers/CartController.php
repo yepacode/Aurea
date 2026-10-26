@@ -188,8 +188,10 @@ class CartController extends Controller
             'cart_count' => $this->cart->count(),
             'items' => $items->map(fn ($item) => [
                 'key' => $item['key'],
+                'id' => $item['product']->id,
                 'name' => $item['product']->name,
                 'slug' => $item['product']->slug,
+                'category' => optional($item['product']->category)->name,
                 'image' => $item['product']->images[0] ?? null,
                 'variant' => $item['variant']
                     ? trim(($item['variant']->color ?? $item['variant']->value) . ' ' . ($item['variant']->graduation ?? ''))
