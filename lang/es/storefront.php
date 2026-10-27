@@ -107,6 +107,7 @@ return [
 
     'footer' => [
         'tagline'          => 'Belleza natural, elegante y atemporal. Skincare, fragancias y rituales premium con ingredientes botánicos.',
+        'follow_us'        => 'Síguenos',
         'store'            => 'Tienda',
         'all_products'     => 'Todos los productos',
         'face_and_skin'    => 'Rostro y piel',

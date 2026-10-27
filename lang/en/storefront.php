@@ -107,6 +107,7 @@ return [
 
     'footer' => [
         'tagline'          => 'Natural, elegant, timeless beauty. Skincare, fragrances and premium rituals with botanical ingredients.',
+        'follow_us'        => 'Follow us',
         'store'            => 'Shop',
         'all_products'     => 'All products',
         'face_and_skin'    => 'Face & skin',
