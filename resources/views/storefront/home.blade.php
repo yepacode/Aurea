@@ -1915,9 +1915,11 @@
                    data-anim="fade-up"
                    style="--stagger: {{ $i % 4 }};">
                     <div class="ba-card__img {{ empty($p->images) ? 'ba-card__img--ph' : '' }}">
+                        @if($p->sales_rank)
                         <span class="ba-card__badge ba-card__badge--featured" style="background:linear-gradient(135deg,#D9B56D,#BE9A53);color:#3B310F;">
-                            #{{ $i + 1 }} en ventas
+                            #{{ $p->sales_rank }} en ventas
                         </span>
+                        @endif
                         @if(!empty($p->images))
                             <img src="{{ asset('storage/'.$p->images[0]) }}" alt="{{ $p->name }}" loading="lazy">
                         @else

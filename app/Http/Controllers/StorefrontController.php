@@ -150,26 +150,10 @@ class StorefrontController extends Controller
             ->take(3)
             ->get();
 
-        // Más vendidos — hasta 8 productos activos con stock, ordenados por
-        // Product::bestSellerIds (unidades vendidas en pedidos pagados).
-        $bestSellerIds = Product::bestSellerIds(8);
-        $bestSellers = collect();
-        if ($bestSellerIds->isNotEmpty()) {
-            $bestSellers = Product::active()
-                ->whereIn('id', $bestSellerIds)
-                ->where(function ($q) {
-                    $q->where('stock', '>', 0)
-                      ->orWhereHas('variants', fn ($v) => $v->where('is_active', true)->where('stock', '>', 0));
-                })
-                ->whereNotNull('images')
-                ->whereRaw('JSON_LENGTH(images) > 0')
-                ->with(['variants', 'category', 'brand'])
-                ->get()
-                ->filter(fn ($p) => $p->hasStock())
-                ->sortBy(fn ($p) => $bestSellerIds->search($p->id))
-                ->values()
-                ->take(8);
-        }
+        // Más vendidos — primero ventas ONLINE reales (con badge "#N en ventas"),
+        // luego se rellena hasta 8 con ganadores curados / destacados / recientes
+        // (sin badge de ventas). Ver buildBestSellers().
+        $bestSellers = $this->buildBestSellers(8);
 
         return compact(
             'hero', 'starProduct', 'heroMode', 'homePage', 'seoSettings',
@@ -178,6 +162,97 @@ class StorefrontController extends Controller
             'categories', 'testimonials', 'featuredBrands', 'featuredBundles',
             'bestSellers',
         );
+    }
+
+    /**
+     * Construye la lista de "Más vendidos" del home garantizando hasta $target ítems:
+     *   1) ventas ONLINE reales (pedidos pagados) → llevan $p->sales_rank (badge "#N en ventas")
+     *   2) ganadores curados por internal_code/miracle_ref (config/bestsellers.php) → sin badge
+     *   3) destacados (is_featured) → sin badge
+     *   4) recientes → relleno final sin badge
+     * Dedup por id; cada producto queda con $p->sales_rank (int real o null).
+     */
+    private function buildBestSellers(int $target = 8): \Illuminate\Support\Collection
+    {
+        $withImgStock = function ($q) {
+            $q->whereNotNull('images')
+              ->whereRaw('JSON_LENGTH(images) > 0')
+              ->where(function ($s) {
+                  $s->where('stock', '>', 0)
+                    ->orWhereHas('variants', fn ($v) => $v->where('is_active', true)->where('stock', '>', 0));
+              });
+        };
+        $load = ['variants', 'category', 'brand'];
+
+        // 1) Ventas ONLINE reales (pedidos pagados) → con badge "#N en ventas".
+        $ids = Product::bestSellerIds($target);
+        $result = collect();
+        if ($ids->isNotEmpty()) {
+            $result = Product::active()->whereIn('id', $ids)->where($withImgStock)
+                ->with($load)->get()
+                ->filter(fn ($p) => $p->hasStock())
+                ->sortBy(fn ($p) => $ids->search($p->id))
+                ->values()->take($target);
+            $result->each(fn ($p, $i) => $p->sales_rank = $i + 1);
+        }
+
+        // 2) Ganadores curados por código (config), en el orden de la lista.
+        //    Se emparejan solo por las columnas de código que EXISTAN en la tabla
+        //    (internal_code / miracle_ref), para no romper si una no está migrada.
+        if ($result->count() < $target) {
+            $codes = collect(config('bestsellers.curated', []))->map(fn ($c) => (string) $c)->values();
+            $matchCols = collect(['internal_code', 'miracle_ref'])
+                ->filter(fn ($c) => \Illuminate\Support\Facades\Schema::hasColumn('products', $c))
+                ->values();
+            if ($codes->isNotEmpty() && $matchCols->isNotEmpty()) {
+                $curated = Product::active()
+                    ->whereNotIn('id', $result->pluck('id')->all())
+                    ->where(function ($w) use ($codes, $matchCols) {
+                        foreach ($matchCols as $idx => $col) {
+                            $idx === 0
+                                ? $w->whereIn($col, $codes->all())
+                                : $w->orWhereIn($col, $codes->all());
+                        }
+                    })
+                    ->where($withImgStock)->with($load)->limit(80)->get()
+                    ->filter(fn ($p) => $p->hasStock())
+                    ->sortBy(function ($p) use ($codes, $matchCols) {
+                        return $matchCols->map(function ($col) use ($codes, $p) {
+                            $k = $codes->search((string) ($p->{$col} ?? ''));
+                            return $k === false ? PHP_INT_MAX : $k;
+                        })->min();
+                    })
+                    ->values()->take($target - $result->count());
+                $curated->each(fn ($p) => $p->sales_rank = null);
+                $result = $result->concat($curated);
+            }
+        }
+
+        // 3) Destacados (is_featured) → sin badge.
+        if ($result->count() < $target) {
+            $featured = Product::active()->where('is_featured', true)
+                ->whereNotIn('id', $result->pluck('id')->all())
+                ->where($withImgStock)->with($load)
+                ->orderBy('sort_order')->orderByDesc('created_at')->limit(24)->get()
+                ->filter(fn ($p) => $p->hasStock())
+                ->values()->take($target - $result->count());
+            $featured->each(fn ($p) => $p->sales_rank = null);
+            $result = $result->concat($featured);
+        }
+
+        // 4) Recientes → relleno final para garantizar la fila.
+        if ($result->count() < $target) {
+            $recent = Product::active()
+                ->whereNotIn('id', $result->pluck('id')->all())
+                ->where($withImgStock)->with($load)
+                ->orderByDesc('created_at')->limit(24)->get()
+                ->filter(fn ($p) => $p->hasStock())
+                ->values()->take($target - $result->count());
+            $recent->each(fn ($p) => $p->sales_rank = null);
+            $result = $result->concat($recent);
+        }
+
+        return $result->take($target)->values();
     }
 
     /**
