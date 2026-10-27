@@ -298,6 +298,9 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 // Google Merchant Center — feed de productos (RSS 2.0 + namespace g:)
 Route::get('/feed/google-merchant.xml', [FeedController::class, 'googleMerchant'])->name('feed.google_merchant');
 
+// Meta (Facebook/Instagram Shops) — mismo formato que Google, sin productos sin foto
+Route::get('/feed/meta-catalog.xml', [FeedController::class, 'metaCatalog'])->name('feed.meta_catalog');
+
 // robots.txt dinámico (la URL del sitemap se adapta al dominio real)
 Route::get('/robots.txt', function () {
     $lines = [
@@ -315,6 +318,9 @@ Route::get('/robots.txt', function () {
         '',
         '# Google Merchant Center product feed',
         'Allow: /feed/google-merchant.xml',
+        '',
+        '# Meta (Facebook/Instagram Shops) product feed',
+        'Allow: /feed/meta-catalog.xml',
         '',
     ];
 
