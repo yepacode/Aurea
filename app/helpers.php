@@ -114,3 +114,26 @@ if (! function_exists('switch_locale_url')) {
         return $path.($qs ? '?'.$qs : '');
     }
 }
+
+if (! function_exists('jpg_url')) {
+    /**
+     * URL absoluta que sirve una imagen de storage como JPG.
+     *
+     * Mercado Libre y Meta (IG/FB Shops) NO aceptan WebP; casi todas las imágenes
+     * del sitio son .webp. Pásale la ruta relativa dentro de storage/app/public
+     * (p. ej. 'products/slug/1-xxx.webp', con o sin prefijo 'storage/') y devuelve
+     * la URL .jpg servida por el endpoint /img/jpg (ver ImageJpegController).
+     */
+    function jpg_url(?string $storagePath): ?string
+    {
+        if (empty($storagePath)) {
+            return null;
+        }
+
+        $p = ltrim($storagePath, '/');
+        $p = preg_replace('#^storage/#', '', $p);
+        $p = preg_replace('/\.(jpe?g|webp|png|gif)$/i', '', $p) . '.jpg';
+
+        return url('/img/jpg/' . $p);
+    }
+}

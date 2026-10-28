@@ -362,6 +362,12 @@ Route::get('/storage/{path}', function (string $path) {
     ]);
 })->where('path', '.*')->name('storage.serve');
 
+// Sirve cualquier imagen de producto como JPG (ML/Meta no aceptan WebP).
+// URL: /img/jpg/<ruta>.jpg  →  helper jpg_url('products/slug/1-xxx.webp')
+Route::get('/img/jpg/{path}', [\App\Http\Controllers\ImageJpegController::class, 'show'])
+    ->where('path', '.*')
+    ->name('img.jpg');
+
 /*
 |--------------------------------------------------------------------------
 | Admin Authentication (outside admin middleware group)

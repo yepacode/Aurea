@@ -30,3 +30,6 @@ Thumbs.db
 
 # Respaldos locales de media (no van al repo)
 storage/app/public/**/_huerfanos/
+
+# Caché runtime de conversión JPG (ImageJpegController)
+storage/app/public/_jpg/
