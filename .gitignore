@@ -14,7 +14,10 @@
 /auth.json
 /node_modules
 /public/hot
-# /public/storage
+# public/storage es un symlink en producción (-> storage/app/public).
+# NO versionar la carpeta real: un git pull la restauraría y rompería el
+# symlink, dejando en 404 las imágenes subidas por el admin.
+/public/storage
 /storage/*.key
 /storage/pail
 /vendor
