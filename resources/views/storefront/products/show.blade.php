@@ -66,6 +66,41 @@
     {{-- ============================================================
          FICHA PRINCIPAL: IMAGEN + DATOS
          ============================================================ --}}
+    <style>
+        /* ── Galería / carrusel del detalle de producto ── */
+        .ba-gallery{position:relative;}
+        .ba-gal-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:42px;height:42px;
+            border-radius:50%;border:1px solid rgba(217,181,109,.5);background:rgba(255,255,255,.88);
+            -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);color:#BE9A53;display:flex;
+            align-items:center;justify-content:center;cursor:pointer;
+            box-shadow:0 10px 24px -12px rgba(120,92,44,.55);opacity:0;
+            transition:opacity .25s ease,background .25s ease,color .25s ease,transform .2s ease;}
+        .ba-gal-arrow svg{width:20px;height:20px;}
+        .ba-gal-arrow--prev{left:12px;}
+        .ba-gal-arrow--next{right:12px;}
+        .ba-gal-arrow:hover{background:#fff;color:#2E2A26;}
+        .ba-gal-arrow:active{transform:translateY(-50%) scale(.92);}
+        .product-zoom-container:hover .ba-gal-arrow{opacity:1;}
+        .ba-gal-counter{position:absolute;bottom:12px;right:12px;z-index:4;background:rgba(46,42,38,.6);
+            color:#fff;font:600 11px/1 'Montserrat',sans-serif;letter-spacing:.06em;padding:6px 11px;
+            border-radius:9999px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);pointer-events:none;}
+        .ba-gal-dots{display:flex;justify-content:center;gap:7px;margin-top:14px;}
+        .ba-gal-dot{width:8px;height:8px;border-radius:50%;border:none;background:#E3D6BC;cursor:pointer;
+            padding:0;transition:all .3s cubic-bezier(.2,.7,.3,1);}
+        .ba-gal-dot.is-active{background:#D9B56D;width:24px;border-radius:9999px;}
+        .ba-gal-thumbs{display:flex;gap:10px;margin-top:14px;overflow-x:auto;padding-bottom:4px;
+            scrollbar-width:thin;scrollbar-color:#D9B56D transparent;}
+        .ba-gal-thumbs::-webkit-scrollbar{height:5px;}
+        .ba-gal-thumbs::-webkit-scrollbar-thumb{background:#D9B56D;border-radius:4px;}
+        .ba-gal-thumb{flex-shrink:0;width:66px;height:66px;border-radius:12px;overflow:hidden;cursor:pointer;
+            padding:0;border:1px solid rgba(217,181,109,.25);background:#FBF8F2;opacity:.6;
+            transition:opacity .25s ease,box-shadow .25s ease,border-color .25s ease,transform .25s ease;}
+        .ba-gal-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+        .ba-gal-thumb:hover{opacity:1;transform:translateY(-2px);}
+        .ba-gal-thumb.is-active{opacity:1;border-color:#D9B56D;box-shadow:0 0 0 2px #D9B56D;}
+        /* En pantallas táctiles mostramos las flechas siempre */
+        @media(hover:none){.ba-gal-arrow{opacity:1;}}
+    </style>
     <section style="background:transparent;padding:clamp(32px,5vw,64px) 24px;" x-data="productDetail()" @variant-selection-changed.window="recomputeMax(); stockError = '';">
         <div class="product-layout" style="max-width:1160px;margin:0 auto;background:linear-gradient(160deg,#FEFCF8,#F8F2E8);border:1px solid rgba(217,181,109,.16);border-radius:28px;box-shadow:0 46px 92px -52px rgba(120,92,44,.5),0 6px 22px -12px rgba(0,0,0,.05);padding:clamp(24px,4vw,52px);">
 
@@ -74,9 +109,12 @@
                 @php $firstImage = $displayImages[0] ?? null; @endphp
 
                 @if($firstImage)
+                    <div class="ba-gallery">
                     <div class="product-zoom-container"
                          style="position:relative;border-radius:18px;overflow:hidden;cursor:zoom-in;min-height:300px;height:480px;background:linear-gradient(155deg,#FBF8F2,#F1EBDF);border:1px solid rgba(217,181,109,.22);"
-                         @click="openLightbox()"
+                         @click="maybeLightbox()"
+                         @touchstart.passive="onTouchStart($event)"
+                         @touchend="onTouchEnd($event)"
                          onmousemove="productZoomMove(event, this)"
                          onmouseleave="productZoomLeave(this)">
                         @foreach($displayImages as $i => $image)
@@ -84,6 +122,7 @@
                              alt="{{ $product->name }} - imagen {{ $i + 1 }}"
                              class="product-main-image"
                              data-image-index="{{ $i }}"
+                             loading="{{ $i === 0 ? 'eager' : 'lazy' }}"
                              style="width:100%;height:100%;object-fit:contain;border-radius:16px;
                                     transition:transform .2s ease;transform-origin:center center;
                                     {{ $i > 0 ? 'position:absolute;top:0;left:0;display:none;' : '' }}"
@@ -101,23 +140,45 @@
                                     transition:transform .2s ease;transform-origin:center center;
                                     position:absolute;top:0;left:0;display:none;z-index:1;">
 
+                        @if(count($displayImages) > 1)
+                        {{-- Flechas del carrusel --}}
+                        <button type="button" class="ba-gal-arrow ba-gal-arrow--prev"
+                                @click.stop="prevImage()" aria-label="Imagen anterior">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15.75 19.5 8.25 12l7.5-7.5"/></svg>
+                        </button>
+                        <button type="button" class="ba-gal-arrow ba-gal-arrow--next"
+                                @click.stop="nextImage()" aria-label="Imagen siguiente">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+                        </button>
+                        {{-- Contador de imágenes --}}
+                        <div class="ba-gal-counter" x-text="(activeImage + 1) + ' / ' + nImages"></div>
+                        @endif
                     </div>
 
-                    {{-- Thumbnails --}}
                     @if(count($displayImages) > 1)
-                    <div style="display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:4px;">
+                    {{-- Puntos indicadores --}}
+                    <div class="ba-gal-dots">
                         @foreach($displayImages as $i => $image)
-                        <button @click="activeImage = {{ $i }}; hideVariantImage()"
-                                style="flex-shrink:0;width:72px;height:72px;border-radius:10px;
-                                       overflow:hidden;cursor:pointer;transition:all .2s;
-                                       opacity:0.5;"
-                                :style="activeImage === {{ $i }} ? 'opacity:1;box-shadow:0 0 0 2px #D9B56D;' : 'opacity:0.5;'">
-                            <img src="{{ asset('storage/' . $image) }}" alt=""
-                                 style="width:100%;height:100%;object-fit:cover;">
+                        <button type="button" class="ba-gal-dot"
+                                @click="goImage({{ $i }})"
+                                :class="activeImage === {{ $i }} ? 'is-active' : ''"
+                                aria-label="Ir a la imagen {{ $i + 1 }}"></button>
+                        @endforeach
+                    </div>
+
+                    {{-- Miniaturas --}}
+                    <div class="ba-gal-thumbs">
+                        @foreach($displayImages as $i => $image)
+                        <button type="button" class="ba-gal-thumb"
+                                @click="goImage({{ $i }})"
+                                :class="activeImage === {{ $i }} ? 'is-active' : ''"
+                                aria-label="Ver imagen {{ $i + 1 }}">
+                            <img src="{{ asset('storage/' . $image) }}" alt="" loading="lazy">
                         </button>
                         @endforeach
                     </div>
                     @endif
+                    </div>
                 @else
                     <div style="width:100%;height:400px;border-radius:16px;position:relative;
                                 background:linear-gradient(155deg,#FBF8F2,#F1EBDF);
@@ -1119,6 +1180,10 @@ window.baseProductPrice = {{ (float) $product->price }};
 function productDetail() {
     return {
         activeImage: 0,
+        nImages: {{ count($displayImages) }},
+        touchStartX: 0,
+        touchStartY: 0,
+        swiped: false,
         lightboxOpen: false,
         qty: 1,
         currentMax: 10,
@@ -1180,6 +1245,50 @@ function productDetail() {
                     ? 'Máximo disponible: ' + this.currentMax + ' unidad(es).'
                     : 'Sin stock disponible.';
             }
+        },
+
+        /* ── Navegación del carrusel ── */
+        nextImage() {
+            if (this.nImages < 2) return;
+            this.activeImage = (this.activeImage + 1) % this.nImages;
+            this._afterNav();
+        },
+        prevImage() {
+            if (this.nImages < 2) return;
+            this.activeImage = (this.activeImage - 1 + this.nImages) % this.nImages;
+            this._afterNav();
+        },
+        goImage(i) {
+            this.activeImage = i;
+            this._afterNav();
+        },
+        _afterNav() {
+            // Al cambiar de foto ocultamos el overlay de color de variante
+            // para que se vea la imagen del carrusel.
+            if (typeof hideVariantImage === 'function') hideVariantImage();
+        },
+
+        /* ── Swipe en móvil ── */
+        onTouchStart(e) {
+            var t = e.changedTouches ? e.changedTouches[0] : e;
+            this.touchStartX = t.clientX;
+            this.touchStartY = t.clientY;
+            this.swiped = false;
+        },
+        onTouchEnd(e) {
+            var t = e.changedTouches ? e.changedTouches[0] : e;
+            var dx = t.clientX - this.touchStartX;
+            var dy = t.clientY - this.touchStartY;
+            // Solo cuenta como swipe si el movimiento horizontal es claro.
+            if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+                this.swiped = true;
+                if (dx < 0) this.nextImage(); else this.prevImage();
+            }
+        },
+        /* Un toque (sin swipe) abre el lightbox; un swipe solo navega. */
+        maybeLightbox() {
+            if (this.swiped) { this.swiped = false; return; }
+            this.openLightbox();
         },
 
         openLightbox() {
