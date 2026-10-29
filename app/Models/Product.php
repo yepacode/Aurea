@@ -65,6 +65,7 @@ class Product extends Model
         'is_featured',
         'badge_2x1',
         'sort_order',
+        'ml_item_id',
     ];
 
     protected function casts(): array

@@ -74,4 +74,13 @@ return [
         'site_verification' => env('GOOGLE_SITE_VERIFICATION', 'LRPmPb_Df5tYLqU6xyoQcUzMkhtAXe26W6bw4Z2QGis'),
     ],
 
+    // Mercado Libre (API). App creada en developers.mercadolibre.com.co.
+    // Los tokens OAuth se guardan en la tabla mercadolibre_settings.
+    'mercadolibre' => [
+        'app_id'   => env('MERCADOLIBRE_APP_ID'),
+        'secret'   => env('MERCADOLIBRE_SECRET'),
+        'redirect' => env('MERCADOLIBRE_REDIRECT', 'https://bellezaaurea.com/ml/callback'),
+        'site'     => 'MCO',
+    ],
+
 ];

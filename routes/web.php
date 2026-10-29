@@ -368,6 +368,13 @@ Route::get('/img/jpg/{path}', [\App\Http\Controllers\ImageJpegController::class,
     ->where('path', '.*')
     ->name('img.jpg');
 
+// Mercado Libre OAuth (detrás de auth + admin). /ml/callback es la URI de
+// redirect registrada en la app de ML.
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/ml/conectar', [\App\Http\Controllers\MercadoLibreOauthController::class, 'connect'])->name('ml.connect');
+    Route::get('/ml/callback', [\App\Http\Controllers\MercadoLibreOauthController::class, 'callback'])->name('ml.callback');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Admin Authentication (outside admin middleware group)
