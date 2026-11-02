@@ -7,8 +7,9 @@
         @foreach($products as $p)
         @php
             $firstImage    = is_array($p->images) ? ($p->images[0] ?? null) : null;
+            // Imagen en JPG (vía endpoint /img/jpg): Meta rechaza WebP; Google acepta JPG igual.
             $imageAbsolute = $firstImage
-                ? asset('storage/' . $firstImage)
+                ? jpg_url($firstImage)
                 : asset('img/brand/logo-principal.png');
             $desc = trim(strip_tags($p->description ?? $p->meta_description ?? $p->name));
             $desc = $desc !== '' ? $desc : $p->name;
