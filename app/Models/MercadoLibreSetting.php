@@ -11,6 +11,11 @@ use Illuminate\Database\Eloquent\Model;
  */
 class MercadoLibreSetting extends Model
 {
+    // La migración crea la tabla como 'mercadolibre_settings' (sin guiones),
+    // pero la convención de Laravel para MercadoLibreSetting sería
+    // 'mercado_libre_settings'. Fijamos el nombre real para que coincidan.
+    protected $table = 'mercadolibre_settings';
+
     protected $fillable = ['key', 'value'];
 
     public static function get(string $key, mixed $default = null): mixed
