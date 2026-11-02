@@ -69,7 +69,10 @@ class MlIssues extends Command
         }
 
         // 2) Traer detalle (multiget de a 20) y agrupar por motivo.
+        //    Solo listamos las que TIENEN problema (sub_status o salud < 1);
+        //    el resumen cuenta todas.
         $reasons = [];
+        $conProblema = 0;
         foreach (array_chunk($ids, 20) as $chunk) {
             $res = Http::withToken($token)->get('https://api.mercadolibre.com/items', [
                 'ids'        => implode(',', $chunk),
@@ -77,14 +80,23 @@ class MlIssues extends Command
             ]);
             foreach ($res->json() ?? [] as $row) {
                 $b = $row['body'] ?? [];
-                $sub = ! empty($b['sub_status']) ? implode('|', (array) $b['sub_status']) : '(sin sub_status)';
-                $reasons[$sub] = ($reasons[$sub] ?? 0) + 1;
-                $this->line("  {$b['id']}  [{$sub}]  ".Str::limit($b['title'] ?? '', 55));
+                $sub    = (array) ($b['sub_status'] ?? []);
+                $health = $b['health'] ?? null;
+                $subKey = $sub ? implode('|', $sub) : '(sin sub_status)';
+                $reasons[$subKey] = ($reasons[$subKey] ?? 0) + 1;
+
+                $problema = ! empty($sub) || (is_numeric($health) && $health < 1);
+                if ($problema) {
+                    $conProblema++;
+                    $flag = $sub ? implode('|', $sub) : 'salud='.$health;
+                    $this->line("  {$b['id']}  [{$flag}]  ".Str::limit($b['title'] ?? '', 55));
+                }
             }
             usleep(200000);
         }
 
         $this->newLine();
+        $this->line("Con alguna bandera: {$conProblema} de ".count($ids));
         $this->info('RESUMEN por motivo (sub_status):');
         arsort($reasons);
         foreach ($reasons as $motivo => $n) {
