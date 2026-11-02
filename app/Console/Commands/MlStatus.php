@@ -66,10 +66,12 @@ class MlStatus extends Command
         $this->newLine();
         $this->info("ESTADO EN MERCADO LIBRE (cuenta {$userId}):");
         $estados = [
-            'active'       => 'Activas',
-            'paused'       => 'Pausadas',
-            'under_review' => 'En revisión',
-            'closed'       => 'Cerradas',
+            'active'           => 'Activas',
+            'paused'           => 'Pausadas',
+            'under_review'     => 'En revisión',
+            'inactive'         => 'Inactivas',
+            'payment_required' => 'Requieren pago',
+            'closed'           => 'Cerradas',
         ];
         $totalML = 0;
         foreach ($estados as $status => $label) {
