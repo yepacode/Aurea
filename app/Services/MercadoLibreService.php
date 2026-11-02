@@ -224,19 +224,17 @@ class MercadoLibreService
         return $unit;
     }
 
-    /** Arma el payload del item para un producto. */
-    public function buildItem(Product $product, string $categoryId): array
+    /** Construye la lista de atributos del item: obligatorios + enriquecidos. */
+    public function buildAttributes(Product $product, string $categoryId): array
     {
-        $pictures = collect($product->images ?? [])
-            ->map(fn ($img) => ['source' => jpg_url($img)])
-            ->filter(fn ($p) => ! empty($p['source']))
-            ->take(10)->values()->all();
+        $catAttrs = $this->categoryAttributes($categoryId);
 
         $attrs = [['id' => 'BRAND', 'value_name' => $product->brand?->name ?: 'Genérico']];
+        $added = ['BRAND' => true];
 
-        foreach ($this->categoryAttributes($categoryId) as $a) {
+        foreach ($catAttrs as $a) {
             $id = $a['id'] ?? null;
-            if (! $id || $id === 'BRAND' || ! $this->attributeIsRequired($a)) {
+            if (! $id || isset($added[$id]) || ! $this->attributeIsRequired($a)) {
                 continue;
             }
 
@@ -253,6 +251,7 @@ class MercadoLibreService
                     ?? ($vals[0] ?? null);
                 if ($chosen) {
                     $attrs[] = ['id' => 'EMPTY_GTIN_REASON', 'value_id' => $chosen['id']];
+                    $added[$id] = true;
                 }
                 continue;
             }
@@ -260,11 +259,13 @@ class MercadoLibreService
             // Cantidad por pack: 1 (vendemos la unidad).
             if ($id === 'UNITS_PER_PACK') {
                 $attrs[] = ['id' => 'UNITS_PER_PACK', 'value_name' => '1'];
+                $added[$id] = true;
                 continue;
             }
 
             if ($id === 'MODEL') {
                 $attrs[] = ['id' => 'MODEL', 'value_name' => Str::limit($product->name, 50, '')];
+                $added[$id] = true;
                 continue;
             }
 
@@ -275,6 +276,7 @@ class MercadoLibreService
                 $num = $this->numericFromName($product->name, $a);
                 if ($num !== null) {
                     $attrs[] = ['id' => $id, 'value_name' => $num];
+                    $added[$id] = true;
                 }
                 // Si no se puede extraer, se omite (ese producto requerirá carga manual).
                 continue;
@@ -286,22 +288,125 @@ class MercadoLibreService
             } else {
                 $attrs[] = ['id' => $id, 'value_name' => Str::limit($product->name, 60, '')];
             }
+            $added[$id] = true;
         }
 
-        return [
+        return $this->enrichAttributes($attrs, $added, $catAttrs, $product);
+    }
+
+    /** Agrega atributos opcionales fiables para mejorar la ficha técnica (sin inventar datos). */
+    private function enrichAttributes(array $attrs, array $added, array $catAttrs, Product $product): array
+    {
+        // SKU del vendedor desde el código interno.
+        if (! isset($added['SELLER_SKU']) && filled($product->internal_code)) {
+            $attrs[] = ['id' => 'SELLER_SKU', 'value_name' => (string) $product->internal_code];
+            $added['SELLER_SKU'] = true;
+        }
+
+        // Atributos opcionales con lista de valores que el NOMBRE menciona explícitamente.
+        $haystack = ' '.mb_strtolower($product->name).' ';
+        foreach ($catAttrs as $a) {
+            $id = $a['id'] ?? null;
+            if (! $id || isset($added[$id]) || empty($a['values'])) {
+                continue;
+            }
+            $tags = $a['tags'] ?? [];
+            if (($tags['hidden'] ?? false) === true || ($tags['variation_attribute'] ?? false) === true) {
+                continue;
+            }
+
+            $match = null;
+            foreach ($a['values'] as $v) {
+                $vn = mb_strtolower(trim($v['name'] ?? ''));
+                if (mb_strlen($vn) < 3) {
+                    continue;
+                }
+                if (str_contains($haystack, ' '.$vn.' ')) {
+                    if ($match && ($match['id'] ?? null) !== ($v['id'] ?? null)) {
+                        $match = null; // dos valores distintos coinciden → ambiguo, no arriesgar
+                        break;
+                    }
+                    $match = $v;
+                }
+            }
+            if ($match && ! empty($match['id'])) {
+                $attrs[] = ['id' => $id, 'value_id' => $match['id']];
+                $added[$id] = true;
+            }
+        }
+
+        return $attrs;
+    }
+
+    /** Precio mínimo (COP) para ofrecer envío gratis; 0 = desactivado. */
+    private function freeShippingMin(): int
+    {
+        return (int) (config('services.mercadolibre.free_shipping_min') ?? 0);
+    }
+
+    /** Arma el payload del item para un producto. */
+    public function buildItem(Product $product, string $categoryId): array
+    {
+        $pictures = collect($product->images ?? [])
+            ->map(fn ($img) => ['source' => jpg_url($img)])
+            ->filter(fn ($p) => ! empty($p['source']))
+            ->take(10)->values()->all();
+
+        $price = $this->mlPrice((float) $product->price);
+
+        $payload = [
             // En la nueva estructura de ML, family_name reemplaza a title
             // (enviar 'title' da body.invalid_fields).
             'family_name'        => Str::limit($product->name, 60, ''),
             'category_id'        => $categoryId,
-            'price'              => $this->mlPrice((float) $product->price),
+            'price'              => $price,
             'currency_id'        => 'COP',
             'available_quantity' => 10,
             'buying_mode'        => 'buy_it_now',
             'listing_type_id'    => 'gold_special',
             'condition'          => 'new',
             'pictures'           => $pictures,
-            'attributes'         => $attrs,
+            'attributes'         => $this->buildAttributes($product, $categoryId),
         ];
+
+        if ($this->freeShippingMin() > 0 && $price >= $this->freeShippingMin()) {
+            $payload['shipping'] = ['mode' => 'me2', 'free_shipping' => true];
+        }
+
+        return $payload;
+    }
+
+    /** Actualiza un item YA publicado (atributos + envío) para mejorar su calidad. */
+    public function updateItem(Product $product): array
+    {
+        $token = $this->accessToken();
+        if (! $token) {
+            return [false, 'Sin token válido. Autoriza en /ml/conectar.'];
+        }
+        $itemId = $product->ml_item_id;
+        if (! $itemId) {
+            return [false, 'El producto no tiene ml_item_id.'];
+        }
+
+        // La categoría real del item (puede diferir de una nueva predicción).
+        $catRes = Http::withToken($token)->get(self::API."/items/{$itemId}", ['attributes' => 'category_id']);
+        $categoryId = $catRes->successful() ? $catRes->json('category_id') : null;
+        if (! $categoryId) {
+            return [false, 'No se pudo leer la categoría del item.'];
+        }
+
+        $payload = ['attributes' => $this->buildAttributes($product, $categoryId)];
+        $price = $this->mlPrice((float) $product->price);
+        if ($this->freeShippingMin() > 0 && $price >= $this->freeShippingMin()) {
+            $payload['shipping'] = ['mode' => 'me2', 'free_shipping' => true];
+        }
+
+        $res = Http::withToken($token)->put(self::API."/items/{$itemId}", $payload);
+        if (! $res->successful()) {
+            return [false, 'ML '.$res->status().': '.$res->body()];
+        }
+
+        return [true, $itemId];
     }
 
     /** Publica un producto. Devuelve [bool ok, string item_id|error]. */

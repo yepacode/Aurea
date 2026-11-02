@@ -81,6 +81,9 @@ return [
         'secret'   => env('MERCADOLIBRE_SECRET'),
         'redirect' => env('MERCADOLIBRE_REDIRECT', 'https://bellezaaurea.com/ml/callback'),
         'site'     => 'MCO',
+        // Precio mínimo (COP) para ofrecer envío gratis. 0 = desactivado.
+        // El envío gratis lo paga el vendedor, por eso se activa por umbral.
+        'free_shipping_min' => (int) env('MERCADOLIBRE_FREE_SHIPPING_MIN', 0),
     ],
 
 ];
