@@ -200,6 +200,8 @@ class MercadoLibreService
 
         return [
             'title'              => Str::limit($product->name, 60, ''),
+            // family_name: nombre de familia (nueva estructura de publicación de ML).
+            'family_name'        => Str::limit($product->name, 60, ''),
             'category_id'        => $categoryId,
             'price'              => $this->mlPrice((float) $product->price),
             'currency_id'        => 'COP',
