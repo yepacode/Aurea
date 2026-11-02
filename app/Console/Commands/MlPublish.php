@@ -63,7 +63,8 @@ class MlPublish extends Command
                 $this->info("✓ {$p->name}  ->  {$info}");
             } else {
                 $fail++;
-                $this->warn("✗ {$p->name}: ".Str::limit($info, 180));
+                // Mostramos el error COMPLETO de ML (si viene cortado no se ven los campos que faltan).
+                $this->warn("✗ {$p->name}: ".$info);
             }
             usleep(400000); // ~0.4s entre llamadas para no saturar la API
         }

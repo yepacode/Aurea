@@ -116,21 +116,28 @@ class MercadoLibreService
         return $res->successful() ? $res->json('0.category_id') : null;
     }
 
-    /** Atributos OBLIGATORIOS de una categoría. */
-    public function requiredAttributes(string $categoryId): array
+    /** Todos los atributos de una categoría. */
+    public function categoryAttributes(string $categoryId): array
     {
         $res = Http::get(self::API."/categories/{$categoryId}/attributes");
-        if (! $res->successful()) {
-            return [];
+
+        return $res->successful() ? $res->json() : [];
+    }
+
+    /** ¿El atributo es obligatorio (incluye los condicionales)? */
+    private function attributeIsRequired(array $a): bool
+    {
+        $tags = $a['tags'] ?? [];
+        foreach (['required', 'catalog_required', 'conditional_required'] as $k) {
+            if (($tags[$k] ?? false) === true) {
+                return true;
+            }
+            if (is_array($tags) && in_array($k, $tags, true)) {
+                return true;
+            }
         }
 
-        return collect($res->json())
-            ->filter(function ($a) {
-                $tags = $a['tags'] ?? [];
-                return ($tags['required'] ?? false) === true
-                    || (is_array($tags) && in_array('required', $tags, true));
-            })
-            ->values()->all();
+        return false;
     }
 
     /** Precio ML: precio web +5%, redondeo a 50, MÍNIMO 2900 COP. */
@@ -149,15 +156,40 @@ class MercadoLibreService
 
         $attrs = [['id' => 'BRAND', 'value_name' => $product->brand?->name ?: 'Genérico']];
 
-        foreach ($this->requiredAttributes($categoryId) as $a) {
+        foreach ($this->categoryAttributes($categoryId) as $a) {
             $id = $a['id'] ?? null;
-            if (! $id || $id === 'BRAND') {
+            if (! $id || $id === 'BRAND' || ! $this->attributeIsRequired($a)) {
                 continue;
             }
+
+            // GTIN (código de barras): no lo tenemos → se resuelve con EMPTY_GTIN_REASON.
+            if ($id === 'GTIN') {
+                continue;
+            }
+
+            // Motivo de código vacío: elegimos "no tiene código registrado".
+            if ($id === 'EMPTY_GTIN_REASON') {
+                $vals = $a['values'] ?? [];
+                $chosen = collect($vals)->first(fn ($v) => str_contains(mb_strtolower($v['name'] ?? ''), 'no tiene código'))
+                    ?? collect($vals)->first(fn ($v) => str_contains(mb_strtolower($v['name'] ?? ''), 'otra'))
+                    ?? ($vals[0] ?? null);
+                if ($chosen) {
+                    $attrs[] = ['id' => 'EMPTY_GTIN_REASON', 'value_id' => $chosen['id']];
+                }
+                continue;
+            }
+
+            // Cantidad por pack: 1 (vendemos la unidad).
+            if ($id === 'UNITS_PER_PACK') {
+                $attrs[] = ['id' => 'UNITS_PER_PACK', 'value_name' => '1'];
+                continue;
+            }
+
             if ($id === 'MODEL') {
                 $attrs[] = ['id' => 'MODEL', 'value_name' => Str::limit($product->name, 50, '')];
                 continue;
             }
+
             // Con valores permitidos → el primero; si no → el nombre del producto.
             if (! empty($a['values'])) {
                 $attrs[] = ['id' => $id, 'value_id' => $a['values'][0]['id']];
