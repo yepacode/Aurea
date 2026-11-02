@@ -84,6 +84,15 @@ return [
         // Precio mínimo (COP) para ofrecer envío gratis. 0 = desactivado.
         // El envío gratis lo paga el vendedor, por eso se activa por umbral.
         'free_shipping_min' => (int) env('MERCADOLIBRE_FREE_SHIPPING_MIN', 0),
+
+        // Precio ML con ganancia garantizada tras la comisión de ML.
+        // commission = comisión aprox de ML (0.14 = 14%); fixed_fee = cargo fijo
+        // por venta; margin = ganancia mínima deseada sobre el COSTO (cost_price).
+        // Si el producto no tiene costo cargado, se usa el precio web +5%.
+        'commission'   => (float) env('MERCADOLIBRE_COMMISSION', 0.14),
+        'fixed_fee'    => (int) env('MERCADOLIBRE_FIXED_FEE', 1000),
+        'margin'       => (float) env('MERCADOLIBRE_MARGIN', 0.15),
+        'margin_floor' => (int) env('MERCADOLIBRE_MARGIN_FLOOR', 1200),
     ],
 
 ];

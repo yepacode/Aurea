@@ -169,10 +169,34 @@ class MercadoLibreService
         return false;
     }
 
-    /** Precio ML: precio web +5%, redondeo a 50, MÍNIMO 2900 COP. */
-    public function mlPrice(float $webPrice): int
+    /**
+     * Precio ML. Base competitiva = precio web +5%. Si el producto tiene COSTO
+     * cargado (cost_price), se eleva lo necesario para garantizar ganancia tras
+     * la comisión de ML. Redondeo a 50, mínimo 2900 COP.
+     */
+    public function mlPrice(float $webPrice, ?float $cost = null): int
     {
-        return max((int) (round($webPrice * 1.05 / 50) * 50), 2900);
+        $base = $webPrice * 1.05;
+
+        if ($cost !== null && $cost > 0) {
+            $comm   = (float) config('services.mercadolibre.commission', 0.14);
+            $fee    = (int) config('services.mercadolibre.fixed_fee', 1000);
+            $margin = (float) config('services.mercadolibre.margin', 0.15);
+            $floor  = (int) config('services.mercadolibre.margin_floor', 1200);
+            $target = max($cost * $margin, $floor);                 // ganancia neta mínima
+            $priceMin = ($cost + $fee + $target) / max(1 - $comm, 0.01);
+            $base = max($base, $priceMin);
+        }
+
+        return max((int) (round($base / 50) * 50), 2900);
+    }
+
+    /** Costo del producto (cost_price) como float, o null si no está cargado. */
+    private function productCost(Product $product): ?float
+    {
+        return $product->cost_price !== null && (float) $product->cost_price > 0
+            ? (float) $product->cost_price
+            : null;
     }
 
     /** Extrae un valor numérico del nombre para un atributo number/number_unit. */
@@ -352,7 +376,7 @@ class MercadoLibreService
             ->filter(fn ($p) => ! empty($p['source']))
             ->take(10)->values()->all();
 
-        $price = $this->mlPrice((float) $product->price);
+        $price = $this->mlPrice((float) $product->price, $this->productCost($product));
 
         $payload = [
             // En la nueva estructura de ML, family_name reemplaza a title
@@ -395,8 +419,11 @@ class MercadoLibreService
             return [false, 'No se pudo leer la categoría del item.'];
         }
 
-        $payload = ['attributes' => $this->buildAttributes($product, $categoryId)];
-        $price = $this->mlPrice((float) $product->price);
+        $price = $this->mlPrice((float) $product->price, $this->productCost($product));
+        $payload = [
+            'price'      => $price,
+            'attributes' => $this->buildAttributes($product, $categoryId),
+        ];
         if ($this->freeShippingMin() > 0 && $price >= $this->freeShippingMin()) {
             $payload['shipping'] = ['mode' => 'me2', 'free_shipping' => true];
         }
