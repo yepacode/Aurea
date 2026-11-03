@@ -82,8 +82,11 @@ return [
         'redirect' => env('MERCADOLIBRE_REDIRECT', 'https://bellezaaurea.com/ml/callback'),
         'site'     => 'MCO',
         // Precio mínimo (COP) para ofrecer envío gratis. 0 = desactivado.
-        // El envío gratis lo paga el vendedor, por eso se activa por umbral.
+        // Los productos >= este umbral llevan envío gratis CON el costo del envío
+        // incluido en el precio (así el vendedor no pierde margen).
         'free_shipping_min' => (int) env('MERCADOLIBRE_FREE_SHIPPING_MIN', 0),
+        // Costo del envío (COP) que se suma al precio de los que llevan envío gratis.
+        'shipping_cost'     => (int) env('MERCADOLIBRE_SHIPPING_COST', 12000),
 
         // Precio ML con ganancia garantizada tras la comisión de ML.
         // commission = comisión aprox de ML (0.14 = 14%); fixed_fee = cargo fijo

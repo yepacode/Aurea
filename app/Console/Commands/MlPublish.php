@@ -52,8 +52,9 @@ class MlPublish extends Command
         foreach ($products as $p) {
             if ($this->option('dry-run')) {
                 $cat = $ml->predictCategory($p->name);
-                $cost = $p->cost_price !== null ? (float) $p->cost_price : null;
-                $this->line("[DRY] {$p->name}  ->  cat {$cat}  ->  \$".number_format($ml->mlPrice((float) $p->price, $cost), 0, ',', '.'));
+                [$price, $free] = $ml->finalPricing($p);
+                $g = $free ? '  [ENVÍO GRATIS]' : '';
+                $this->line("[DRY] {$p->name}  ->  cat {$cat}  ->  \$".number_format($price, 0, ',', '.').$g);
 
                 continue;
             }

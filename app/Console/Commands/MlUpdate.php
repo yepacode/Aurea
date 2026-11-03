@@ -49,9 +49,8 @@ class MlUpdate extends Command
         $fail = 0;
         foreach ($products as $p) {
             if ($this->option('dry-run')) {
-                $cost = $p->cost_price !== null ? (float) $p->cost_price : null;
-                $price = $ml->mlPrice((float) $p->price, $cost);
-                $gratis = ($min > 0 && $price >= $min) ? '  [ENVÍO GRATIS]' : '';
+                [$price, $free] = $ml->finalPricing($p);
+                $gratis = $free ? '  [ENVÍO GRATIS]' : '';
                 $this->line('[DRY] $'.number_format($price, 0, ',', '.').'  '.Str::limit($p->name, 50).$gratis);
 
                 continue;

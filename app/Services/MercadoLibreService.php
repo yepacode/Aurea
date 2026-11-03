@@ -368,6 +368,25 @@ class MercadoLibreService
         return (int) (config('services.mercadolibre.free_shipping_min') ?? 0);
     }
 
+    /**
+     * Precio final del producto y si lleva envío gratis.
+     * Los productos >= umbral incluyen el costo del envío en el precio
+     * (así se ofrece "envío gratis" SIN perder margen). Devuelve [precio, free].
+     */
+    public function finalPricing(Product $product): array
+    {
+        $price = $this->mlPrice((float) $product->price, $this->productCost($product));
+        $min = $this->freeShippingMin();
+        $free = $min > 0 && $price >= $min;
+
+        if ($free) {
+            $ship = (int) config('services.mercadolibre.shipping_cost', 12000);
+            $price = (int) (round(($price + $ship) / 50) * 50);
+        }
+
+        return [$price, $free];
+    }
+
     /** Arma el payload del item para un producto. */
     public function buildItem(Product $product, string $categoryId): array
     {
@@ -376,7 +395,7 @@ class MercadoLibreService
             ->filter(fn ($p) => ! empty($p['source']))
             ->take(10)->values()->all();
 
-        $price = $this->mlPrice((float) $product->price, $this->productCost($product));
+        [$price, $free] = $this->finalPricing($product);
 
         $payload = [
             // En la nueva estructura de ML, family_name reemplaza a title
@@ -393,7 +412,7 @@ class MercadoLibreService
             'attributes'         => $this->buildAttributes($product, $categoryId),
         ];
 
-        if ($this->freeShippingMin() > 0 && $price >= $this->freeShippingMin()) {
+        if ($free) {
             $payload['shipping'] = ['mode' => 'me2', 'free_shipping' => true];
         }
 
@@ -419,12 +438,12 @@ class MercadoLibreService
             return [false, 'No se pudo leer la categoría del item.'];
         }
 
-        $price = $this->mlPrice((float) $product->price, $this->productCost($product));
+        [$price, $free] = $this->finalPricing($product);
         $payload = [
             'price'      => $price,
             'attributes' => $this->buildAttributes($product, $categoryId),
         ];
-        if ($this->freeShippingMin() > 0 && $price >= $this->freeShippingMin()) {
+        if ($free) {
             $payload['shipping'] = ['mode' => 'me2', 'free_shipping' => true];
         }
 
