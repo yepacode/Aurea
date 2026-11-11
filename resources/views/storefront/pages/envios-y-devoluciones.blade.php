@@ -60,12 +60,13 @@
                     </h2>
                 </div>
                 <div class="prose prose-sm text-text-muted leading-relaxed max-w-none">
-                    {!! \App\Support\SafeHtml::sanitize($page->returns_content ?? '<p>Cuentas con el <strong>derecho de retracto</strong>: tienes 5 días hábiles desde que recibes tu pedido para solicitar la devolución.</p>
+                    {!! \App\Support\SafeHtml::sanitize($page->returns_content ?? '<p>En Belleza Áurea tienes <strong>30 días</strong> desde que recibes tu pedido para solicitar la devolución de productos nuevos y sin usar.</p>
                     <ul>
                         <li>El producto debe estar sin usar y en su empaque original.</li>
+                        <li>El <strong>costo del envío de la devolución corre por cuenta del cliente</strong>.</li>
                         <li>Por higiene, algunos productos de uso personal no admiten devolución una vez abiertos.</li>
-                        <li>Escríbenos con tu número de pedido y te guiamos en todo el proceso.</li>
-                        <li>El reembolso se procesa una vez recibamos y revisemos el producto.</li>
+                        <li>Además, por ley cuentas con el <strong>derecho de retracto</strong> dentro de los 5 días hábiles siguientes a la entrega del producto.</li>
+                        <li>Escríbenos con tu número de pedido y te guiamos en todo el proceso. El reembolso se procesa una vez recibamos y revisemos el producto.</li>
                     </ul>') !!}
                 </div>
             </div>

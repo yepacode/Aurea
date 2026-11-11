@@ -298,7 +298,7 @@ class SeoService
                     '@type'                => 'MerchantReturnPolicy',
                     'applicableCountry'    => 'CO',
                     'returnPolicyCategory' => 'https://schema.org/MerchantReturnFiniteReturnWindow',
-                    'merchantReturnDays'   => (int) config('legal.retracto_dias', 5),
+                    'merchantReturnDays'   => (int) config('legal.return_window_dias', 30),
                     'returnMethod'         => 'https://schema.org/ReturnByMail',
                     'returnFees'           => 'https://schema.org/ReturnShippingFees',
                 ],

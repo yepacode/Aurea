@@ -44,4 +44,9 @@ return [
 
     // Días hábiles para el derecho de retracto (Estatuto del Consumidor).
     'retracto_dias' => 5,
+
+    // Días calendario de la política de devoluciones voluntaria de la tienda
+    // (productos nuevos y sin usar). Se usa en el schema y en la página de
+    // envíos y devoluciones. Debe coincidir con lo declarado en Merchant Center.
+    'return_window_dias' => 30,
 ];
