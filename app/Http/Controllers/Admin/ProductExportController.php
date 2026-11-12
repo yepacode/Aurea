@@ -19,16 +19,32 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ProductExportController extends Controller
 {
-    /** Columnas con orden y ancho */
+    /** Columnas de la plantilla de importación (orden y ancho) */
     private const COLS = [
-        'Referencia'        => 14,
-        'Nombre'            => 50,
-        'Categoría'         => 28,
-        'Descripción'       => 60,
-        'PV Centro de Exp'  => 18,
-        'Venta'             => 14,
-        'Stock'             => 10,
-        'Activo'            => 10,
+        'Referencia'              => 14,
+        'Nombre'                  => 46,
+        'Categoría'               => 24,
+        'Descripción'             => 50,
+        'Costo (PV Distribuidor)' => 20,
+        'Precio venta web'        => 18,
+        'Precio anterior / PVP'   => 20,
+        'Stock'                   => 10,
+        'Activo'                  => 10,
+    ];
+
+    /** Columnas del export (incluye el margen bruto calculado) */
+    private const EXPORT_COLS = [
+        'Referencia'              => 14,
+        'Nombre'                  => 46,
+        'Categoría'               => 24,
+        'Descripción'             => 50,
+        'Costo (PV Distribuidor)' => 20,
+        'Precio venta web'        => 18,
+        'Precio anterior / PVP'   => 20,
+        'Margen bruto ($)'        => 16,
+        'Margen bruto (%)'        => 16,
+        'Stock'                   => 10,
+        'Activo'                  => 10,
     ];
 
     /**
@@ -38,11 +54,11 @@ class ProductExportController extends Controller
     {
         $sheet = $this->newSheetWithHeader();
 
-        // Filas de ejemplo
+        // Filas de ejemplo (Costo, Precio venta web, Precio anterior / PVP)
         $examples = [
-            ['EJ-001', 'Sérum facial vitamina C 30 ml',  'Skincare',   'Sérum iluminador con vitamina C estabilizada y rosa mosqueta.', 720.00, 580.00, 100, 'Sí'],
-            ['EJ-002', 'Crema hidratante karité 50 ml',  'Skincare',   'Crema 24h con manteca de karité y ácido hialurónico.',           520.00, 420.00, 100, 'Sí'],
-            ['EJ-003', 'Set Ritual Esencial',            'Sets',       'Set de 3 piezas: tónico + crema + sérum, en estuche regalo.',   1380.00, 1200.00, 50, 'Sí'],
+            ['EJ-001', 'Sérum facial vitamina C 30 ml',  'Skincare',   'Sérum iluminador con vitamina C estabilizada y rosa mosqueta.',  400.00,  580.00,  720.00, 100, 'Sí'],
+            ['EJ-002', 'Crema hidratante karité 50 ml',  'Skincare',   'Crema 24h con manteca de karité y ácido hialurónico.',           300.00,  420.00,  520.00, 100, 'Sí'],
+            ['EJ-003', 'Set Ritual Esencial',            'Sets',       'Set de 3 piezas: tónico + crema + sérum, en estuche regalo.',    900.00, 1200.00, 1380.00,  50, 'Sí'],
         ];
 
         $row = 2;
@@ -63,7 +79,7 @@ class ProductExportController extends Controller
      */
     public function export(): StreamedResponse
     {
-        $sheet = $this->newSheetWithHeader();
+        $sheet = $this->newSheetWithHeader(self::EXPORT_COLS);
 
         $products = Product::with('category')->orderBy('sort_order')->get();
 
@@ -73,17 +89,23 @@ class ProductExportController extends Controller
             $sheet->setCellValue('B'.$row, $p->name);
             $sheet->setCellValue('C'.$row, $p->category?->name ?? '');
             $sheet->setCellValue('D'.$row, strip_tags($p->description ?? ''));
-            $sheet->setCellValue('E'.$row, (float) ($p->compare_price ?? 0));
+            // Precios: Costo (PV Distribuidor) · Precio venta web · Precio anterior / PVP
+            $sheet->setCellValue('E'.$row, $p->cost_price !== null ? (float) $p->cost_price : '');
             $sheet->setCellValue('F'.$row, (float) $p->price);
-            $sheet->setCellValue('G'.$row, (int) $p->stock);
-            $sheet->setCellValue('H'.$row, $p->is_active ? 'Sí' : 'No');
+            $sheet->setCellValue('G'.$row, (float) ($p->compare_price ?? 0));
+            // Margen bruto en $ y % (vacío si no hay costo cargado)
+            $sheet->setCellValue('H'.$row, $p->margin !== null ? (float) $p->margin : '');
+            $sheet->setCellValue('I'.$row, $p->margin_percent !== null ? (float) $p->margin_percent : '');
+            $sheet->setCellValue('J'.$row, (int) $p->stock);
+            $sheet->setCellValue('K'.$row, $p->is_active ? 'Sí' : 'No');
             $row++;
         }
 
-        // Formato moneda en columnas de precios
+        // Formato de moneda (COP) en costo, precios y margen $; porcentaje en margen %
         if ($row > 2) {
-            $sheet->getStyle('E2:F'.($row - 1))->getNumberFormat()
-                ->setFormatCode('"$"#,##0.00');
+            $last = $row - 1;
+            $sheet->getStyle('E2:H'.$last)->getNumberFormat()->setFormatCode('"$"#,##0');
+            $sheet->getStyle('I2:I'.$last)->getNumberFormat()->setFormatCode('0.0"%"');
         }
 
         $filename = 'productos_belleza_aurea_'.now()->format('Y-m-d_His').'.xlsx';
@@ -94,21 +116,21 @@ class ProductExportController extends Controller
     /**
      * Crea spreadsheet con header estilizado.
      */
-    private function newSheetWithHeader()
+    private function newSheetWithHeader(array $cols = self::COLS)
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Productos');
 
         $col = 'A';
-        foreach (self::COLS as $name => $width) {
+        foreach ($cols as $name => $width) {
             $sheet->setCellValue($col.'1', $name);
             $sheet->getColumnDimension($col)->setWidth($width);
             $col++;
         }
 
         // Estilo header
-        $lastCol = chr(ord('A') + count(self::COLS) - 1);
+        $lastCol = chr(ord('A') + count($cols) - 1);
         $sheet->getStyle('A1:'.$lastCol.'1')->applyFromArray([
             'font' => ['bold' => true, 'color' => ['rgb' => '2E2A26'], 'size' => 11],
             'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FBF4E6']],

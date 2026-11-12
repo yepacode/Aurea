@@ -281,9 +281,12 @@ class ProductImportController extends Controller
             $key === 'categoria' || $key === 'categoria del producto' => 'categoria',
             $key === 'marca' || $key === 'brand' || $key === 'fabricante' => 'marca',
             $key === 'descripcion' || $key === 'detalle' => 'descripcion',
-            str_contains($key, 'pv centro') || str_contains($key, 'precio centro') => 'pv_centro',
-            str_contains($key, 'pv distribuidor') || str_contains($key, 'precio distribuidor') => 'pv_distribuidor',
-            $key === 'venta' || $key === 'precio' || $key === 'precio venta' || $key === 'precio publico' => 'venta',
+            str_contains($key, 'pv centro') || str_contains($key, 'precio centro')
+                || str_contains($key, 'precio anterior') || str_contains($key, 'pvp') => 'pv_centro',
+            str_contains($key, 'pv distribuidor') || str_contains($key, 'precio distribuidor')
+                || str_contains($key, 'costo') => 'pv_distribuidor',
+            $key === 'venta' || $key === 'precio' || $key === 'precio publico'
+                || str_contains($key, 'precio venta') => 'venta',
             default => null,
         };
     }
