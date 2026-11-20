@@ -22,7 +22,13 @@
             $salePriceFormatted = $onSale
                 ? number_format((float) $p->price, 2, '.', '') . ' COP'
                 : null;
-            $brandName = $p->brand?->name ?? 'Belleza Áurea';
+            // Belleza Áurea es la DISTRIBUIDORA; la marca real de los productos actuales es "Miracle".
+            // El registro antiguo "Áurea Naturals" era un placeholder mal puesto → se corrige aquí
+            // (independiente de la migración de BD). Marcas reales distintas se respetan.
+            $dbBrand   = $p->brand?->name;
+            $brandName = (! $dbBrand || mb_stripos($dbBrand, 'urea Naturals') !== false)
+                ? 'Miracle'
+                : $dbBrand;
             $hasGtin = ! empty($p->gtin);
             $hasMpn  = ! empty($p->mpn);
 
