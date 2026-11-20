@@ -25,6 +25,27 @@
             $brandName = $p->brand?->name ?? 'Belleza Áurea';
             $hasGtin = ! empty($p->gtin);
             $hasMpn  = ! empty($p->mpn);
+
+            // Categoría oficial de Google por tipo de producto (mejor emparejamiento que la genérica "Cosmetics").
+            $NAIL   = 'Health & Beauty > Personal Care > Cosmetics > Nail Care';
+            $POLISH = $NAIL.' > Nail Polish';
+            $TOOLS  = $NAIL.' > Manicure & Pedicure Tools';
+            $HAIR   = 'Health & Beauty > Personal Care > Hair Care';
+            $SKIN   = 'Health & Beauty > Personal Care > Cosmetics > Skin Care';
+            $gcMap = [
+                'unas modernas' => $POLISH, 'esmaltes' => $POLISH, 'preparadores y finalizadores' => $POLISH,
+                'unas' => $NAIL, 'decoracion' => $NAIL, 'construccion y esculpido' => $NAIL,
+                'bledos' => $NAIL, 'remocion y mantenimiento' => $NAIL,
+                'herramientas manuales' => $TOOLS, 'pinceleria' => $TOOLS, 'equipos electricos' => $TOOLS,
+                'brocas' => $TOOLS, 'tijeras' => $TOOLS, 'limas' => $TOOLS,
+                'pestanas' => 'Health & Beauty > Personal Care > Cosmetics > Makeup > Eye Makeup > False Eyelashes',
+                'peluqueria' => $HAIR, 'cepillos' => $HAIR, 'gorros' => $HAIR,
+                'rostro y piel' => $SKIN,
+                'depilacion' => 'Health & Beauty > Personal Care > Hair Removal',
+                'seguridad e higiene' => 'Health & Beauty > Personal Care',
+            ];
+            $catKey = (string) \Illuminate\Support\Str::of($p->category?->name ?? '')->lower()->ascii();
+            $googleCategory = $gcMap[$catKey] ?? 'Health & Beauty > Personal Care > Cosmetics';
         @endphp
         <item>
             <g:id>{{ $p->id }}</g:id>
@@ -39,7 +60,7 @@
             @endif
             <g:brand><![CDATA[{{ $brandName }}]]></g:brand>
             <g:condition>new</g:condition>
-            <g:google_product_category>Health &amp; Beauty &gt; Personal Care &gt; Cosmetics</g:google_product_category>
+            <g:google_product_category>{{ $googleCategory }}</g:google_product_category>
             @if($p->category)
             <g:product_type><![CDATA[{{ $p->category->name }}]]></g:product_type>
             @endif
