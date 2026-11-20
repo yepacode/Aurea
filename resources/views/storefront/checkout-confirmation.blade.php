@@ -318,4 +318,26 @@
     })();
 </script>
 @endif
+
+{{-- ── Google Customer Reviews · opt-in de encuesta post-compra ──
+     Solo en pedidos reales (pagados, transferencia o contra-entrega) con correo.
+     Requiere el contrato de "Reseñas de Clientes" firmado en Merchant Center
+     (merchant_id 5902123905). Google envía la encuesta al cliente alrededor de la
+     fecha estimada de entrega para pedir su opinión de la tienda (reseña gratuita). --}}
+@if(optional($order->customer)->email && ($pagoOk || $esTransfer || $esContraEntrega))
+<script src="https://apis.google.com/js/platform.js?onload=renderBaGcr" async defer></script>
+<script>
+    window.renderBaGcr = function () {
+        window.gapi.load('surveyoptin', function () {
+            window.gapi.surveyoptin.render({
+                "merchant_id": 5902123905,
+                "order_id": @js((string) $order->id),
+                "email": @js($order->customer->email),
+                "delivery_country": "CO",
+                "estimated_delivery_date": @js(now()->addDays(7)->format('Y-m-d'))
+            });
+        });
+    };
+</script>
+@endif
 @endpush
