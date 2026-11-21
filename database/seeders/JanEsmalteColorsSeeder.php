@@ -96,10 +96,21 @@ class JanEsmalteColorsSeeder extends Seeder
 
         $order = 0;
         foreach ($colors as [$familia, $tono, $hex]) {
-            ProductVariant::firstOrCreate(
+            // firstOrNew + save: backfillea la columna legacy `color` (la que usa el
+            // storefront y ProductController->pluck('color')) en filas ya existentes,
+            // SIN pisar el stock/price que se haya ajustado desde el admin.
+            $variant = ProductVariant::firstOrNew(
                 ['product_id' => $product->id, 'option_type' => 'color', 'value' => $tono],
-                ['name' => 'Tono', 'color_hex' => $hex, 'stock' => 10, 'price_modifier' => 0, 'is_active' => true],
             );
+            $variant->name = 'Tono';
+            $variant->color = $tono;       // <- columna que renderiza el swatch
+            $variant->color_hex = $hex;
+            $variant->is_active = true;
+            if (! $variant->exists) {       // solo en creación nueva
+                $variant->stock = 10;
+                $variant->price_modifier = 0;
+            }
+            $variant->save();
             $order++;
         }
 
