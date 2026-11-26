@@ -304,12 +304,25 @@ class ProductController extends Controller
 
         $seo = $this->seo->forProduct($product);
         $schema = $this->seo->productSchema($product);
-        $howToSchema = $this->seo->howToSchema($product);
-        $breadcrumbs = $this->seo->breadcrumbSchema([
+        // HowTo schema retirado: Google descontinuó sus rich results (sept-2023)
+        // y Miracle tampoco lo usa. El "Modo de uso" sigue visible en la ficha.
+        $howToSchema = null;
+
+        // Breadcrumb CON nivel de categoría: enriquece el schema y apunta a la
+        // página-hub de la categoría (/productos?category={slug}), reforzando el
+        // enlazado interno hub ↔ producto.
+        $crumbs = [
             ['name' => 'Inicio',    'url' => url('/')],
             ['name' => 'Productos', 'url' => route('products.index')],
-            ['name' => $product->name, 'url' => route('products.show', $product->slug)],
-        ]);
+        ];
+        if ($product->category) {
+            $crumbs[] = [
+                'name' => $product->category->name,
+                'url'  => route('products.index').'?category='.$product->category->slug,
+            ];
+        }
+        $crumbs[] = ['name' => $product->name, 'url' => route('products.show', $product->slug)];
+        $breadcrumbs = $this->seo->breadcrumbSchema($crumbs);
 
         return view('storefront.products.show', compact(
             'product', 'colores', 'genericVariants',
