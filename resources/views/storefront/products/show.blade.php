@@ -137,8 +137,8 @@
                              src=""
                              alt="{{ $product->name }}"
                              style="width:100%;height:100%;object-fit:contain;border-radius:16px;
-                                    transition:transform .2s ease;transform-origin:center center;
-                                    position:absolute;top:0;left:0;display:none;z-index:1;">
+                                    transition:opacity .32s ease, transform .2s ease;transform-origin:center center;will-change:opacity;
+                                    position:absolute;top:0;left:0;display:none;opacity:0;z-index:1;">
 
                         @if(count($displayImages) > 1)
                         {{-- Flechas del carrusel --}}
@@ -1001,6 +1001,35 @@ function hideVariantImage() {
     }
 }
 
+/* ── Muestra la foto del tono con un fundido suave (ligero, ~0.3s) ── */
+function showVariantImage(overlay, url) {
+    var done = false;
+    var animateIn = function () {
+        if (done) return; done = true;
+        overlay.src = url;
+        overlay.style.display = 'block';
+        overlay.style.opacity = '0';
+        overlay.style.transform = 'scale(1.035)';
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                overlay.style.opacity = '1';
+                overlay.style.transform = 'scale(1)';
+            });
+        });
+    };
+    if (overlay.getAttribute('src') === url) {
+        overlay.style.display = 'block';
+        overlay.style.opacity = '1';
+        return;
+    }
+    // Precargamos para evitar el parpadeo al cambiar de tono.
+    var pre = new Image();
+    pre.onload = animateIn;
+    pre.onerror = animateIn;
+    pre.src = url;
+    if (pre.complete) animateIn();
+}
+
 /* ── Helper para mostrar/ocultar el botón "Quitar" de color ── */
 function updateClearButtons() {
     var sel = window.currentSelection;
@@ -1011,9 +1040,10 @@ function updateClearButtons() {
 }
 
 /* ── Color selector ── */
-function selectColor(color) {
-    // Toggle: si el color ya está seleccionado, lo deseleccionamos.
-    if (window.currentSelection.color === color) {
+function selectColor(color, showImage) {
+    if (showImage === undefined) showImage = true;
+    // Re-clic sobre el tono activo (con su foto ya visible) -> vuelve a la portada.
+    if (window.currentSelection.color === color && showImage && window.__variantImageShown) {
         clearColor();
         return;
     }
@@ -1030,16 +1060,21 @@ function selectColor(color) {
     var label = document.getElementById('selected-color-name');
     if (label) label.textContent = color;
 
-    // Swap main image to the variant image for this color (if any)
+    // Cambia la imagen principal a la foto de este tono (si la tiene).
+    // En la carga inicial (showImage=false) NO se muestra: queda la portada.
     var overlay = document.getElementById('variant-color-image');
     if (overlay) {
         var url = window.variantImagesByColor[color];
-        if (url) {
-            overlay.src = url;
-            overlay.style.display = 'block';
+        if (showImage && url) {
+            showVariantImage(overlay, url);
+            window.__variantImageShown = true;
         } else {
-            overlay.src = '';
-            overlay.style.display = 'none';
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(1)';
+            window.setTimeout(function () {
+                if (overlay.style.opacity === '0') { overlay.style.display = 'none'; overlay.src = ''; }
+            }, 340);
+            window.__variantImageShown = false;
         }
     }
 
@@ -1059,7 +1094,14 @@ function clearColor() {
     if (label) label.textContent = '— Selecciona un color';
 
     var overlay = document.getElementById('variant-color-image');
-    if (overlay) { overlay.src = ''; overlay.style.display = 'none'; }
+    if (overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.transform = 'scale(1)';
+        window.setTimeout(function () {
+            if (overlay.style.opacity === '0') { overlay.style.display = 'none'; overlay.src = ''; }
+        }, 340);
+    }
+    window.__variantImageShown = false;
 
     window.currentSelection.color = null;
     refreshVariantAvailability();
@@ -1074,7 +1116,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var buttons = document.querySelectorAll('.color-btn');
     for (var i = 0; i < buttons.length; i++) {
         if (buttons[i].dataset.outOfStock !== '1') {
-            selectColor(buttons[i].dataset.color);
+            // showImage=false: deja la PORTADA visible al cargar; el tono queda
+            // preseleccionado para el carrito, pero la foto aparece al hacer clic.
+            selectColor(buttons[i].dataset.color, false);
             break;
         }
     }
