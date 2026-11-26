@@ -24,7 +24,15 @@ class SitemapController extends Controller
                 ->orderByDesc('published_at')
                 ->get();
 
-            $categories = Category::select('slug', 'updated_at')->get();
+            // Categorías indexables: con al menos un producto activo y sin
+            // bandera noindex. Se emiten como /productos?category={slug}, que
+            // ahora es canónica propia (ver ProductController@index).
+            $categories = Category::query()
+                ->where(fn ($q) => $q->whereNull('noindex')->orWhere('noindex', false))
+                ->whereHas('products', fn ($q) => $q->active())
+                ->select('slug', 'updated_at')
+                ->orderBy('name')
+                ->get();
 
             $brands = Brand::active()
                 ->select('slug', 'updated_at')

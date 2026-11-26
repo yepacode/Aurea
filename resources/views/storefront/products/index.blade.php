@@ -166,8 +166,18 @@
             <span style="color:#8E7E70;">Catálogo</span>
         </nav>
         <div class="catx-eyebrow">Distribuidora oficial · Colombia</div>
-        <h1 class="catx-title">{{ $lentesPage->catalog_title ?? 'Nuestro catálogo' }}</h1>
+        @php $__ac = $activeCategory ?? null; @endphp
+        {{-- Con categoría activa el H1 toma su nombre (match de keyword para SEO);
+             sin categoría, el título general del catálogo. --}}
+        <h1 class="catx-title">{{ $__ac->name ?? $lentesPage->catalog_title ?? 'Nuestro catálogo' }}</h1>
         <p class="catx-sub">{{ $lentesPage->catalog_subtitle ?? 'Insumos profesionales y cosmética de marca — uñas, piel, maquillaje y más, en un solo lugar.' }}</p>
+        @if(!empty($__ac?->description))
+        {{-- Intro única de la categoría: contenido propio encima de la grilla
+             para que la página no sea solo un listado (evita thin content). --}}
+        <div class="catx-intro" style="max-width:820px;margin:16px auto 0;color:#6b5d50;font-size:14px;line-height:1.65;">
+            {!! nl2br(e($__ac->description)) !!}
+        </div>
+        @endif
     </section>
 
     {{-- ============================================================

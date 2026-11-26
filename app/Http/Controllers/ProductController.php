@@ -158,17 +158,27 @@ class ProductController extends Controller
 
         // Si se está filtrando por UNA categoría, sus overrides SEO mandan.
         $categorySeo = null;
+        $activeCategory = null;
         if ($catFiltro) {
-            $cat = Category::where('slug', $catFiltro)->first();
-            if ($cat) {
+            $activeCategory = Category::where('slug', $catFiltro)->first();
+            if ($activeCategory) {
+                // Canónica PROPIA e indexable de la categoría. NO usar
+                // url()->current(): en Laravel descarta el query string, así que
+                // /productos?category=X terminaba apuntando a /productos y Google
+                // colapsaba todas las categorías en una sola URL (= imposible
+                // rankear por categoría). Al fijar ?category={slug} aquí, cada
+                // categoría es su propia URL y las variantes con orden/precio/
+                // página se consolidan en ella.
+                $categoryCanonical = route('products.index').'?category='.$activeCategory->slug;
+
                 $base = $this->seo->meta(
-                    $cat->meta_title ?: ($cat->name.' | Belleza Áurea'),
-                    $cat->meta_description ?: ('Explora la categoría '.$cat->name.' en Belleza Áurea. Cosmética e insumos de belleza con envío a toda Colombia.'),
-                    $cat->image ? asset('storage/'.$cat->image) : null,
-                    url()->current(),
+                    $activeCategory->meta_title ?: ($activeCategory->name.' | Belleza Áurea'),
+                    $activeCategory->meta_description ?: ('Explora la categoría '.$activeCategory->name.' en Belleza Áurea. Cosmética e insumos de belleza con envío a toda Colombia.'),
+                    $activeCategory->image ? asset('storage/'.$activeCategory->image) : null,
+                    $categoryCanonical,
                     'website',
                 );
-                $categorySeo = $this->seo->applyItemSeo($base, $cat, 'og_image_path', 'twitter_image_path');
+                $categorySeo = $this->seo->applyItemSeo($base, $activeCategory, 'og_image_path', 'twitter_image_path');
             }
         }
 
@@ -178,6 +188,7 @@ class ProductController extends Controller
 
         return view('storefront.products.index', [
             'categorySeo'      => $categorySeo,
+            'activeCategory'   => $activeCategory,
             'bestSellerIds'    => Product::bestSellerIds(8),
             'wishlistIds'      => $wishlistIds,
             'products'         => $products,

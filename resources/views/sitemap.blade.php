@@ -68,6 +68,18 @@
     @endforeach
     @endisset
 
+    {{-- Categorías: cada una como URL canónica propia e indexable --}}
+    @isset($categories)
+    @foreach($categories as $category)
+    <url>
+        <loc>{{ route('products.index') }}?category={{ $category->slug }}</loc>
+        @if($category->updated_at)<lastmod>{{ $category->updated_at->toW3cString() }}</lastmod>@endif
+        <changefreq>weekly</changefreq>
+        <priority>0.75</priority>
+    </url>
+    @endforeach
+    @endisset
+
     {{-- Páginas legales --}}
     <url>
         <loc>{{ route('legal.terms') }}</loc>

@@ -246,7 +246,7 @@ class SeoService
      */
     public function productSchema(Product $product): string
     {
-        $brandName = $product->brand?->name ?? 'Belleza Áurea';
+        $brandName = $product->brand?->name;
         $hasStock = $product->hasStock();
         $images = collect($product->images ?? [])
             ->map(fn ($img) => asset('storage/'.$img))
@@ -307,6 +307,14 @@ class SeoService
 
         if (! empty($images)) {
             $schema['image'] = $images;
+        }
+
+        // Marca: SOLO si el producto tiene una marca REAL asignada. Nunca caer a
+        // "Belleza Áurea" como marca: somos distribuidora multimarca, cada ficha
+        // compite en Google bajo la marca original (Miracle, Jan Beauty, …), no
+        // bajo el nombre de la tienda. Si no hay marca, se omite el nodo brand.
+        if (! $product->brand) {
+            unset($schema['brand']);
         }
 
         // Identificadores comerciales
