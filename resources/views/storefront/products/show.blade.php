@@ -1412,7 +1412,10 @@ function productDetail() {
 <style>
 .product-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* minmax(0,1fr) evita que las columnas crezcan con su contenido:
+       con muchas miniaturas (p.ej. 60 tonos) un '1fr' simple usa min-content
+       como piso y desborda la columna, estirando la imagen principal. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 48px;
     align-items: start;
 }
