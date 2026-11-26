@@ -159,14 +159,16 @@
     {{-- ============================================================
          HEADER
          ============================================================ --}}
-    <section class="catx-head">
+    @php $__ac = $activeCategory ?? null; @endphp
+    {{-- HERO del hub: con categoría activa, un fondo cálido de marca (energía
+         elegante, sin el chillón de la competencia) sobre el encabezado. --}}
+    <section class="catx-head"@if($__ac) style="background:radial-gradient(120% 150% at 50% -10%, #FCF6EE 0%, #F6EBDB 48%, #EFE0CB 100%);"@endif>
         <nav class="catx-bc" aria-label="Migas de pan">
             <a href="{{ route('home') }}">Inicio</a>
             <svg style="width:11px;height:11px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/></svg>
             <span style="color:#8E7E70;">Catálogo</span>
         </nav>
         <div class="catx-eyebrow">Distribuidora oficial · Colombia</div>
-        @php $__ac = $activeCategory ?? null; @endphp
         {{-- Con categoría activa el H1 toma su nombre (match de keyword para SEO);
              sin categoría, el título general del catálogo. --}}
         <h1 class="catx-title">{{ $__ac->name ?? $lentesPage->catalog_title ?? 'Nuestro catálogo' }}</h1>
@@ -174,6 +176,18 @@
              gancho). La guía larga va ABAJO, tras la grilla, para que el usuario
              vea los productos de inmediato (mejor UX, menos texto arriba). --}}
         <p class="catx-sub">{{ ($__ac?->meta_description) ?: ($lentesPage->catalog_subtitle ?? 'Insumos profesionales y cosmética de marca — uñas, piel, maquillaje y más, en un solo lugar.') }}</p>
+
+        @if($catFiltro === 'esmaltes')
+        {{-- Energía elegante: tira de tonos + gancho "+55 tonos" (la respuesta
+             de Belleza Áurea al selector de 70 pastillas de Miracle, pero
+             refinada con la paleta de marca). Piloto de esmaltes. --}}
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:9px;margin:24px auto 0;max-width:560px;">
+            @foreach(['#E7C9B8','#D98C7A','#C65A4E','#9B2D3B','#E9A6B8','#C97B9A','#8E5A7E','#5E5A86','#7E93C4','#9FB89A','#C9B07A','#6E5A48'] as $__h)
+                <span aria-hidden="true" style="width:22px;height:22px;border-radius:50%;background:{{ $__h }};border:2px solid #fff;box-shadow:0 2px 6px rgba(120,90,50,.28);"></span>
+            @endforeach
+            <span style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#E7C988,#D9B56D);color:#2E2A26;font-size:12.5px;font-weight:700;letter-spacing:.04em;padding:7px 15px;border-radius:999px;box-shadow:0 4px 12px -4px rgba(190,154,83,.6);">+55 tonos</span>
+        </div>
+        @endif
     </section>
 
     {{-- ============================================================
@@ -390,7 +404,13 @@
                     <a href="{{ route('products.show', $product->slug) }}" class="pcard">
                         <div class="pcard__img">
                             @if($firstImage)
-                                <img src="{{ asset('storage/'.$firstImage) }}" alt="{{ $product->name }}" loading="lazy">
+                                {{-- Primera fila (above-fold) carga al instante con prioridad
+                                     alta: evita el "flash" de tarjeta vacía al entrar. El resto
+                                     lazy. --}}
+                                <img src="{{ asset('storage/'.$firstImage) }}" alt="{{ $product->name }}"
+                                     decoding="async"
+                                     loading="{{ $loop->index < 4 ? 'eager' : 'lazy' }}"
+                                     fetchpriority="{{ $loop->index < 4 ? 'high' : 'auto' }}">
                             @else
                                 <span class="pcard__ph">{{ $product->name }}</span>
                             @endif
