@@ -170,14 +170,10 @@
         {{-- Con categoría activa el H1 toma su nombre (match de keyword para SEO);
              sin categoría, el título general del catálogo. --}}
         <h1 class="catx-title">{{ $__ac->name ?? $lentesPage->catalog_title ?? 'Nuestro catálogo' }}</h1>
-        <p class="catx-sub">{{ $lentesPage->catalog_subtitle ?? 'Insumos profesionales y cosmética de marca — uñas, piel, maquillaje y más, en un solo lugar.' }}</p>
-        @if(!empty($__ac?->description))
-        {{-- Intro única de la categoría: contenido propio encima de la grilla
-             para que la página no sea solo un listado (evita thin content). --}}
-        <div class="catx-intro" style="max-width:820px;margin:16px auto 0;color:#6b5d50;font-size:14px;line-height:1.65;">
-            {!! nl2br(e($__ac->description)) !!}
-        </div>
-        @endif
+        {{-- Subtítulo CORTO: con categoría activa, su meta_description (frase de
+             gancho). La guía larga va ABAJO, tras la grilla, para que el usuario
+             vea los productos de inmediato (mejor UX, menos texto arriba). --}}
+        <p class="catx-sub">{{ ($__ac?->meta_description) ?: ($lentesPage->catalog_subtitle ?? 'Insumos profesionales y cosmética de marca — uñas, piel, maquillaje y más, en un solo lugar.') }}</p>
     </section>
 
     {{-- ============================================================
@@ -566,6 +562,22 @@
                     </div>
                 @endforeach
             </div>
+        </div>
+    </section>
+    @endif
+
+    {{-- ============================================================
+         GUÍA SEO de la categoría — AL FINAL, después de los productos.
+         Le da a Google contenido único y profundo sin tapar la compra:
+         el usuario ve primero la grilla; quien quiere, baja a leer.
+         ============================================================ --}}
+    @if(!empty($__ac?->description))
+    <section class="cat-guide" style="max-width:860px;margin:8px auto 56px;padding:0 24px;color:#5f5247;">
+        <h2 style="font-size:20px;color:#2E2A26;margin:0 0 14px;font-weight:600;">Guía: {{ $__ac->name }}</h2>
+        <div style="font-size:15px;line-height:1.75;">
+            @foreach(preg_split('/\n\n+/', trim($__ac->description)) as $__p)
+                <p style="margin:0 0 12px;">{{ $__p }}</p>
+            @endforeach
         </div>
     </section>
     @endif
