@@ -572,13 +572,22 @@
          el usuario ve primero la grilla; quien quiere, baja a leer.
          ============================================================ --}}
     @if(!empty($__ac?->description))
-    <section class="cat-guide" style="max-width:860px;margin:8px auto 56px;padding:0 24px;color:#5f5247;">
-        <h2 style="font-size:20px;color:#2E2A26;margin:0 0 14px;font-weight:600;">Guía: {{ $__ac->name }}</h2>
-        <div style="font-size:15px;line-height:1.75;">
-            @foreach(preg_split('/\n\n+/', trim($__ac->description)) as $__p)
-                <p style="margin:0 0 12px;">{{ $__p }}</p>
-            @endforeach
-        </div>
+    {{-- Modern Web Guidance (Google): divulgación progresiva con el elemento
+         NATIVO <details> (acordeón sin JS, accesible por teclado) +
+         content-visibility para no pintar la sección hasta que se necesite
+         (mejor LCP/INP). Colapsada por defecto ⇒ menos texto, foco en productos;
+         Google igual indexa el contenido del <details>. --}}
+    <section class="cat-guide" style="max-width:860px;margin:8px auto 56px;padding:0 24px;content-visibility:auto;contain-intrinsic-size:auto 500px;">
+        <details class="cat-guide__d" style="border-top:1px solid #ece7e1;padding-top:18px;">
+            <summary style="cursor:pointer;font-size:18px;font-weight:600;color:#2E2A26;list-style-position:inside;">
+                Guía: cómo elegir y usar tu {{ mb_strtolower($__ac->name) }}
+            </summary>
+            <div style="font-size:15px;line-height:1.75;color:#5f5247;margin-top:14px;">
+                @foreach(preg_split('/\n\n+/', trim($__ac->description)) as $__p)
+                    <p style="margin:0 0 12px;">{{ $__p }}</p>
+                @endforeach
+            </div>
+        </details>
     </section>
     @endif
 
