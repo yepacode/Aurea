@@ -996,6 +996,7 @@ function productZoomLeave(container) {
 }
 
 function hideVariantImage() {
+    if (window.BAVisor && window.BAVisor.ready()) { window.BAVisor.hideHard(); return; }
     var overlay = document.getElementById('variant-color-image');
     if (overlay) {
         overlay.style.display = 'none';
@@ -1005,7 +1006,9 @@ function hideVariantImage() {
 
 /* ── Muestra la foto del tono con un fundido suave (ligero, ~0.3s) ── */
 function showVariantImage(overlay, url) {
-    // Asegura la transición ligera de color (el álbum pudo dejar otra puesta).
+    // Visor premium (2 capas + cross-dissolve): lo maneja BAVisor.
+    if (window.BAVisor && window.BAVisor.ready()) { window.BAVisor.showUrl(url); return; }
+    // Fallback: fundido simple sobre el overlay.
     overlay.style.transition = 'opacity .32s ease, transform .2s ease';
     var done = false;
     var animateIn = function () {
@@ -1097,13 +1100,17 @@ function clearColor() {
     var label = document.getElementById('selected-color-name');
     if (label) label.textContent = '— Selecciona un color';
 
-    var overlay = document.getElementById('variant-color-image');
-    if (overlay) {
-        overlay.style.opacity = '0';
-        overlay.style.transform = 'scale(1)';
-        window.setTimeout(function () {
-            if (overlay.style.opacity === '0') { overlay.style.display = 'none'; overlay.src = ''; }
-        }, 340);
+    if (window.BAVisor && window.BAVisor.ready()) {
+        window.BAVisor.hide();
+    } else {
+        var overlay = document.getElementById('variant-color-image');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(1)';
+            window.setTimeout(function () {
+                if (overlay.style.opacity === '0') { overlay.style.display = 'none'; overlay.src = ''; }
+            }, 340);
+        }
     }
     window.__variantImageShown = false;
 
@@ -1131,157 +1138,283 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* ──────────────────────────────────────────────────────────
-   ÁLBUM AUTOMÁTICO DE TONOS
-   Pasa las fotos solas como un álbum (portada + cada tono) con un
-   deslizamiento tipo página + leve giro 3D + fundido. Es SOLO visual:
-   usa el overlay #variant-color-image y NO toca la selección ni el
-   carrito. Se pausa al pasar el mouse y se detiene del todo cuando el
-   usuario elige un color o usa la galería. Respeta prefers-reduced-motion.
+   VISOR PREMIUM DE TONOS (experiencia hacia el cliente)
+   - Álbum automático: las fotos de los tonos pasan solas con
+     cross-dissolve (2 capas), leve zoom tipo Ken Burns, destello de
+     brillo y etiqueta con nombre + contador (x/total) y barra de avance.
+   - Hover-preview: al pasar el mouse por un swatch se muestra ESE tono
+     al instante (la clienta recorre todos los tonos sin hacer clic).
+   - Al elegir un color se fija ese tono y se detiene el álbum; al
+     quitarlo vuelve la portada y el álbum se reanuda.
+   - Solo visual: NO toca la selección ni el carrito. Respeta
+     prefers-reduced-motion (sin animación, con preview instantáneo).
+   Expone window.BAVisor para que selectColor/clearColor lo usen.
    ────────────────────────────────────────────────────────── */
 (function () {
-    var overlay, container, caption;
-    var frames = [];          // [{url, name}]  portada + tonos
-    var idx = 0, timer = null, pendingSwap = null, stopped = false, started = false;
-    var INTERVAL = 3000;      // tiempo que se ve cada foto
-    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var overlay, container, layers, top = 0;
+    var caption, capDot, capName, capIdx, gloss, glossBar, prog;
+    var tonoFrames = [], urlMeta = {}, colorByUrl = {}, total = 0;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var INTERVAL = 2600, timer = null, rafP = null, startT = 0;
+    var attractOn = true, selectedColor = null, idx = 0, hovering = false, hoverTimer = null, ready = false;
 
-    function buildFrames() {
-        var out = [];
-        if (window.portadaImage) out.push({ url: window.portadaImage, name: null });
-        var map = window.variantImagesByColor || {};
-        var seen = {};
-        if (window.portadaImage) seen[window.portadaImage] = 1;
-        document.querySelectorAll('.color-btn').forEach(function (b) {
-            var u = map[b.dataset.color];
-            if (u && !seen[u]) { seen[u] = 1; out.push({ url: u, name: b.dataset.color }); }
-        });
-        if (out.length <= 1) {
-            Object.keys(map).forEach(function (k) {
-                if (!seen[map[k]]) { seen[map[k]] = 1; out.push({ url: map[k], name: k }); }
-            });
-        }
-        return out;
+    function hexFor(color) {
+        var b = document.querySelector('.color-btn[data-color="' + color + '"]');
+        return b ? (b.style.background || b.style.backgroundColor || '#D9B56D') : '#D9B56D';
     }
+    function buildFrames() {
+        var map = window.variantImagesByColor || {};
+        document.querySelectorAll('.color-btn').forEach(function (b) {
+            var c = b.dataset.color, u = map[c];
+            if (u && !urlMeta[c]) {
+                tonoFrames.push({ url: u, name: c });
+                urlMeta[c] = { url: u, index: tonoFrames.length };
+                colorByUrl[u] = c;
+            }
+        });
+        total = tonoFrames.length;
+    }
+    function preload(url) { if (url) { var im = new Image(); im.src = url; } }
 
-    function preload(url) { if (url) { var i = new Image(); i.src = url; } }
-
-    function setCaption(name) {
+    function setCaption(meta) {
         if (!caption) return;
-        if (name) {
-            caption.textContent = name;
+        if (meta && meta.name) {
+            capName.textContent = meta.name;
+            capIdx.textContent = total ? ('· ' + meta.index + ' / ' + total) : '';
+            capDot.style.background = hexFor(meta.name);
             caption.style.opacity = '1';
             caption.style.transform = 'translateY(0)';
         } else {
             caption.style.opacity = '0';
-            caption.style.transform = 'translateY(6px)';
+            caption.style.transform = 'translateY(8px)';
         }
     }
-
-    function showFrame(i) {
-        if (!overlay || stopped) return;
-        var f = frames[i];
-        overlay.style.transition = 'opacity .5s ease, transform .55s cubic-bezier(.22,.61,.36,1)';
-        overlay.style.opacity = '0';
-        overlay.style.transform = 'translateX(-26px) rotateY(-9deg) scale(.985)';
-        setCaption(null);
-        pendingSwap = window.setTimeout(function () {
-            if (stopped) return;
-            overlay.src = f.url;
-            overlay.style.display = 'block';
-            overlay.style.transform = 'translateX(26px) rotateY(9deg) scale(.985)';
+    function sweep() {
+        if (reduce || !gloss) return;
+        glossBar.style.transition = 'none';
+        glossBar.style.transform = 'translateX(0) rotate(18deg)';
+        gloss.style.opacity = '1';
+        requestAnimationFrame(function () {
+            glossBar.style.transition = 'transform .85s ease';
+            glossBar.style.transform = 'translateX(620%) rotate(18deg)';
+            window.setTimeout(function () { gloss.style.opacity = '0'; }, 820);
+        });
+    }
+    // Cross-dissolve + Ken Burns a la url dada (meta = {name,index} o null).
+    function paint(url, meta) {
+        if (!overlay || !layers) return;
+        var pre = new Image();
+        var apply = function () {
+            var nt = 1 - top, nl = layers[nt], ol = layers[top];
+            nl.src = url;
+            nl.style.display = 'block'; nl.style.zIndex = '2'; ol.style.zIndex = '1';
+            nl.style.transition = 'none';
+            nl.style.opacity = '0';
+            nl.style.transform = 'scale(1.0)';
+            void nl.offsetWidth; // reflow para reiniciar la transición
             requestAnimationFrame(function () {
-                requestAnimationFrame(function () {
-                    if (stopped) return;
-                    overlay.style.opacity = '1';
-                    overlay.style.transform = 'translateX(0) rotateY(0) scale(1)';
-                    setCaption(f.name);
-                });
+                nl.style.transition = 'opacity .55s ease, transform ' + (reduce ? '0s' : '6s') + ' ease-out';
+                nl.style.opacity = '1';
+                nl.style.transform = reduce ? 'scale(1)' : 'scale(1.06)';
+                ol.style.transition = 'opacity .55s ease';
+                ol.style.opacity = '0';
             });
-        }, 240);
-        preload((frames[(i + 1) % frames.length] || {}).url);
+            top = nt;
+            setCaption(meta);
+            sweep();
+            window.__variantImageShown = !!meta;
+        };
+        pre.onload = apply; pre.onerror = apply; pre.src = url;
+        if (pre.complete) apply();
     }
-
-    function tick() {
-        if (stopped) return;
-        idx = (idx + 1) % frames.length;
-        showFrame(idx);
-    }
-
-    function startLoop() {
-        if (stopped || timer) return;
-        timer = window.setInterval(tick, INTERVAL);
-    }
-
-    function pause() {
-        if (timer) { window.clearInterval(timer); timer = null; }
-    }
-
-    function stop() {
-        if (stopped) return;
-        stopped = true;
-        pause();
-        if (pendingSwap) { window.clearTimeout(pendingSwap); pendingSwap = null; }
+    function hideHard() {
+        if (!layers) return;
+        layers.forEach(function (l) {
+            l.style.transition = 'opacity .4s ease, transform .2s ease';
+            l.style.opacity = '0';
+            l.style.transform = 'scale(1)';
+        });
+        window.setTimeout(function () {
+            layers.forEach(function (l) { if (l.style.opacity === '0') { l.style.display = 'none'; l.src = ''; } });
+        }, 420);
         setCaption(null);
-        // Vuelve limpio a la portada si el usuario no eligió aún un tono.
-        if (overlay && !window.__variantImageShown) {
-            overlay.style.transition = 'opacity .32s ease, transform .2s ease';
-            overlay.style.opacity = '0';
-            overlay.style.transform = 'scale(1)';
-            window.setTimeout(function () {
-                if (overlay.style.opacity === '0') { overlay.style.display = 'none'; overlay.src = ''; }
-            }, 340);
-        }
+        if (prog) prog.style.opacity = '0';
+        window.__variantImageShown = false;
     }
+
+    /* ── Álbum automático ── */
+    function progressTick() {
+        if (!attractOn || hovering) return;
+        var e = (Date.now() - startT) / INTERVAL;
+        if (prog) prog.style.width = Math.min(100, e * 100) + '%';
+        rafP = requestAnimationFrame(progressTick);
+    }
+    function paintAttract(i) {
+        idx = i;
+        startT = Date.now();
+        if (prog && !reduce) { prog.style.opacity = '1'; prog.style.width = '0'; }
+        var f = tonoFrames[i];
+        paint(f.url, { name: f.name, index: i + 1 });
+        preload((tonoFrames[(i + 1) % total] || {}).url);
+    }
+    function next() { if (!attractOn || hovering) return; paintAttract((idx + 1) % total); }
+    function runTimer() {
+        if (timer || reduce || total < 2) return;
+        rafP = requestAnimationFrame(progressTick);
+        timer = window.setInterval(next, INTERVAL);
+    }
+    function startAttract() {
+        if (reduce || total < 2) return;
+        attractOn = true;
+        paintAttract(0);
+        runTimer();
+    }
+    function stopAttract() {
+        attractOn = false;
+        if (timer) { window.clearInterval(timer); timer = null; }
+        if (rafP) { cancelAnimationFrame(rafP); rafP = null; }
+        if (prog) prog.style.opacity = '0';
+    }
+    function pauseAttract() {
+        if (timer) { window.clearInterval(timer); timer = null; }
+        if (rafP) { cancelAnimationFrame(rafP); rafP = null; }
+        if (prog) prog.style.opacity = '0';
+    }
+    function resumeAttract() {
+        if (!attractOn || reduce || total < 2 || timer) return;
+        startT = Date.now();
+        runTimer();
+    }
+
+    /* ── API pública usada por selectColor / clearColor ── */
+    function showByColor(color) {
+        var m = urlMeta[color];
+        selectedColor = color;
+        stopAttract(); hovering = false;
+        if (hoverTimer) { window.clearTimeout(hoverTimer); hoverTimer = null; }
+        if (m) paint(m.url, { name: color, index: m.index });
+    }
+    function clearPhoto() {
+        selectedColor = null;
+        hideHard();
+        attractOn = true;
+        window.setTimeout(resumeAttract, 1400);
+    }
+    function previewColor(color) {
+        var m = urlMeta[color];
+        if (!m) return;
+        hovering = true;
+        if (hoverTimer) { window.clearTimeout(hoverTimer); hoverTimer = null; }
+        pauseAttract();
+        idx = m.index - 1; // para que el álbum continúe desde aquí al reanudar
+        paint(m.url, { name: color, index: m.index });
+    }
+    function endHover() {
+        hovering = false;
+        if (hoverTimer) window.clearTimeout(hoverTimer);
+        hoverTimer = window.setTimeout(function () {
+            if (hovering) return;
+            if (selectedColor) {
+                var m = urlMeta[selectedColor];
+                if (m) paint(m.url, { name: selectedColor, index: m.index });
+            } else if (attractOn) {
+                resumeAttract();
+            } else {
+                hideHard();
+            }
+        }, 280);
+    }
+
+    window.BAVisor = {
+        ready: function () { return ready; },
+        showByColor: showByColor,
+        showUrl: function (url) {
+            var c = colorByUrl[url];
+            if (c) showByColor(c);
+            else { stopAttract(); paint(url, null); } // variante genérica con imagen
+        },
+        hide: clearPhoto,
+        hideHard: hideHard,
+        preview: previewColor,
+        endHover: endHover,
+        stopAttract: stopAttract
+    };
 
     document.addEventListener('DOMContentLoaded', function () {
         overlay = document.getElementById('variant-color-image');
         if (!overlay) return;
         container = overlay.closest('.product-zoom-container');
-        frames = buildFrames();
-        if (reduceMotion || frames.length < 2) return; // nada que pasar
+        buildFrames();
+
+        // Capa base (A) + capa clon (B) para el cross-dissolve.
+        var baseCss = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;' +
+            'border-radius:16px;opacity:0;z-index:1;will-change:opacity,transform;' +
+            'pointer-events:none;backface-visibility:hidden;';
+        overlay.style.cssText += ';' + baseCss;
+        overlay.style.display = 'none';
+        var layerB = overlay.cloneNode(false);
+        layerB.id = 'variant-color-image-b';
+        layerB.removeAttribute('src');
+        if (container) container.appendChild(layerB);
+        layers = [overlay, layerB];
 
         if (container) {
-            container.style.perspective = '1200px';
-            // Etiqueta flotante con el nombre del tono (estilo álbum).
+            container.style.perspective = '1400px';
+
+            // Destello de brillo que barre la foto en cada cambio.
+            gloss = document.createElement('div');
+            gloss.setAttribute('aria-hidden', 'true');
+            gloss.style.cssText = 'position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:16px;overflow:hidden;opacity:0;';
+            gloss.innerHTML = '<div style="position:absolute;top:-30%;left:-60%;width:40%;height:160%;' +
+                'transform:rotate(18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);"></div>';
+            container.appendChild(gloss);
+            glossBar = gloss.firstChild;
+
+            // Etiqueta con punto del color + nombre + contador.
             caption = document.createElement('div');
             caption.setAttribute('aria-hidden', 'true');
-            caption.style.cssText = 'position:absolute;left:14px;bottom:14px;z-index:2;' +
-                'padding:6px 14px;border-radius:999px;font-family:\'Playfair Display\',serif;' +
-                'font-style:italic;font-size:14px;letter-spacing:.2px;color:#6B4E16;' +
-                'background:linear-gradient(135deg,rgba(255,252,246,.94),rgba(246,236,214,.92));' +
-                'border:1px solid rgba(217,181,109,.5);box-shadow:0 8px 20px -10px rgba(120,92,44,.5);' +
-                'opacity:0;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease;' +
-                'pointer-events:none;backdrop-filter:blur(2px);';
+            caption.style.cssText = 'position:absolute;left:14px;bottom:14px;z-index:4;display:flex;align-items:center;gap:9px;' +
+                'padding:7px 15px;border-radius:999px;font-family:\'Playfair Display\',serif;color:#6B4E16;' +
+                'background:linear-gradient(135deg,rgba(255,252,246,.95),rgba(246,236,214,.92));' +
+                'border:1px solid rgba(217,181,109,.55);box-shadow:0 10px 24px -12px rgba(120,92,44,.55);' +
+                'opacity:0;transform:translateY(8px);transition:opacity .5s ease,transform .5s ease;' +
+                'pointer-events:none;backdrop-filter:blur(3px);';
+            caption.innerHTML = '<span class="pv-dot" style="width:13px;height:13px;border-radius:50%;' +
+                'box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(217,181,109,.6);"></span>' +
+                '<span class="pv-name" style="font-style:italic;font-size:14.5px;letter-spacing:.2px;"></span>' +
+                '<span class="pv-idx" style="font-style:normal;font-size:11px;color:#B07D2E;font-family:ui-sans-serif,system-ui;"></span>';
             container.appendChild(caption);
-        }
-        overlay.style.backfaceVisibility = 'hidden';
+            capDot = caption.querySelector('.pv-dot');
+            capName = caption.querySelector('.pv-name');
+            capIdx = caption.querySelector('.pv-idx');
 
-        // Pausa mientras se mira; reanuda al salir (si no se detuvo).
-        if (container) {
-            container.addEventListener('mouseenter', function () { if (!stopped) pause(); });
-            container.addEventListener('mouseleave', function () { if (!stopped && started) startLoop(); });
+            // Barra de avance del álbum.
+            prog = document.createElement('div');
+            prog.setAttribute('aria-hidden', 'true');
+            prog.style.cssText = 'position:absolute;left:0;bottom:0;height:3px;z-index:4;width:0;opacity:0;' +
+                'background:linear-gradient(90deg,#E7C987,#D9B56D);border-radius:0 3px 3px 0;transition:opacity .3s ease;';
+            container.appendChild(prog);
+
+            // Pausa el álbum mientras se mira la foto (y permite el zoom).
+            container.addEventListener('mouseenter', function () { if (attractOn) pauseAttract(); });
+            container.addEventListener('mouseleave', function () { if (attractOn && !hovering) resumeAttract(); });
         }
 
-        // Se detiene con cualquier interacción real (color, flechas, puntos, miniaturas, zoom/lightbox).
-        function bindStop(sel) {
-            document.querySelectorAll(sel).forEach(function (el) {
-                el.addEventListener('click', stop, { once: true });
-            });
-        }
-        bindStop('.color-btn');
-        bindStop('.ba-gal-arrow');
-        bindStop('.ba-gal-dot');
-        bindStop('.ba-gal-thumb');
-        if (container) container.addEventListener('click', stop, { once: true });
+        // Hover-preview sobre cada swatch: muestra ESE tono al instante.
+        document.querySelectorAll('.color-btn').forEach(function (b) {
+            b.addEventListener('mouseenter', function () { previewColor(b.dataset.color); });
+            b.addEventListener('mouseleave', endHover);
+        });
 
-        // Arranca: deja ver la portada un momento y luego empieza a pasar.
-        window.setTimeout(function () {
-            if (stopped) return;
-            started = true;
-            idx = 1;
-            showFrame(idx);
-            startLoop();
-        }, 2200);
+        ready = true;
+
+        // Deja ver la portada un momento y luego arranca el álbum.
+        if (!reduce && total >= 2) {
+            window.setTimeout(function () {
+                if (!attractOn || selectedColor) return;
+                startAttract();
+            }, 1800);
+        }
     });
 })();
 
