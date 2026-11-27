@@ -923,6 +923,8 @@
 <script>
 /* ── Variant images map (color → image URL) ── */
 window.variantImagesByColor = @json($variantImagesByColor);
+/* ── Portada (primera imagen) para el álbum automático de tonos ── */
+window.portadaImage = @json(! empty($displayImages) ? asset('storage/' . $displayImages[0]) : null);
 
 /* ── Lista de variantes activas con stock para calcular disponibilidad por color ── */
 @php
@@ -1003,6 +1005,8 @@ function hideVariantImage() {
 
 /* ── Muestra la foto del tono con un fundido suave (ligero, ~0.3s) ── */
 function showVariantImage(overlay, url) {
+    // Asegura la transición ligera de color (el álbum pudo dejar otra puesta).
+    overlay.style.transition = 'opacity .32s ease, transform .2s ease';
     var done = false;
     var animateIn = function () {
         if (done) return; done = true;
@@ -1125,6 +1129,161 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateClearButtons();
 });
+
+/* ──────────────────────────────────────────────────────────
+   ÁLBUM AUTOMÁTICO DE TONOS
+   Pasa las fotos solas como un álbum (portada + cada tono) con un
+   deslizamiento tipo página + leve giro 3D + fundido. Es SOLO visual:
+   usa el overlay #variant-color-image y NO toca la selección ni el
+   carrito. Se pausa al pasar el mouse y se detiene del todo cuando el
+   usuario elige un color o usa la galería. Respeta prefers-reduced-motion.
+   ────────────────────────────────────────────────────────── */
+(function () {
+    var overlay, container, caption;
+    var frames = [];          // [{url, name}]  portada + tonos
+    var idx = 0, timer = null, pendingSwap = null, stopped = false, started = false;
+    var INTERVAL = 3000;      // tiempo que se ve cada foto
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function buildFrames() {
+        var out = [];
+        if (window.portadaImage) out.push({ url: window.portadaImage, name: null });
+        var map = window.variantImagesByColor || {};
+        var seen = {};
+        if (window.portadaImage) seen[window.portadaImage] = 1;
+        document.querySelectorAll('.color-btn').forEach(function (b) {
+            var u = map[b.dataset.color];
+            if (u && !seen[u]) { seen[u] = 1; out.push({ url: u, name: b.dataset.color }); }
+        });
+        if (out.length <= 1) {
+            Object.keys(map).forEach(function (k) {
+                if (!seen[map[k]]) { seen[map[k]] = 1; out.push({ url: map[k], name: k }); }
+            });
+        }
+        return out;
+    }
+
+    function preload(url) { if (url) { var i = new Image(); i.src = url; } }
+
+    function setCaption(name) {
+        if (!caption) return;
+        if (name) {
+            caption.textContent = name;
+            caption.style.opacity = '1';
+            caption.style.transform = 'translateY(0)';
+        } else {
+            caption.style.opacity = '0';
+            caption.style.transform = 'translateY(6px)';
+        }
+    }
+
+    function showFrame(i) {
+        if (!overlay || stopped) return;
+        var f = frames[i];
+        overlay.style.transition = 'opacity .5s ease, transform .55s cubic-bezier(.22,.61,.36,1)';
+        overlay.style.opacity = '0';
+        overlay.style.transform = 'translateX(-26px) rotateY(-9deg) scale(.985)';
+        setCaption(null);
+        pendingSwap = window.setTimeout(function () {
+            if (stopped) return;
+            overlay.src = f.url;
+            overlay.style.display = 'block';
+            overlay.style.transform = 'translateX(26px) rotateY(9deg) scale(.985)';
+            requestAnimationFrame(function () {
+                requestAnimationFrame(function () {
+                    if (stopped) return;
+                    overlay.style.opacity = '1';
+                    overlay.style.transform = 'translateX(0) rotateY(0) scale(1)';
+                    setCaption(f.name);
+                });
+            });
+        }, 240);
+        preload((frames[(i + 1) % frames.length] || {}).url);
+    }
+
+    function tick() {
+        if (stopped) return;
+        idx = (idx + 1) % frames.length;
+        showFrame(idx);
+    }
+
+    function startLoop() {
+        if (stopped || timer) return;
+        timer = window.setInterval(tick, INTERVAL);
+    }
+
+    function pause() {
+        if (timer) { window.clearInterval(timer); timer = null; }
+    }
+
+    function stop() {
+        if (stopped) return;
+        stopped = true;
+        pause();
+        if (pendingSwap) { window.clearTimeout(pendingSwap); pendingSwap = null; }
+        setCaption(null);
+        // Vuelve limpio a la portada si el usuario no eligió aún un tono.
+        if (overlay && !window.__variantImageShown) {
+            overlay.style.transition = 'opacity .32s ease, transform .2s ease';
+            overlay.style.opacity = '0';
+            overlay.style.transform = 'scale(1)';
+            window.setTimeout(function () {
+                if (overlay.style.opacity === '0') { overlay.style.display = 'none'; overlay.src = ''; }
+            }, 340);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        overlay = document.getElementById('variant-color-image');
+        if (!overlay) return;
+        container = overlay.closest('.product-zoom-container');
+        frames = buildFrames();
+        if (reduceMotion || frames.length < 2) return; // nada que pasar
+
+        if (container) {
+            container.style.perspective = '1200px';
+            // Etiqueta flotante con el nombre del tono (estilo álbum).
+            caption = document.createElement('div');
+            caption.setAttribute('aria-hidden', 'true');
+            caption.style.cssText = 'position:absolute;left:14px;bottom:14px;z-index:2;' +
+                'padding:6px 14px;border-radius:999px;font-family:\'Playfair Display\',serif;' +
+                'font-style:italic;font-size:14px;letter-spacing:.2px;color:#6B4E16;' +
+                'background:linear-gradient(135deg,rgba(255,252,246,.94),rgba(246,236,214,.92));' +
+                'border:1px solid rgba(217,181,109,.5);box-shadow:0 8px 20px -10px rgba(120,92,44,.5);' +
+                'opacity:0;transform:translateY(6px);transition:opacity .45s ease,transform .45s ease;' +
+                'pointer-events:none;backdrop-filter:blur(2px);';
+            container.appendChild(caption);
+        }
+        overlay.style.backfaceVisibility = 'hidden';
+
+        // Pausa mientras se mira; reanuda al salir (si no se detuvo).
+        if (container) {
+            container.addEventListener('mouseenter', function () { if (!stopped) pause(); });
+            container.addEventListener('mouseleave', function () { if (!stopped && started) startLoop(); });
+        }
+
+        // Se detiene con cualquier interacción real (color, flechas, puntos, miniaturas, zoom/lightbox).
+        function bindStop(sel) {
+            document.querySelectorAll(sel).forEach(function (el) {
+                el.addEventListener('click', stop, { once: true });
+            });
+        }
+        bindStop('.color-btn');
+        bindStop('.ba-gal-arrow');
+        bindStop('.ba-gal-dot');
+        bindStop('.ba-gal-thumb');
+        if (container) container.addEventListener('click', stop, { once: true });
+
+        // Arranca: deja ver la portada un momento y luego empieza a pasar.
+        window.setTimeout(function () {
+            if (stopped) return;
+            started = true;
+            idx = 1;
+            showFrame(idx);
+            startLoop();
+        }, 2200);
+    });
+})();
 
 /* ──────────────────────────────────────────────────────────
    Selector de variantes genéricas (Tamaño / Aroma / Acabado…)
